@@ -3,6 +3,7 @@ import {
   boardActionsSchema,
   coerceBoardActions,
 } from "@/lib/schemas/boardActions";
+import { boardScriptSchema } from "@/lib/schemas/boardScript";
 import {
   coerceSceneRecipe,
   sceneRecipeSchema,
@@ -194,12 +195,20 @@ export const lessonBeatSchema = z.object({
       .map((r) => r.data);
     const sceneRecipe =
       raw.sceneRecipe != null ? coerceSceneRecipe(raw.sceneRecipe) : undefined;
+    const boardScriptParse =
+      raw.boardScript != null
+        ? boardScriptSchema.safeParse(raw.boardScript)
+        : null;
     return {
       renderer: renderer.data,
       assetId: typeof raw.assetId === "string" ? raw.assetId : undefined,
       source: typeof raw.source === "string" ? raw.source : undefined,
       formula: typeof raw.formula === "string" ? raw.formula : undefined,
       sceneRecipe,
+      boardScript:
+        boardScriptParse && boardScriptParse.success
+          ? boardScriptParse.data
+          : undefined,
       actions,
     };
   }, visualPlanSchema.optional()),

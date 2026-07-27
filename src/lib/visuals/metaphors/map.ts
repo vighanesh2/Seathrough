@@ -222,13 +222,7 @@ export const METAPHOR_MAP: MetaphorEntry[] = [
     renderer: "template",
     priority: 75,
   },
-  {
-    id: "probability",
-    aliases: ["probability basics", "coin probability", "sample space", "probability"],
-    assetId: "tabler-dice",
-    renderer: "template",
-    priority: 75,
-  },
+  // probability / coin flips → board_script pen lesson (see boardScriptPlan heuristics)
   {
     id: "matrix-multiplication",
     aliases: ["matrix multiplication", "matrices transform space", "matrix"],
@@ -271,13 +265,8 @@ export const METAPHOR_MAP: MetaphorEntry[] = [
     renderer: "template",
     priority: 70,
   },
-  {
-    id: "derivative-tangent",
-    aliases: ["what is a derivative", "tangent slope", "derivative"],
-    assetId: "tabler-math-function",
-    renderer: "template",
-    priority: 80,
-  },
+  // derivative meaning → board_script pen lesson (see boardScriptPlan heuristics)
+  // Do not map bare "derivative" to the generic function icon.
 
   // ── Process (Tier 2) — prefer mermaid shells ──────────────────────
   {

@@ -53,7 +53,20 @@ export type DiagramScene = {
 };
 
 export type StreamEvent =
-  | { type: "plan_meta"; title: string; language: string; lessonId?: string }
+  | {
+      type: "plan_meta";
+      title: string;
+      language: string;
+      lessonId?: string;
+      conversationId?: string;
+      beatCount?: number;
+      mode?: "new" | "follow_up";
+    }
+  | {
+      type: "student_message";
+      text: string;
+      conversationId?: string;
+    }
   | { type: "beat_start"; beat: LessonBeat }
   | { type: "code_delta"; text: string }
   | {
@@ -76,6 +89,6 @@ export type StreamEvent =
     }
   | { type: "human_summary"; text: string }
   | { type: "error"; message: string }
-  | { type: "done" };
+  | { type: "done"; conversationId?: string; lessonId?: string };
 
 export type PaceSpeed = 0.75 | 1 | 1.25;

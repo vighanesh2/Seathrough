@@ -45,7 +45,7 @@ export function CliTutor({
             tutor · cli
           </p>
           <h2 className="truncate font-mono text-xs text-[#c8d5cd]">
-            {title ?? "visual-education — ready"}
+            {title ?? "SeeThrough — ready"}
           </h2>
         </div>
       </header>

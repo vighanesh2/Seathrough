@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import type { BoardNarrationLine } from "@/components/board/BoardNarration";
 import type { VisualPlan } from "@/lib/visuals/types";
 
 const TutorBoard = dynamic(
@@ -8,10 +9,8 @@ const TutorBoard = dynamic(
   {
     ssr: false,
     loading: () => (
-      <section className="flex h-full min-h-[280px] items-center justify-center rounded-[var(--radius-shell)] border border-board-edge bg-board">
-        <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#8fa398]">
-          loading board…
-        </p>
+      <section className="flex h-full min-h-0 items-center justify-center bg-board">
+        <p className="font-sans text-sm text-muted">Preparing the board…</p>
       </section>
     ),
   },
@@ -21,6 +20,11 @@ type VisualStageProps = {
   plan: VisualPlan | null;
   playKey: number;
   title?: string;
+  beatOrder?: number;
+  totalBeats?: number;
+  narrationLines?: BoardNarrationLine[];
+  codeBuffer?: string;
+  streaming?: boolean;
   onDrawComplete?: () => void;
 };
 
@@ -28,6 +32,11 @@ export function VisualStage({
   plan,
   playKey,
   title,
+  beatOrder,
+  totalBeats,
+  narrationLines,
+  codeBuffer,
+  streaming,
   onDrawComplete,
 }: VisualStageProps) {
   return (
@@ -35,6 +44,11 @@ export function VisualStage({
       plan={plan}
       playKey={playKey}
       title={title}
+      beatOrder={beatOrder}
+      totalBeats={totalBeats}
+      narrationLines={narrationLines}
+      codeBuffer={codeBuffer}
+      streaming={streaming}
       onDrawComplete={onDrawComplete}
     />
   );

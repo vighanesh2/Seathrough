@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
-import { IBM_Plex_Mono, Syne } from "next/font/google";
+import { Fraunces, IBM_Plex_Mono, Lexend } from "next/font/google";
+import { AuthProvider } from "@/components/AuthProvider";
 import "./globals.css";
 
-const syne = Syne({
-  variable: "--font-syne",
+const lexend = Lexend({
+  variable: "--font-lexend",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["300", "400", "500", "600", "700"],
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -15,9 +22,13 @@ const ibmPlexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Visual Education",
+  title: "SeeThrough",
   description:
-    "Dual-pane concept learning — teaching sketches synced with a CLI-style tutor.",
+    "Learn by watching ideas drawn on a whiteboard — visuals and narration, beat by beat.",
+  icons: {
+    icon: [{ url: "/SeeThrough_logo.png", type: "image/png" }],
+    apple: [{ url: "/SeeThrough_logo.png", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({
@@ -28,10 +39,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${syne.variable} ${ibmPlexMono.variable} h-full antialiased`}
+      className={`${lexend.variable} ${fraunces.variable} ${ibmPlexMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans text-ink">
-        {children}
+      <body className="flex min-h-full flex-col font-sans text-ink">
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

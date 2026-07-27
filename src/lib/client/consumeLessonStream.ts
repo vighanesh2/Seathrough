@@ -1,9 +1,14 @@
+import { toUserFacingError } from "@/lib/errors/userFacing";
 import type { StreamEvent } from "@/types/lesson";
 
 export type ConsumeLessonOptions = {
   prompt: string;
   withAudio?: boolean;
   signal?: AbortSignal;
+  mode?: "new" | "follow_up";
+  conversationId?: string;
+  visualSummary?: string;
+  accessToken?: string | null;
   onEvent: (event: StreamEvent) => void | Promise<void>;
 };
 
@@ -13,12 +18,22 @@ export type ConsumeLessonOptions = {
 export async function consumeLessonStream(
   options: ConsumeLessonOptions,
 ): Promise<void> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (options.accessToken) {
+    headers.Authorization = `Bearer ${options.accessToken}`;
+  }
+
   const response = await fetch("/api/lesson/stream", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({
       prompt: options.prompt,
       withAudio: options.withAudio,
+      mode: options.mode,
+      conversationId: options.conversationId,
+      visualSummary: options.visualSummary,
     }),
     signal: options.signal,
   });
@@ -31,7 +46,10 @@ export async function consumeLessonStream(
     } catch {
       // ignore
     }
-    await options.onEvent({ type: "error", message });
+    await options.onEvent({
+      type: "error",
+      message: toUserFacingError(message),
+    });
     return;
   }
 
@@ -69,6 +87,13 @@ export async function consumeLessonStream(
         event = JSON.parse(payload) as StreamEvent;
       } catch {
         continue;
+      }
+
+      if (event.type === "error") {
+        event = {
+          ...event,
+          message: toUserFacingError(event.message),
+        };
       }
 
       await options.onEvent(event);

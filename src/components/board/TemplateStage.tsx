@@ -103,8 +103,8 @@ export function TemplateStage({
 
   if (!asset) {
     return (
-      <div className="flex h-full items-center justify-center font-mono text-xs uppercase tracking-[0.2em] text-[#8fa398]">
-        no template matched ({plan?.assetId ?? "missing id"})
+      <div className="flex h-full items-center justify-center font-sans text-sm text-muted">
+        No drawing matched ({plan?.assetId ?? "missing id"})
       </div>
     );
   }
@@ -123,8 +123,8 @@ export function TemplateStage({
           cx={hl.x}
           cy={hl.y}
           r={28}
-          fill="rgba(229,192,123,0.18)"
-          stroke="#e5c07b"
+          fill="rgba(27,108,168,0.12)"
+          stroke="#1b6ca8"
           strokeWidth={1.5}
         />
       ) : null}
@@ -134,7 +134,7 @@ export function TemplateStage({
           key={`${playKey}-${p.id}`}
           d={p.d}
           fill={p.fill ?? "none"}
-          stroke={p.stroke ?? "#7dcea0"}
+          stroke={p.stroke ?? "#1b6ca8"}
           strokeWidth={p.strokeWidth ?? 2.4}
           strokeLinecap="round"
           strokeLinejoin="round"

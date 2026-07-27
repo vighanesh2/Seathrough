@@ -46,6 +46,29 @@ export function scoreAssetForPrompt(
   ) {
     return 0;
   }
+  // chart-area is a DATA chart, not geometric area / perimeter
+  if (asset.id === "chart-area") {
+    if (/\bperimeter\b/.test(t)) return 0;
+    if (
+      /\b(area\s+chart|chart\s+area|data\s+viz|statistics|compound interest)\b/.test(
+        t,
+      )
+    ) {
+      // keep normal scoring
+    } else if (/\barea\b/.test(t) && !/\b(chart|graph|data|plot)\b/.test(t)) {
+      return 0;
+    }
+  }
+  // Generic function icon is a weak stand-in for "what is a derivative"
+  if (asset.id === "tabler-math-function") {
+    if (
+      /\bderivative\b/.test(t) &&
+      /\b(mean|means|meaning|what is|what's|explain)\b/.test(t) &&
+      !/\b(graph|plot|draw the)\b/.test(t)
+    ) {
+      return 0;
+    }
+  }
 
   return score;
 }

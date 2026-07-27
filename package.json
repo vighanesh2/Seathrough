@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "ingest:svgs": "node scripts/ingest-svgs.cjs"
+    "ingest:svgs": "node scripts/ingest-svgs.cjs",
+    "smoke:visual-library": "npx --yes esbuild scripts/smoke-visual-library.ts --bundle --platform=node --outfile=/tmp/smoke-vl.js && node /tmp/smoke-vl.js"
   },
   "dependencies": {
     "@iconify-json/tabler": "^1.2.37",

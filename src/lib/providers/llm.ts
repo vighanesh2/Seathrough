@@ -8,7 +8,7 @@ import { listAssetIdsForPrompt } from "@/lib/visuals/router";
 
 const ASSETS = listAssetIdsForPrompt();
 
-const SYSTEM_PROMPT = `You are the lesson planner for Visual Education.
+const SYSTEM_PROMPT = `You are the lesson planner for SeeThrough.
 Voice is Deepgram TTS. You plan beats only.
 
 CRITICAL visual rules (the server will REJECT unrelated assets):
@@ -71,6 +71,17 @@ Other rules:
 - Prefer 5–10 short beats
 - First visual beat: imageAction generate; later same figure: keep`;
 
+const FOLLOW_UP_SYSTEM = `You are continuing an existing SeeThrough lesson for a student follow-up question.
+You already taught the topic. Answer ONLY the follow-up using prior context.
+
+Rules:
+1. Prefer imageAction "keep" on almost every beat — do not wipe the board unless a new figure is truly required.
+2. Prefer 2–5 short beats. Be direct and clear.
+3. If a new visual is needed, use the same visual rules as the main planner (relevant figures only).
+4. Narration should answer the student's question, referencing what was already on the board when helpful.
+5. Return ONLY valid JSON with the same lesson plan schema (title, language, beats, humanSummary).
+6. Title can be a short follow-up title (e.g. "Follow-up: fair coins").`;
+
 function normalizePlanInput(json: unknown): unknown {
   if (!json || typeof json !== "object") return json;
   const plan = json as Record<string, unknown>;
@@ -105,12 +116,19 @@ function normalizePlanInput(json: unknown): unknown {
   return plan;
 }
 
-export async function generateLessonPlan(prompt: string): Promise<LessonPlanParsed> {
-  const trimmed = prompt.trim();
-  if (!trimmed) {
-    throw new Error("Prompt is empty");
-  }
+export type LessonPlanContext = {
+  rootPrompt: string;
+  priorTitle?: string | null;
+  priorSummary?: string | null;
+  priorPlanJson?: string;
+  transcript: string;
+  visualSummary?: string;
+};
 
+async function completeLessonPlan(
+  system: string,
+  userContent: string,
+): Promise<LessonPlanParsed> {
   const config = getLlmConfig();
   const client = new OpenAI({
     apiKey: config.apiKey,
@@ -122,11 +140,8 @@ export async function generateLessonPlan(prompt: string): Promise<LessonPlanPars
     temperature: 0.25,
     response_format: { type: "json_object" },
     messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      {
-        role: "user",
-        content: `Create a Visual Education lesson for:\n\n${trimmed}\n\nUse only simple, directly relevant visuals. No invented metaphors.`,
-      },
+      { role: "system", content: system },
+      { role: "user", content: userContent },
     ],
   });
 
@@ -155,3 +170,51 @@ export async function generateLessonPlan(prompt: string): Promise<LessonPlanPars
 
   return parsed.data;
 }
+
+export async function generateLessonPlan(prompt: string): Promise<LessonPlanParsed> {
+  const trimmed = prompt.trim();
+  if (!trimmed) {
+    throw new Error("Prompt is empty");
+  }
+
+  return completeLessonPlan(
+    SYSTEM_PROMPT,
+    `Create a SeeThrough lesson for:\n\n${trimmed}\n\nUse only simple, directly relevant visuals. No invented metaphors.`,
+  );
+}
+
+/** Short continuation plan that keeps board context when possible. */
+export async function generateFollowUpPlan(
+  question: string,
+  context: LessonPlanContext,
+): Promise<LessonPlanParsed> {
+  const trimmed = question.trim();
+  if (!trimmed) {
+    throw new Error("Follow-up question is empty");
+  }
+
+  const planSnippet = context.priorPlanJson
+    ? context.priorPlanJson.slice(0, 3500)
+    : "(plan unavailable)";
+
+  return completeLessonPlan(
+    FOLLOW_UP_SYSTEM,
+    [
+      `Original lesson prompt:\n${context.rootPrompt}`,
+      context.priorTitle ? `Lesson title: ${context.priorTitle}` : "",
+      context.priorSummary
+        ? `Prior human summary:\n${context.priorSummary}`
+        : "",
+      context.visualSummary
+        ? `Current board visual:\n${context.visualSummary}`
+        : "",
+      `Conversation so far:\n${context.transcript}`,
+      `Prior plan (truncated JSON):\n${planSnippet}`,
+      `Student follow-up question:\n${trimmed}`,
+      `Answer this follow-up. Prefer imageAction keep. Keep beats short.`,
+    ]
+      .filter(Boolean)
+      .join("\n\n"),
+  );
+}
+
