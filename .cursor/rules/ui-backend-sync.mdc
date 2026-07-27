@@ -1,0 +1,11 @@
+---
+description: UI changes must not break backend communication
+alwaysApply: true
+---
+
+# UI ↔ backend sync
+
+- When changing UI (especially lesson shell, prompt, stream consumers), verify the backend session/stream still connects.
+- Do not ship UI refactors that drop event handlers, change payload shapes, or orphan API calls.
+- After UI edits that touch data flow, smoke-check: prompt submit → API/SSE starts → events update UI.
+- If the server communication path is unclear, trace it end-to-end before finishing.

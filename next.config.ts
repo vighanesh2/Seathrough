@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  /* Iconify Tabler + Vivus run client-side via dynamic import */
 };
 
 export default nextConfig;

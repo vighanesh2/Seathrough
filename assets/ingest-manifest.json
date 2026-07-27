@@ -1,0 +1,413 @@
+{
+  "source": "tabler-icons/icons/outline",
+  "stroke": "#7dcea0",
+  "strokeWidth": 1.6,
+  "icons": [
+    {
+      "icon": "horse",
+      "id": "tabler-horse",
+      "title": "Horse",
+      "tags": ["horse", "horseriding", "horse anatomy", "equestrian", "stallion"],
+      "curriculumId": "horse"
+    },
+    {
+      "icon": "heart",
+      "id": "tabler-heart",
+      "title": "Heart",
+      "tags": ["heart", "human heart", "parts of the heart", "blood"],
+      "curriculumId": "heart"
+    },
+    {
+      "icon": "hexagon",
+      "id": "tabler-hexagon",
+      "title": "Hexagon",
+      "tags": ["hexagon", "six sides", "polygon"],
+      "curriculumId": "hexagon"
+    },
+    {
+      "icon": "eye",
+      "id": "eye-simple",
+      "title": "Eye",
+      "tags": ["eye", "parts of the eye", "eye cross section", "vision"],
+      "curriculumId": "eye"
+    },
+    {
+      "icon": "tree",
+      "id": "tree-simple",
+      "title": "Tree",
+      "tags": ["tree", "parts of a tree", "roots", "trunk", "leaves"],
+      "curriculumId": "tree-parts"
+    },
+    {
+      "icon": "planet",
+      "id": "solar-planet",
+      "title": "Planet / orbit",
+      "tags": ["solar system", "planet", "orbit", "planets in order"],
+      "curriculumId": "solar-system"
+    },
+    {
+      "icon": "sun",
+      "id": "solar-sun",
+      "title": "Sun",
+      "tags": ["sun", "solar system", "star"],
+      "curriculumId": "solar-system"
+    },
+    {
+      "icon": "globe",
+      "id": "globe-simple",
+      "title": "Globe / Earth",
+      "tags": ["earth", "globe", "world", "planet earth"],
+      "curriculumId": "solar-system"
+    },
+    {
+      "icon": "droplet",
+      "id": "water-drop",
+      "title": "Water drop",
+      "tags": ["water", "water molecule", "H2O", "droplet"],
+      "curriculumId": "water-molecule"
+    },
+    {
+      "icon": "atom",
+      "id": "atom-simple",
+      "title": "Atom",
+      "tags": ["atom", "molecule", "chemistry", "water molecule"],
+      "curriculumId": "water-molecule"
+    },
+    {
+      "icon": "flask",
+      "id": "flask-simple",
+      "title": "Flask",
+      "tags": ["chemistry", "flask", "reaction"],
+      "curriculumId": "water-molecule"
+    },
+    {
+      "icon": "rocket",
+      "id": "rocket-simple",
+      "title": "Rocket",
+      "tags": ["rocket", "rocket launch", "escape velocity"],
+      "curriculumId": "rocket-launch"
+    },
+    {
+      "icon": "leaf",
+      "id": "leaf-simple",
+      "title": "Leaf",
+      "tags": ["leaf", "photosynthesis", "plant"],
+      "curriculumId": "photosynthesis"
+    },
+    {
+      "icon": "recycle",
+      "id": "recycle-cycle",
+      "title": "Recycle / cycle",
+      "tags": ["recycle", "water cycle", "rock cycle", "cycle"],
+      "curriculumId": "water-cycle"
+    },
+    {
+      "icon": "refresh",
+      "id": "refresh-loop",
+      "title": "Refresh loop",
+      "tags": ["loop", "cycle", "repeat", "refresh"],
+      "curriculumId": "loop"
+    },
+    {
+      "icon": "timeline",
+      "id": "timeline-process",
+      "title": "Timeline / process",
+      "tags": ["process", "timeline", "bill becomes law", "legislative"],
+      "curriculumId": "bill-becomes-law"
+    },
+    {
+      "icon": "route",
+      "id": "route-journey",
+      "title": "Route / journey",
+      "tags": ["journey", "digestion", "path", "route"],
+      "curriculumId": "digestion"
+    },
+    {
+      "icon": "mountain",
+      "id": "mountain-rock",
+      "title": "Mountain / rock",
+      "tags": ["rock cycle", "mountain", "geology"],
+      "curriculumId": "rock-cycle"
+    },
+    {
+      "icon": "volcano",
+      "id": "volcano-igneous",
+      "title": "Volcano",
+      "tags": ["volcano", "igneous", "rock cycle"],
+      "curriculumId": "rock-cycle"
+    },
+    {
+      "icon": "stack-2",
+      "id": "tabler-stack",
+      "title": "Stack",
+      "tags": ["stack", "lifo", "stack data structure"],
+      "curriculumId": "stack-ds"
+    },
+    {
+      "icon": "stack-push",
+      "id": "tabler-stack-push",
+      "title": "Stack push",
+      "tags": ["stack push", "push", "lifo"],
+      "curriculumId": "stack-ds"
+    },
+    {
+      "icon": "users-group",
+      "id": "tabler-queue-people",
+      "title": "People line",
+      "tags": ["queue", "fifo", "line", "people"],
+      "curriculumId": "queue-ds"
+    },
+    {
+      "icon": "box",
+      "id": "tabler-box",
+      "title": "Box",
+      "tags": ["variable", "box", "value"],
+      "curriculumId": "variable"
+    },
+    {
+      "icon": "function",
+      "id": "tabler-function",
+      "title": "Function",
+      "tags": ["function", "functions", "math function"],
+      "curriculumId": "function"
+    },
+    {
+      "icon": "binary",
+      "id": "tabler-binary",
+      "title": "Binary",
+      "tags": ["binary", "bits", "ones and zeros"],
+      "curriculumId": "binary-bits"
+    },
+    {
+      "icon": "git-branch",
+      "id": "tabler-git-branch",
+      "title": "Branch",
+      "tags": ["inheritance", "extends", "git branch", "is-a"],
+      "curriculumId": "oop-inheritance"
+    },
+    {
+      "icon": "lock",
+      "id": "tabler-lock",
+      "title": "Lock",
+      "tags": ["encryption", "encrypt", "lock"],
+      "curriculumId": "encryption"
+    },
+    {
+      "icon": "key",
+      "id": "tabler-key",
+      "title": "Key",
+      "tags": ["encryption", "key", "public key"],
+      "curriculumId": "encryption"
+    },
+    {
+      "icon": "api",
+      "id": "tabler-api",
+      "title": "API",
+      "tags": ["api", "rest api", "how apis work"],
+      "curriculumId": "api"
+    },
+    {
+      "icon": "server",
+      "id": "tabler-server",
+      "title": "Server",
+      "tags": ["server", "api", "backend"],
+      "curriculumId": "api"
+    },
+    {
+      "icon": "pointer",
+      "id": "tabler-pointer",
+      "title": "Pointer",
+      "tags": ["pointer", "cursor"],
+      "curriculumId": "pointer-reference"
+    },
+    {
+      "icon": "link",
+      "id": "tabler-link",
+      "title": "Link / reference",
+      "tags": ["reference", "pointer", "link", "reference vs value"],
+      "curriculumId": "pointer-reference"
+    },
+    {
+      "icon": "arrows-join",
+      "id": "tabler-arrows-join",
+      "title": "Arrows join",
+      "tags": ["reference", "join", "point to"],
+      "curriculumId": "pointer-reference"
+    },
+    {
+      "icon": "layers-intersect",
+      "id": "tabler-layers",
+      "title": "Layers",
+      "tags": ["layers", "recursion", "nested"],
+      "curriculumId": "recursion"
+    },
+    {
+      "icon": "components",
+      "id": "tabler-components",
+      "title": "Components / blueprint",
+      "tags": ["components", "blueprint", "template", "class"],
+      "curriculumId": "java-class"
+    },
+    {
+      "icon": "chart-line",
+      "id": "supply-demand-curves",
+      "title": "Line chart",
+      "tags": ["supply and demand", "equilibrium", "curves"],
+      "curriculumId": "supply-demand"
+    },
+    {
+      "icon": "chart-area-line",
+      "id": "chart-area",
+      "title": "Area chart",
+      "tags": ["growth", "compound interest", "area chart"],
+      "curriculumId": "compound-interest"
+    },
+    {
+      "icon": "snowflake",
+      "id": "compound-growth",
+      "title": "Snowflake / growth",
+      "tags": ["compound interest", "exponential growth", "snowball"],
+      "curriculumId": "compound-interest"
+    },
+    {
+      "icon": "flame",
+      "id": "tabler-flame",
+      "title": "Flame / entropy heat",
+      "tags": ["entropy", "heat", "thermodynamics"],
+      "curriculumId": "entropy"
+    },
+    {
+      "icon": "wind",
+      "id": "tabler-wind",
+      "title": "Wind / disorder",
+      "tags": ["entropy", "disorder", "wind"],
+      "curriculumId": "entropy"
+    },
+    {
+      "icon": "triangle",
+      "id": "tabler-triangle",
+      "title": "Triangle",
+      "tags": ["triangle", "pythagoras", "geometry"],
+      "curriculumId": "pythagorean-theorem"
+    },
+    {
+      "icon": "wave-sine",
+      "id": "tabler-wave-sine",
+      "title": "Sine wave",
+      "tags": ["sine", "sine wave", "unit circle", "trigonometry"],
+      "curriculumId": "sine-unit-circle"
+    },
+    {
+      "icon": "circle",
+      "id": "tabler-circle",
+      "title": "Circle",
+      "tags": ["circle", "area of a circle", "unit circle", "pi"],
+      "curriculumId": "area-circle"
+    },
+    {
+      "icon": "math-function",
+      "id": "tabler-math-function",
+      "title": "Math function",
+      "tags": ["function graph", "derivative", "y = mx + b", "slope"],
+      "curriculumId": "slope-intercept"
+    },
+    {
+      "icon": "vector",
+      "id": "tabler-vector",
+      "title": "Vector",
+      "tags": ["vector", "vectors", "tip to tail"],
+      "curriculumId": "vectors"
+    },
+    {
+      "icon": "vector-triangle",
+      "id": "tabler-vector-triangle",
+      "title": "Vector triangle",
+      "tags": ["vector addition", "tip to tail"],
+      "curriculumId": "vectors"
+    },
+    {
+      "icon": "dice",
+      "id": "tabler-dice",
+      "title": "Dice",
+      "tags": ["probability", "dice", "sample space", "chance"],
+      "curriculumId": "probability"
+    },
+    {
+      "icon": "coin",
+      "id": "tabler-coin",
+      "title": "Coin",
+      "tags": ["probability", "coin", "coin flip"],
+      "curriculumId": "probability"
+    },
+    {
+      "icon": "pizza",
+      "id": "tabler-pizza",
+      "title": "Pizza / fractions",
+      "tags": ["fractions", "pizza", "parts of a whole"],
+      "curriculumId": "fractions"
+    },
+    {
+      "icon": "matrix",
+      "id": "tabler-matrix",
+      "title": "Matrix",
+      "tags": ["matrix", "matrix multiplication", "linear algebra"],
+      "curriculumId": "matrix-multiplication"
+    },
+    {
+      "icon": "chart-dots-2",
+      "id": "tabler-chart-dots",
+      "title": "Dot chart / spread",
+      "tags": ["standard deviation", "spread", "mean", "statistics"],
+      "curriculumId": "standard-deviation"
+    },
+    {
+      "icon": "list-numbers",
+      "id": "tabler-list-numbers",
+      "title": "Number list",
+      "tags": ["prime numbers", "numbers", "sieve"],
+      "curriculumId": "prime-numbers"
+    },
+    {
+      "icon": "sort-ascending-numbers",
+      "id": "tabler-sort-numbers",
+      "title": "Sorted numbers",
+      "tags": ["prime numbers", "sieve of eratosthenes", "numbers"],
+      "curriculumId": "prime-numbers"
+    },
+    {
+      "icon": "math-x-divide-y",
+      "id": "tabler-log-ratio",
+      "title": "Division / log ratio",
+      "tags": ["logarithm", "logarithms", "ratio"],
+      "curriculumId": "logarithms"
+    },
+    {
+      "icon": "scale",
+      "id": "tabler-scale",
+      "title": "Scale / balance",
+      "tags": ["scale", "slope", "balance"],
+      "curriculumId": "derivative-tangent"
+    },
+    {
+      "icon": "dna",
+      "id": "tabler-dna",
+      "title": "DNA",
+      "tags": ["dna", "biology", "genetics"],
+      "curriculumId": "digestion"
+    },
+    {
+      "icon": "brain",
+      "id": "tabler-brain",
+      "title": "Brain",
+      "tags": ["brain", "anatomy"],
+      "curriculumId": "eye"
+    },
+    {
+      "icon": "pyramid",
+      "id": "tabler-pyramid",
+      "title": "Pyramid",
+      "tags": ["pyramid", "geometry"],
+      "curriculumId": "fractions"
+    }
+  ]
+}

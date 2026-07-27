@@ -1,0 +1,12 @@
+---
+description: Prioritize in-depth, meticulous building over rushing
+alwaysApply: true
+---
+
+# Depth over rush
+
+- Prefer thorough, careful implementation over speed.
+- Finish each layer properly before jumping ahead (types → providers → API → UI → sync).
+- Do not leave TODOs, stubs, or half-wired paths that look done but are not.
+- When a task is large, break it into complete sub-steps and complete each with depth.
+- If unsure, investigate and verify rather than shipping a shallow fix.

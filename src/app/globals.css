@@ -1,26 +1,122 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Studio desk — light chalk wall, ink CLI, teal signal (not purple) */
+  --paper: #eef1eb;
+  --paper-deep: #e2e7df;
+  --ink: #1c2420;
+  --ink-soft: #3d4a43;
+  --chalk: #f4f6f2;
+  --board: #2a3530;
+  --board-edge: #1a221e;
+  --terminal: #121916;
+  --terminal-panel: #18211c;
+  --terminal-line: #2c3a33;
+  --accent: #0d8a6a;
+  --accent-soft: #b8e6d6;
+  --warn: #c47a2c;
+  --code: #7dcea0;
+  --muted: #6b7a72;
+  --hairline: rgba(28, 36, 32, 0.12);
+  --glow: rgba(13, 138, 106, 0.18);
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+
+  --radius-shell: 18px;
+  --shadow-shell: 0 18px 50px rgba(28, 36, 32, 0.12);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-chalk: var(--chalk);
+  --color-board: var(--board);
+  --color-board-edge: var(--board-edge);
+  --color-terminal: var(--terminal);
+  --color-terminal-panel: var(--terminal-panel);
+  --color-terminal-line: var(--terminal-line);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-warn: var(--warn);
+  --color-code: var(--code);
+  --color-muted: var(--muted);
+  --font-sans: var(--font-syne);
+  --font-mono: var(--font-ibm-plex-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
+  margin: 0;
+  background:
+    radial-gradient(1200px 600px at 12% -10%, rgba(13, 138, 106, 0.09), transparent 55%),
+    radial-gradient(900px 500px at 90% 0%, rgba(196, 122, 44, 0.07), transparent 50%),
+    linear-gradient(180deg, #f5f7f3 0%, var(--paper) 40%, var(--paper-deep) 100%);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-syne), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+
+@keyframes caret-blink {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes sketch-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 420ms ease-out both;
+}
+
+.animate-sketch-in {
+  animation: sketch-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.caret-blink::after {
+  content: "▋";
+  margin-left: 2px;
+  color: var(--accent);
+  animation: caret-blink 1.1s step-end infinite;
 }

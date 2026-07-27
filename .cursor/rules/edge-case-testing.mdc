@@ -1,0 +1,11 @@
+---
+description: Test edge cases after major coding progress
+alwaysApply: true
+---
+
+# Edge-case testing
+
+- After any major feature or integration, test edge cases before moving on.
+- Cover at least: empty input, invalid input, missing env/keys, network/API failure, slow response, and mid-flow pause/skip where relevant.
+- Use subagents for broader regression or multi-path checks when needed.
+- Fix broken edge cases before declaring the work done.

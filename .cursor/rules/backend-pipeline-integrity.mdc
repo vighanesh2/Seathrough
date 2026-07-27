@@ -1,0 +1,12 @@
+---
+description: Scan for missing backend wiring, dead APIs, and pipeline gaps
+alwaysApply: true
+---
+
+# Backend pipeline integrity
+
+- After backend or integration work, verify the full path: env → provider → route/API → client consumer.
+- Actively look for APIs that exist but are never called, or UI that pretends to call a backend that is not wired.
+- Check for missing env usage, unused adapters, orphaned routes, and broken request/response contracts.
+- Use explore/shell/subagents when the wiring spans multiple files or is unclear.
+- Prefer proving the pipeline with a real request over assuming it works.

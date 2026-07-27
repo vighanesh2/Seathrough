@@ -1,0 +1,204 @@
+#!/usr/bin/env node
+/**
+ * Transform stroke SVG sources into VisualAsset entries for this app.
+ *
+ * Sources (in priority order per icon):
+ * 1) assets/raw-svgs/<id>.svg           — hand overrides
+ * 2) tabler-icons/icons/outline/<icon>.svg  — local Tabler clone (preferred)
+ * 3) @iconify-json/tabler               — npm fallback
+ *
+ * Output: src/lib/visuals/assets/generated.ts
+ *
+ * Usage: npm run ingest:svgs
+ */
+
+const fs = require("fs");
+const path = require("path");
+
+const ROOT = path.join(__dirname, "..");
+const MANIFEST = path.join(ROOT, "assets/ingest-manifest.json");
+const RAW_DIR = path.join(ROOT, "assets/raw-svgs");
+const TABLER_OUTLINE = path.join(ROOT, "tabler-icons/icons/outline");
+const OUT = path.join(ROOT, "src/lib/visuals/assets/generated.ts");
+
+function extractPaths(svgBody) {
+  const paths = [];
+  const re = /<path\b[^>]*\bd="([^"]+)"[^>]*>/gi;
+  let m;
+  while ((m = re.exec(svgBody))) {
+    paths.push(m[1]);
+  }
+  return paths;
+}
+
+function extractCommentTags(svgBody) {
+  const tags = [];
+  const tagMatch = svgBody.match(/tags:\s*\[([^\]]+)\]/);
+  if (tagMatch) {
+    for (const part of tagMatch[1].split(",")) {
+      const t = part.replace(/[\[\]"]/g, "").trim();
+      if (t) tags.push(t.toLowerCase().replace(/-/g, " "));
+    }
+  }
+  return tags;
+}
+
+function anchorsFromViewBox(vb) {
+  const parts = vb.split(/[\s,]+/).map(Number);
+  const [, , w = 24, h = 24] = parts;
+  return {
+    center: { x: w / 2, y: h / 2, preferredLabelSide: "bottom" },
+    top: { x: w / 2, y: h * 0.12, preferredLabelSide: "top" },
+    right: { x: w * 0.88, y: h / 2, preferredLabelSide: "right" },
+  };
+}
+
+function assetFromPaths(meta, pathDs, viewBox, stroke, strokeWidth, extraTags) {
+  if (!pathDs.length) return null;
+  const tags = [...new Set([...(meta.tags || []), ...(extraTags || [])])];
+  return {
+    id: meta.id,
+    title: meta.title,
+    viewBox: viewBox || "0 0 24 24",
+    tags,
+    paths: pathDs.map((d, i) => ({
+      id: `p${i + 1}`,
+      d,
+      drawOrder: i + 1,
+      stroke,
+      strokeWidth,
+    })),
+    anchors: anchorsFromViewBox(viewBox || "0 0 24 24"),
+  };
+}
+
+function loadSvgFile(filePath) {
+  if (!fs.existsSync(filePath)) return null;
+  const raw = fs.readFileSync(filePath, "utf8");
+  const vbMatch = raw.match(/viewBox=["']([^"']+)["']/i);
+  const viewBox = vbMatch ? vbMatch[1] : "0 0 24 24";
+  const paths = extractPaths(raw);
+  if (!paths.length) return null;
+  return { viewBox, paths, tags: extractCommentTags(raw), raw };
+}
+
+function loadRawOverride(id) {
+  return loadSvgFile(path.join(RAW_DIR, `${id}.svg`));
+}
+
+function loadLocalTabler(iconName) {
+  return loadSvgFile(path.join(TABLER_OUTLINE, `${iconName}.svg`));
+}
+
+function loadIconifyTabler(iconName) {
+  try {
+    const { getIconData } = require("@iconify/utils");
+    const tabler = require("@iconify-json/tabler/icons.json");
+    const data = getIconData(tabler, iconName);
+    if (!data) return null;
+    const w = data.width || 24;
+    const h = data.height || 24;
+    const paths = extractPaths(data.body);
+    if (!paths.length) return null;
+    return { viewBox: `0 0 ${w} ${h}`, paths, tags: [] };
+  } catch {
+    return null;
+  }
+}
+
+function main() {
+  if (!fs.existsSync(MANIFEST)) {
+    console.error("Missing assets/ingest-manifest.json");
+    process.exit(1);
+  }
+
+  const hasLocal = fs.existsSync(TABLER_OUTLINE);
+  console.log(
+    hasLocal
+      ? `Using local Tabler outline: ${path.relative(ROOT, TABLER_OUTLINE)}`
+      : "Local tabler-icons/icons/outline not found — falling back to @iconify-json/tabler",
+  );
+
+  const manifest = JSON.parse(fs.readFileSync(MANIFEST, "utf8"));
+  const stroke = manifest.stroke || "#7dcea0";
+  const strokeWidth = manifest.strokeWidth || 1.6;
+  const assets = [];
+  const report = [];
+
+  for (const entry of manifest.icons) {
+    const override = loadRawOverride(entry.id);
+    const local = loadLocalTabler(entry.icon);
+    const npm = !local ? loadIconifyTabler(entry.icon) : null;
+
+    let source = null;
+    let from = null;
+    if (override?.paths?.length) {
+      source = override;
+      from = "raw-svg";
+    } else if (local?.paths?.length) {
+      source = local;
+      from = "tabler-icons/outline";
+    } else if (npm?.paths?.length) {
+      source = npm;
+      from = "iconify-npm";
+    }
+
+    if (!source) {
+      report.push({ id: entry.id, icon: entry.icon, ok: false, reason: "no paths" });
+      continue;
+    }
+
+    const asset = assetFromPaths(
+      entry,
+      source.paths,
+      source.viewBox,
+      stroke,
+      strokeWidth,
+      source.tags,
+    );
+    if (!asset) {
+      report.push({ id: entry.id, ok: false, reason: "empty" });
+      continue;
+    }
+    assets.push(asset);
+    report.push({
+      id: entry.id,
+      ok: true,
+      from,
+      paths: asset.paths.length,
+    });
+  }
+
+  const body = assets
+    .map((a) => `  ${JSON.stringify(a, null, 2).replace(/\n/g, "\n  ")}`)
+    .join(",\n");
+
+  const file = `/**
+ * Auto-generated by \\\`npm run ingest:svgs\\\`.
+ * Prefer local tabler-icons/icons/outline, then assets/raw-svgs overrides.
+ * Do not edit by hand — update assets/ingest-manifest.json.
+ */
+import type { VisualAsset } from "@/lib/visuals/types";
+
+export const GENERATED_ASSETS: VisualAsset[] = [
+${body}
+];
+`;
+
+  fs.mkdirSync(path.dirname(OUT), { recursive: true });
+  fs.writeFileSync(OUT, file);
+  fs.mkdirSync(RAW_DIR, { recursive: true });
+  const keep = path.join(RAW_DIR, ".gitkeep");
+  if (!fs.existsSync(keep)) fs.writeFileSync(keep, "");
+
+  console.log(`Wrote ${assets.length} assets → ${path.relative(ROOT, OUT)}`);
+  for (const r of report) {
+    console.log(
+      r.ok
+        ? `  ✓ ${r.id} (${r.from}, ${r.paths} paths)`
+        : `  ✗ ${r.id} [${r.icon}]: ${r.reason}`,
+    );
+  }
+}
+
+main();
