@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { sceneRecipeSchema } from "@/lib/schemas/sceneRecipe";
+import { boardScriptSchema } from "@/lib/schemas/boardScript";
 
 export const visualRendererSchema = z.enum([
   "template",
@@ -8,6 +9,7 @@ export const visualRendererSchema = z.enum([
   "katex",
   "rough",
   "icon",
+  "board_script",
 ]);
 
 export type VisualRenderer = z.infer<typeof visualRendererSchema>;
@@ -52,12 +54,13 @@ export const visualPlanSchema = z.object({
   /** Mermaid source, KaTeX expression, or Mafs mode */
   source: z.string().optional(),
   /**
-   * Optional equation shown WITH a figure (template / mafs / rough).
-   * Prefer this over katex-only so drawings never disappear for math.
+   * Optional equation shown WITH a figure (template / mafs / rough / board_script).
    */
   formula: z.string().optional(),
   /** Rough.js scene when renderer is "rough" */
   sceneRecipe: sceneRecipeSchema.optional(),
+  /** Progressive pen lesson when renderer is "board_script" */
+  boardScript: boardScriptSchema.optional(),
   actions: z.array(visualActionSchema).default([]),
 });
 

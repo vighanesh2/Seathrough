@@ -214,6 +214,35 @@ export const lessonPlanSchema = z.object({
   language: z.string().min(1).default("general"),
   beats: z.array(lessonBeatSchema).min(1).max(40),
   humanSummary: z.string().min(1),
+  /**
+   * Planner preference for interactive Three.js. The scene resolver may apply
+   * narrow safety fallbacks when a supported anatomy lesson was omitted.
+   */
+  threeScene: z
+    .preprocess((value) => {
+      if (value == null || value === false || value === "") return null;
+      if (value === true) return { use: true, id: "generic" };
+      if (typeof value !== "object") return null;
+      const raw = value as Record<string, unknown>;
+      const use =
+        raw.use === true ||
+        raw.enabled === true ||
+        raw.show === true ||
+        String(raw.use).toLowerCase() === "true";
+      if (!use) return { use: false };
+      return {
+        use: true,
+        id: typeof raw.id === "string" ? raw.id : undefined,
+        title: typeof raw.title === "string" ? raw.title : undefined,
+      };
+    }, z
+      .object({
+        use: z.boolean(),
+        id: z.string().optional(),
+        title: z.string().optional(),
+      })
+      .nullable()
+      .optional()),
 });
 
 export type LessonPlanParsed = z.infer<typeof lessonPlanSchema>;

@@ -38,13 +38,20 @@ export function scoreAssetForPrompt(
   ) {
     return 0;
   }
-  if (
-    asset.id === "class-blueprint" &&
-    !/\b(class|classes|oop|object[- ]oriented|blueprint|java class|python class)\b/.test(
-      t,
-    )
-  ) {
-    return 0;
+  if (asset.id === "class-blueprint") {
+    const oopSignal =
+      /\b(oop|object[- ]oriented|java|python|blueprint|vs\s+object|public\s+class|what\s+is\s+a\s+class|classes?\s+in)\b/.test(
+        t,
+      ) || /\b(class|classes)\b/.test(t);
+    if (!oopSignal) return 0;
+    // Other topics that can appear after an OOP lesson must not rematch this asset.
+    if (
+      /\b(cryptograph|encrypt|decrypt|cipher|plaintext|photosynthesis|gravity|inertia|big\s*bang|neuron|mitosis)\b/.test(
+        t,
+      )
+    ) {
+      return 0;
+    }
   }
 
   return score;
@@ -80,13 +87,6 @@ export function wantsSimpleMath(prompt: string): boolean {
     /\b(pythagoras|pythagorean|hypotenuse|theorem|triangle|right[- ]angled|geometry|algebra|equation|formula|sine|cosine|tangent)\b/.test(
       t,
     ) && !/\b(horse|airplane|photosynthesis|sdlc)\b/.test(t)
-  );
-}
-
-export function wantsRightTriangle(prompt: string): boolean {
-  const t = prompt.toLowerCase();
-  return /\b(pythagoras|pythagorean|hypotenuse|right[- ]angled\s+triangle|right triangle)\b/.test(
-    t,
   );
 }
 

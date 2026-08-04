@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getVisualAsset } from "@/lib/visuals/assets/catalog";
 import type { VisualAction, VisualPlan } from "@/lib/visuals/types";
 
@@ -30,16 +30,15 @@ export function TemplateStage({
   onDrawComplete,
 }: TemplateStageProps) {
   const onDoneRef = useRef(onDrawComplete);
-  onDoneRef.current = onDrawComplete;
+  useEffect(() => {
+    onDoneRef.current = onDrawComplete;
+  }, [onDrawComplete]);
 
   const [labels, setLabels] = useState<LabelMark[]>([]);
   const [arrows, setArrows] = useState<ArrowMark[]>([]);
   const [highlight, setHighlight] = useState<string | null>(null);
 
-  const asset = useMemo(
-    () => (plan?.assetId ? getVisualAsset(plan.assetId) : undefined),
-    [plan?.assetId],
-  );
+  const asset = plan?.assetId ? getVisualAsset(plan.assetId) : undefined;
 
   useEffect(() => {
     if (!plan || plan.renderer !== "template" || !asset) return;
@@ -88,6 +87,8 @@ export function TemplateStage({
       }
     }
 
+    // Resetting the staged overlay is the purpose of this playback effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHighlight(hl);
     // Stagger labels slightly so the figure reads first
     setLabels([]);
@@ -103,8 +104,8 @@ export function TemplateStage({
 
   if (!asset) {
     return (
-      <div className="flex h-full items-center justify-center font-mono text-xs uppercase tracking-[0.2em] text-[#8fa398]">
-        no template matched ({plan?.assetId ?? "missing id"})
+      <div className="flex h-full items-center justify-center font-sans text-sm text-muted">
+        No drawing matched ({plan?.assetId ?? "missing id"})
       </div>
     );
   }
@@ -123,8 +124,8 @@ export function TemplateStage({
           cx={hl.x}
           cy={hl.y}
           r={28}
-          fill="rgba(229,192,123,0.18)"
-          stroke="#e5c07b"
+          fill="rgba(27,108,168,0.12)"
+          stroke="#1b6ca8"
           strokeWidth={1.5}
         />
       ) : null}
@@ -134,7 +135,7 @@ export function TemplateStage({
           key={`${playKey}-${p.id}`}
           d={p.d}
           fill={p.fill ?? "none"}
-          stroke={p.stroke ?? "#7dcea0"}
+          stroke={p.stroke ?? "#1b6ca8"}
           strokeWidth={p.strokeWidth ?? 2.4}
           strokeLinecap="round"
           strokeLinejoin="round"

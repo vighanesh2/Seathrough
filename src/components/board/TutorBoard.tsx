@@ -1,120 +1,274 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import {
+  BoardNarration,
+  type BoardNarrationLine,
+} from "@/components/board/BoardNarration";
+import { BoardScriptStage } from "@/components/board/BoardScriptStage";
+import { InfiniteCanvas } from "@/components/board/InfiniteCanvas";
 import { RoughSketch } from "@/components/RoughSketch";
 import { TemplateStage } from "@/components/board/TemplateStage";
+import type { DrawCommandQueue } from "@/lib/draw-engine/resolve";
+import type { AnatomyStructureId } from "@/lib/anatomy/types";
 import type { SceneRecipe } from "@/lib/schemas/sceneRecipe";
+import type { ThreeScenePlan } from "@/lib/three-scenes/decide";
 import type { VisualPlan } from "@/lib/visuals/types";
+
+const KonvaDrawStage = dynamic(
+  () =>
+    import("@/components/draw-engine/KonvaDrawStage").then(
+      (m) => m.KonvaDrawStage,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full min-h-[320px] items-center justify-center bg-white font-sans text-sm text-muted">
+        Loading draw engine…
+      </div>
+    ),
+  },
+);
+
+const ThreeBoard = dynamic(
+  () =>
+    import("@/components/board/ThreeBoard").then((m) => m.ThreeBoard),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full min-h-[280px] items-center justify-center bg-[#f7fafc] font-sans text-sm text-muted">
+        Loading 3D…
+      </div>
+    ),
+  },
+);
 
 type TutorBoardProps = {
   plan: VisualPlan | null;
   playKey: number;
   title?: string;
+  beatOrder?: number;
+  totalBeats?: number;
+  narrationLines?: BoardNarrationLine[];
+  codeBuffer?: string;
+  streaming?: boolean;
   onDrawComplete?: () => void;
+  drawQueue?: DrawCommandQueue;
+  drawSessionKey?: number;
+  drawPlaying?: boolean;
+  preferDrawEngine?: boolean;
+  drawSpeech?: string | null;
+  canvasHeight?: number;
+  scrollToY?: number | null;
+  threeScene?: ThreeScenePlan | null;
+  threePlaying?: boolean;
+  threeSpeed?: number;
+  threeSelectedStructure?: AnatomyStructureId | null;
+  onThreeSelect?: (structure: AnatomyStructureId | null) => void;
+  onDrawClock?: (ms: number) => void;
 };
 
 /**
- * Figures (template / rough / mafs) render in their own layer — no tldraw underneath.
- * tldraw loads only for Mermaid flowcharts, so it cannot blank or cover drawings.
+ * Full-bleed infinite canvas + side narration panel.
  */
 export function TutorBoard({
   plan,
   playKey,
   title,
+  beatOrder = 1,
+  totalBeats,
+  narrationLines = [],
+  codeBuffer,
+  streaming,
   onDrawComplete,
+  drawQueue,
+  drawSessionKey = 0,
+  drawPlaying = false,
+  preferDrawEngine = false,
+  drawSpeech = null,
+  canvasHeight,
+  scrollToY = null,
+  threeScene = null,
+  threePlaying = true,
+  threeSpeed = 1,
+  threeSelectedStructure = null,
+  onThreeSelect,
+  onDrawClock,
 }: TutorBoardProps) {
   const onDoneRef = useRef(onDrawComplete);
-  onDoneRef.current = onDrawComplete;
+  useEffect(() => {
+    onDoneRef.current = onDrawComplete;
+  }, [onDrawComplete]);
 
-  const showTemplate = plan?.renderer === "template";
-  const showKatexOnly = plan?.renderer === "katex";
-  const showMafs = plan?.renderer === "mafs";
-  const showRough = plan?.renderer === "rough" || plan?.renderer === "icon";
-  const showMermaid = plan?.renderer === "mermaid";
+  const showThree = Boolean(threeScene);
+  const useDrawEngine = !showThree && Boolean(preferDrawEngine && drawQueue);
+  const showTemplate = !showThree && !useDrawEngine && plan?.renderer === "template";
+  const showKatexOnly = !showThree && !useDrawEngine && plan?.renderer === "katex";
+  const showMafs = !showThree && !useDrawEngine && plan?.renderer === "mafs";
+  const showRough =
+    !showThree &&
+    !useDrawEngine &&
+    (plan?.renderer === "rough" || plan?.renderer === "icon");
+  const showBoardScript =
+    !showThree &&
+    !useDrawEngine &&
+    plan?.renderer === "board_script" &&
+    (plan.boardScript?.steps?.length ?? 0) > 0;
+  const showMermaid =
+    !showThree && !useDrawEngine && plan?.renderer === "mermaid";
   const showFigure = Boolean(
-    showTemplate || showMafs || showRough || showKatexOnly,
+    useDrawEngine ||
+      showTemplate ||
+      showMafs ||
+      showRough ||
+      showKatexOnly ||
+      showBoardScript,
   );
   const formula = plan?.formula ?? (showKatexOnly ? plan?.source : undefined);
 
   return (
     <section
-      className="flex h-full min-h-[320px] flex-col overflow-hidden rounded-[var(--radius-shell)] border border-board-edge bg-board shadow-[var(--shadow-shell)]"
+      className="flex h-full min-h-0 w-full overflow-hidden bg-board"
       aria-label="Tutor whiteboard"
     >
-      <header className="flex shrink-0 items-center justify-between border-b border-white/10 px-4 py-3">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-[#8fa398]">
-            board
-          </p>
-          <h2 className="font-sans text-sm font-semibold text-[#eef3ef]">
-            {title ?? "Waiting for a concept"}
-          </h2>
-        </div>
-        <span className="rounded-full bg-white/5 px-2.5 py-1 font-mono text-[10px] text-[#9aada3]">
-          {plan?.renderer ?? "idle"}
-          {plan?.assetId ? ` · ${plan.assetId}` : ""}
-          {plan?.sceneRecipe?.kind ? ` · ${plan.sceneRecipe.kind}` : ""}
-          {formula ? " · formula" : ""}
-        </span>
-      </header>
-
-      <div className="relative min-h-[280px] flex-1 bg-[#1c2621]">
-        {showMermaid && plan?.source ? (
+      <div className="relative min-h-0 min-w-0 flex-1">
+        {showThree && threeScene ? (
+          <div className="absolute inset-0 flex flex-col bg-white">
+            {drawSpeech ? (
+              <p className="shrink-0 border-b border-board-edge/60 bg-accent-soft/30 px-4 py-2 font-sans text-sm text-ink">
+                <span className="font-semibold text-accent-deep">Tutor: </span>
+                {drawSpeech}
+              </p>
+            ) : null}
+            <div className="min-h-0 flex-1 p-2 md:p-3">
+              <ThreeBoard
+                plan={threeScene}
+                playing={threePlaying}
+                speed={threeSpeed}
+                selectedStructure={threeSelectedStructure}
+                focusStructures={
+                  threeSelectedStructure ? [threeSelectedStructure] : []
+                }
+                onSelectStructure={onThreeSelect}
+                showStructureControls={threeScene.id === "cardiopulmonary"}
+                className="h-full min-h-[280px] w-full overflow-hidden rounded-xl border border-board-edge bg-[#f7fafc]"
+              />
+            </div>
+          </div>
+        ) : useDrawEngine && drawQueue ? (
+          <div className="absolute inset-0 flex flex-col bg-white">
+            {drawSpeech ? (
+              <p className="shrink-0 border-b border-board-edge/60 bg-accent-soft/30 px-4 py-2 font-sans text-sm text-ink">
+                <span className="font-semibold text-accent-deep">Tutor: </span>
+                {drawSpeech}
+              </p>
+            ) : null}
+            <div className="relative min-h-0 flex-1 p-2 md:p-3">
+              <KonvaDrawStage
+                queue={drawQueue}
+                sessionKey={drawSessionKey}
+                playing={drawPlaying}
+                onClock={onDrawClock}
+                canvasHeight={canvasHeight}
+                scrollToY={scrollToY}
+                className="h-full min-h-[280px] w-full overflow-auto rounded-xl border border-board-edge bg-white"
+              />
+            </div>
+          </div>
+        ) : showMermaid && plan?.source ? (
           <MermaidPane
             key={`m-${playKey}`}
             source={plan.source}
             onDone={() => onDoneRef.current?.()}
           />
-        ) : null}
+        ) : (
+          <InfiniteCanvas resetKey={`${playKey}-${plan?.renderer ?? "idle"}`}>
+            {showFigure ? (
+              <>
+                {showTemplate && plan ? (
+                  <TemplateStage
+                    plan={plan}
+                    playKey={playKey}
+                    onDrawComplete={() => onDoneRef.current?.()}
+                  />
+                ) : null}
 
-        {!showMermaid && showFigure ? (
-          <div className="absolute inset-0 z-20 flex flex-col bg-[radial-gradient(circle_at_30%_20%,rgba(125,206,160,0.08),transparent_45%),linear-gradient(180deg,#24312b,#1c2621)] p-4">
-            <div className="flex min-h-[220px] flex-1 items-center justify-center">
-              {showTemplate && plan ? (
-                <TemplateStage
-                  plan={plan}
-                  playKey={playKey}
-                  onDrawComplete={() => onDoneRef.current?.()}
-                />
-              ) : null}
+                {showMafs ? (
+                  <MafsPanel
+                    playKey={playKey}
+                    source={plan?.source}
+                    onDone={() => onDoneRef.current?.()}
+                  />
+                ) : null}
 
-              {showMafs ? (
-                <MafsPanel
-                  playKey={playKey}
-                  onDone={() => onDoneRef.current?.()}
-                />
-              ) : null}
+                {showBoardScript && plan?.boardScript ? (
+                  <BoardScriptStage
+                    key={`bs-${playKey}`}
+                    script={plan.boardScript}
+                    playKey={playKey}
+                    beatOrder={beatOrder}
+                    totalBeats={totalBeats}
+                    onDrawComplete={() => onDoneRef.current?.()}
+                  />
+                ) : null}
 
-              {showRough && plan ? (
-                <RoughPanel
-                  plan={plan}
-                  playKey={playKey}
-                  onDone={() => onDoneRef.current?.()}
-                />
-              ) : null}
+                {showRough && !showBoardScript && plan ? (
+                  <RoughPanel
+                    plan={plan}
+                    playKey={playKey}
+                    onDone={() => onDoneRef.current?.()}
+                  />
+                ) : null}
 
-              {showKatexOnly && !showTemplate && !showMafs && !showRough ? (
-                <div className="font-mono text-xs uppercase tracking-[0.2em] text-[#8fa398]">
-                  equation
-                </div>
-              ) : null}
-            </div>
+                {showKatexOnly &&
+                !showTemplate &&
+                !showMafs &&
+                !showRough &&
+                !showBoardScript ? (
+                  <div className="font-sans text-sm font-semibold uppercase tracking-[0.16em] text-muted">
+                    equation
+                  </div>
+                ) : null}
 
-            {formula ? (
-              <FormulaStrip source={formula} playKey={playKey} />
-            ) : null}
-          </div>
-        ) : null}
+                {formula ? (
+                  <FormulaStrip source={formula} playKey={playKey} />
+                ) : null}
+              </>
+            ) : (
+              <div className="flex flex-col items-center gap-2 text-center">
+                <p className="font-display text-2xl text-marker-soft md:text-3xl">
+                  Ask anything to begin
+                </p>
+                <p className="max-w-sm font-sans text-sm text-muted">
+                  Pan and zoom freely — drawings appear on this infinite board.
+                </p>
+              </div>
+            )}
+          </InfiniteCanvas>
+        )}
+      </div>
 
-        {!showMermaid && !showFigure ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <p className="font-mono text-xs uppercase tracking-[0.22em] text-[#8fa398]">
-              ask a question to draw
-            </p>
-          </div>
-        ) : null}
+      <div className="hidden h-full w-[min(380px,34vw)] shrink-0 md:block">
+        <BoardNarration
+          lines={narrationLines}
+          codeBuffer={codeBuffer}
+          streaming={streaming}
+          title={title}
+          placement="side"
+        />
+      </div>
+
+      <div className="absolute inset-x-0 bottom-0 z-30 md:hidden">
+        <BoardNarration
+          lines={narrationLines}
+          codeBuffer={codeBuffer}
+          streaming={streaming}
+          title={title}
+          placement="bottom"
+        />
       </div>
     </section>
   );
@@ -178,8 +332,8 @@ function MermaidPane({
 
   if (!TldrawComp) {
     return (
-      <div className="absolute inset-0 flex items-center justify-center font-mono text-xs uppercase tracking-[0.2em] text-[#8fa398]">
-        loading flowchart…
+      <div className="absolute inset-0 flex items-center justify-center font-sans text-sm text-muted">
+        Loading flowchart…
       </div>
     );
   }
@@ -218,10 +372,10 @@ function FormulaStrip({
   }, [source, playKey]);
 
   return (
-    <div className="mt-2 flex shrink-0 justify-center border-t border-white/10 px-2 pt-3 pb-1">
+    <div className="flex justify-center">
       <div
         ref={ref}
-        className="rounded-lg border border-white/10 bg-[#24312b]/80 px-5 py-2 text-[#eef3ef]"
+        className="rounded-xl border border-board-edge bg-chalk px-6 py-3 text-marker shadow-[var(--shadow-shell)]"
       />
     </div>
   );
@@ -230,37 +384,51 @@ function FormulaStrip({
 function MafsPanel({
   onDone,
   playKey,
+  source,
 }: {
   onDone?: () => void;
   playKey: number;
+  source?: string;
 }) {
   const onDoneRef = useRef(onDone);
-  onDoneRef.current = onDone;
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
 
   useEffect(() => {
     const t = setTimeout(() => onDoneRef.current?.(), 400);
     return () => clearTimeout(t);
   }, [playKey]);
 
+  const kind = (source ?? "line").toLowerCase();
+  const isParabola = /\bparabola|quadratic\b/.test(kind);
+  const curve = isParabola
+    ? "M40 40 Q160 200 280 40"
+    : "M40 160 Q100 40, 160 110 T280 60";
+
   return (
     <svg
       viewBox="0 0 320 220"
-      className="h-[min(52vh,280px)] w-full max-w-[420px]"
+      className="h-[280px] w-[420px] max-w-[86vw]"
       role="img"
-      aria-label="Coordinate sketch"
+      aria-label={isParabola ? "Parabola sketch" : "Coordinate sketch"}
     >
-      <line x1="20" y1="110" x2="300" y2="110" stroke="#8fa398" />
-      <line x1="160" y1="20" x2="160" y2="200" stroke="#8fa398" />
-      <path
-        d="M40 160 Q100 40, 160 110 T280 60"
-        fill="none"
-        stroke="#7dcea0"
-        strokeWidth="2.5"
-      />
-      <text x="270" y="100" fill="#9aada3" fontSize="12">
+      <line x1="20" y1="110" x2="300" y2="110" stroke="#6a7d90" />
+      <line x1="160" y1="20" x2="160" y2="200" stroke="#6a7d90" />
+      <path d={curve} fill="none" stroke="#1b6ca8" strokeWidth="2.5" />
+      {isParabola ? (
+        <>
+          <circle cx="100" cy="110" r="4" fill="#b86a1e" />
+          <circle cx="220" cy="110" r="4" fill="#b86a1e" />
+          <text x="92" y="128" fill="#4a6580" fontSize="11">
+            roots
+          </text>
+        </>
+      ) : null}
+      <text x="270" y="100" fill="#4a6580" fontSize="12">
         x
       </text>
-      <text x="170" y="35" fill="#9aada3" fontSize="12">
+      <text x="170" y="35" fill="#4a6580" fontSize="12">
         y
       </text>
     </svg>
@@ -277,7 +445,9 @@ function RoughPanel({
   playKey: number;
 }) {
   const onDoneRef = useRef(onDone);
-  onDoneRef.current = onDone;
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
 
   useEffect(() => {
     const t = setTimeout(() => onDoneRef.current?.(), 450);
@@ -291,7 +461,7 @@ function RoughPanel({
   };
 
   return (
-    <div className="flex h-full min-h-[240px] w-full max-w-[560px] items-center justify-center">
+    <div className="flex w-[560px] max-w-[86vw] items-center justify-center">
       <RoughSketch
         key={`${playKey}-${recipe.kind}-${recipe.label}`}
         recipe={recipe}

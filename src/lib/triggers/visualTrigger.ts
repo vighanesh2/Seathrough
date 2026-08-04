@@ -1,4 +1,6 @@
-import { routeVisual, visualKey } from "@/lib/visuals/router";
+import { routeVisual, visualStableKey } from "@/lib/visuals/router";
+import { classifyVisualPlan } from "@/lib/visuals/library/classify";
+import { isWeakVisualPlan } from "@/lib/visuals/library/boardScriptPlan";
 import type { VisualPlan } from "@/lib/visuals/types";
 import type { LessonBeatParsed } from "@/lib/schemas/lesson";
 import type { DiagramAction } from "@/types/lesson";
@@ -18,27 +20,34 @@ export type VisualTriggerResult = {
 };
 
 /**
- * Clean visual trigger for the current stack:
- * - Decide generate / keep / none from prompt-relevant routing
- * - Never keep a mismatched metaphor from narration
+ * Decide generate / keep / retire from prompt-relevant routing.
+ * Uses stable visual identity (ignores formula) so equation strips can be patched
+ * without tearing down the board.
  */
 export function decideVisual(input: VisualTriggerInput): VisualTriggerResult {
   const beat = input.beat;
   const routed = routeVisual({
     prompt: input.prompt,
     conceptKey: beat.conceptKey,
-    // Intentionally omit narration so metaphors in speech can't hijack the board
     plan: beat.visual,
   });
 
-  const key = visualKey(routed);
+  const key = visualStableKey(routed);
 
-  // Always put something on the board for the first visual slot
   if (!input.hasVisual) {
     return {
       action: "generate",
       plan: routed,
       reason: `first:${routed.renderer}:${routed.assetId ?? routed.sceneRecipe?.kind ?? "plain"}`,
+    };
+  }
+
+  if (beat.imageAction === "retire") {
+    // Blanking mid-lesson drops equations/pen scripts — keep the teaching board
+    return {
+      action: "keep",
+      plan: null,
+      reason: "skip-retire-keep-board",
     };
   }
 
@@ -52,18 +61,23 @@ export function decideVisual(input: VisualTriggerInput): VisualTriggerResult {
   }
 
   if (input.activeVisualKey && input.activeVisualKey === key) {
+    // Same figure — allow a formula patch through without treating it as a new board
+    if (routed.formula?.trim()) {
+      return {
+        action: "generate",
+        plan: routed,
+        reason: `formula-patch:${routed.renderer}`,
+      };
+    }
     return { action: "keep", plan: null, reason: "same-visual" };
   }
 
-  if (beat.imageAction === "retire") {
+  const quality = classifyVisualPlan(routed);
+  if (quality === "generic" || isWeakVisualPlan(routed)) {
     return {
-      action: "retire",
-      plan: {
-        renderer: "rough",
-        sceneRecipe: { kind: "concept", label: "cleared", note: "board cleared" },
-        actions: [{ type: "clear" }],
-      },
-      reason: "retire",
+      action: "keep",
+      plan: null,
+      reason: "keep-over-weak-reroute",
     };
   }
 

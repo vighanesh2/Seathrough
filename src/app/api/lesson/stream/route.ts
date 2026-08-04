@@ -1,4 +1,6 @@
 import { runLessonStream } from "@/lib/orchestrator/runLessonStream";
+import { getUserFromRequest } from "@/lib/auth/requestUser";
+import { toUserFacingError } from "@/lib/errors/userFacing";
 import { envPresence } from "@/lib/env";
 import type { StreamEvent } from "@/types/lesson";
 
@@ -8,6 +10,10 @@ export const dynamic = "force-dynamic";
 type Body = {
   prompt?: string;
   withAudio?: boolean;
+  mode?: "new" | "follow_up";
+  conversationId?: string;
+  visualSummary?: string;
+  boardBottomY?: number;
 };
 
 function sseEncode(event: StreamEvent): string {
@@ -27,6 +33,13 @@ export async function POST(request: Request) {
     return Response.json({ error: "Prompt is required" }, { status: 400 });
   }
 
+  if (body.mode === "follow_up" && !body.conversationId?.trim()) {
+    return Response.json(
+      { error: "conversationId is required for follow-up questions" },
+      { status: 400 },
+    );
+  }
+
   const presence = envPresence();
   if (!presence.GROQ_API_KEY && presence.LLM_PROVIDER === "groq") {
     return Response.json(
@@ -43,6 +56,10 @@ export async function POST(request: Request) {
 
   const withAudio =
     body.withAudio !== false && presence.DEEPGRAM_API_KEY === true;
+  const user = await getUserFromRequest(request);
+  if (!user) {
+    return Response.json({ error: "Sign in required" }, { status: 401 });
+  }
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
@@ -56,6 +73,15 @@ export async function POST(request: Request) {
           prompt,
           withAudio,
           signal: request.signal,
+          mode: body.mode === "follow_up" ? "follow_up" : "new",
+          conversationId: body.conversationId?.trim(),
+          visualSummary: body.visualSummary?.trim(),
+          boardBottomY:
+            typeof body.boardBottomY === "number" &&
+            Number.isFinite(body.boardBottomY)
+              ? Math.max(0, body.boardBottomY)
+              : undefined,
+          userId: user.id,
         })) {
           send(event);
           if (event.type === "error" || event.type === "done") {
@@ -63,8 +89,11 @@ export async function POST(request: Request) {
           }
         }
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Stream failed";
+        const message = toUserFacingError(error);
+        console.error(
+          "[lesson-stream-route]",
+          error instanceof Error ? error.message : error,
+        );
         send({ type: "error", message });
       } finally {
         controller.close();

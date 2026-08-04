@@ -7,11 +7,13 @@ import {
   type SceneRecipe,
 } from "@/lib/schemas/sceneRecipe";
 
-const STROKE = "#7dcea0";
-const MUTED = "#8fa398";
-const INK = "#dfe8e3";
-const WARM = "#e5c07b";
+const STROKE = "#1b6ca8";
+const MUTED = "#6a7d90";
+const INK = "#1e3a5f";
+const WARM = "#b86a1e";
 const MONO = "var(--font-ibm-plex-mono), monospace";
+const FILL = "rgba(27, 108, 168, 0.08)";
+
 
 type RoughSketchProps = {
   recipe: SceneRecipe;
@@ -68,7 +70,7 @@ export function RoughSketch({ recipe }: RoughSketchProps) {
           rc.polygon(pts, {
             ...opts,
             stroke: STROKE,
-            fill: "rgba(125,206,160,0.06)",
+            fill: FILL,
             fillStyle: "solid",
           }),
         );
@@ -87,7 +89,7 @@ export function RoughSketch({ recipe }: RoughSketchProps) {
           rc.circle(210, 118, 156, {
             ...opts,
             stroke: STROKE,
-            fill: "rgba(125,206,160,0.05)",
+            fill: FILL,
             fillStyle: "solid",
           }),
         );

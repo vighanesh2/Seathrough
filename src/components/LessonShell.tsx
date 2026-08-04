@@ -1,29 +1,213 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useMachine } from "@xstate/react";
-import { CliTutor, type CliLine } from "@/components/CliTutor";
+import type { BoardNarrationLine } from "@/components/board/BoardNarration";
+import { AuthModal } from "@/components/AuthModal";
+import { useAuth } from "@/components/AuthProvider";
+import { ChatSidebar } from "@/components/ChatSidebar";
 import { PaceControls } from "@/components/PaceControls";
 import { PromptBar } from "@/components/PromptBar";
 import { VisualStage } from "@/components/VisualStage";
 import { consumeLessonStream } from "@/lib/client/consumeLessonStream";
+import type { ConversationListItem } from "@/lib/conversations/types";
+import type { AnatomyStructureId } from "@/lib/anatomy/types";
+import { DrawCommandQueue } from "@/lib/draw-engine/resolve";
+import type { DrawCommand } from "@/lib/draw-engine/commands";
+import { toUserFacingError } from "@/lib/errors/userFacing";
 import { lessonMachine } from "@/lib/lesson/machine";
+import { visualStableKey } from "@/lib/visuals/router";
 import type { VisualPlan } from "@/lib/visuals/types";
 import type { PaceSpeed, StreamEvent } from "@/types/lesson";
+import {
+  threeSceneFromChoiceOrNull,
+  type ThreeScenePlan,
+} from "@/lib/three-scenes/decide";
 
 type LessonStatus = "idle" | "running" | "paused" | "done" | "error";
 
+const SIDEBAR_KEY = "ve.chatSidebar.collapsed";
+
+function chatsCacheKey(userId?: string | null): string {
+  return userId ? `ve.chatSidebar.cache.${userId}` : "ve.chatSidebar.cache.anon";
+}
+
+function visualSummary(
+  plan: VisualPlan | null,
+  threeScene: ThreeScenePlan | null,
+  selectedStructure: AnatomyStructureId | null,
+): string {
+  if (threeScene) {
+    return [
+      `renderer=three`,
+      `scene=${threeScene.id}`,
+      `title=${threeScene.title}`,
+      `reveal=${threeScene.reveal}/${threeScene.maxReveal}`,
+      selectedStructure ? `selected=${selectedStructure}` : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  }
+  if (!plan) return "No figure on the board yet.";
+  return [
+    `renderer=${plan.renderer}`,
+    plan.assetId ? `asset=${plan.assetId}` : null,
+    plan.formula ? `formula=${plan.formula}` : null,
+    plan.boardScript?.title ? `pen=${plan.boardScript.title}` : null,
+    plan.sceneRecipe?.kind ? `sketch=${plan.sceneRecipe.kind}` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function turnsToNarration(
+  turns: Array<{ role: string; content: string }>,
+): BoardNarrationLine[] {
+  const lines: BoardNarrationLine[] = [];
+  let i = 0;
+  for (const turn of turns) {
+    i += 1;
+    if (turn.role === "student") {
+      lines.push({ id: `t-${i}`, text: turn.content, kind: "student" });
+    } else if (turn.role === "system") {
+      lines.push({ id: `t-${i}`, text: turn.content, kind: "summary" });
+    } else if (turn.role === "tutor") {
+      lines.push({ id: `t-${i}`, text: turn.content, kind: "narration" });
+    }
+  }
+  return lines;
+}
+
+function readCachedChats(userId?: string | null): ConversationListItem[] {
+  try {
+    const raw = localStorage.getItem(chatsCacheKey(userId));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as ConversationListItem[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeCachedChats(
+  items: ConversationListItem[],
+  userId?: string | null,
+) {
+  try {
+    localStorage.setItem(
+      chatsCacheKey(userId),
+      JSON.stringify(items.slice(0, 50)),
+    );
+  } catch {
+    // ignore
+  }
+}
+
+function rebaseDrawCommands(
+  commands: DrawCommand[],
+  queue: DrawCommandQueue,
+  clockMs: number,
+): DrawCommand[] {
+  if (!commands.length) return commands;
+  const existing = queue.getAll();
+  const prevEnd = existing.reduce(
+    (m, c) => Math.max(m, c.t0 + (c.durationMs || 0)),
+    0,
+  );
+  const minT = Math.min(...commands.map((c) => c.t0));
+  const base = Math.max(clockMs + 80, prevEnd + 120);
+  return commands.map((c) => ({
+    ...c,
+    t0: base + (c.t0 - minT),
+  }));
+}
+
+function rebaseDrawCommand(
+  command: DrawCommand,
+  queue: DrawCommandQueue,
+  clockMs: number,
+): DrawCommand {
+  return rebaseDrawCommands([command], queue, clockMs)[0]!;
+}
+
+function commandBottomY(cmd: DrawCommand): number {
+  switch (cmd.type) {
+    case "text":
+      return cmd.y + (cmd.fontSize ?? 18) * 1.6;
+    case "rect":
+    case "highlight":
+    case "image":
+      return cmd.y + cmd.h;
+    case "circle":
+      return cmd.y + cmd.radius;
+    case "line":
+    case "arrow":
+      return Math.max(cmd.y1, cmd.y2);
+    case "stroke":
+      return Math.max(...cmd.points.map((p) => p.y), 0);
+    default:
+      return 0;
+  }
+}
+
+function commandsBottomY(commands: DrawCommand[]): number {
+  let max = 0;
+  for (const c of commands) {
+    max = Math.max(max, commandBottomY(c));
+  }
+  return max;
+}
+
 export function LessonShell() {
+  const { user, loading: authLoading, accessToken, logout } = useAuth();
+  const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
   const [prompt, setPrompt] = useState("explain what a class is in Java");
   const [status, setStatus] = useState<LessonStatus>("idle");
   const [speed, setSpeed] = useState<PaceSpeed>(1);
   const [title, setTitle] = useState<string | undefined>();
   const [visualPlan, setVisualPlan] = useState<VisualPlan | null>(null);
   const [playKey, setPlayKey] = useState(0);
-  const [lines, setLines] = useState<CliLine[]>([]);
+  const [beatOrder, setBeatOrder] = useState(1);
+  const [totalBeats, setTotalBeats] = useState<number | undefined>();
+  const [boardNarration, setBoardNarration] = useState<BoardNarrationLine[]>(
+    [],
+  );
   const [codeBuffer, setCodeBuffer] = useState("");
-  const [highlight, setHighlight] = useState<string | undefined>();
+  const [conversationId, setConversationId] = useState<string | undefined>();
+  const [, setLessonId] = useState<string | undefined>();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [conversations, setConversations] = useState<ConversationListItem[]>(
+    [],
+  );
+  const [chatsLoading, setChatsLoading] = useState(true);
   const [, send] = useMachine(lessonMachine);
+  const narrationSeqRef = useRef(0);
+  const visualPlanRef = useRef<VisualPlan | null>(null);
+  const conversationIdRef = useRef<string | undefined>(undefined);
+  const drawQueue = useMemo(() => new DrawCommandQueue(), []);
+  const [drawSessionKey, setDrawSessionKey] = useState(0);
+  const [drawPlaying, setDrawPlaying] = useState(false);
+  const [preferDrawEngine, setPreferDrawEngine] = useState(false);
+  const [drawSpeech, setDrawSpeech] = useState<string | null>(null);
+  const [boardCanvasHeight, setBoardCanvasHeight] = useState(600);
+  const [boardScrollToY, setBoardScrollToY] = useState<number | null>(null);
+  const [threeScene, setThreeScene] = useState<ThreeScenePlan | null>(null);
+  const [threeSelected, setThreeSelected] =
+    useState<AnatomyStructureId | null>(null);
+  const drawClockRef = useRef(0);
+  const boardBottomYRef = useRef(0);
+  const threeSceneRef = useRef<ThreeScenePlan | null>(null);
+  const threeSelectedRef = useRef<AnatomyStructureId | null>(null);
+
+  visualPlanRef.current = visualPlan;
+  conversationIdRef.current = conversationId;
+  threeSceneRef.current = threeScene;
+  threeSelectedRef.current = threeSelected;
+
+  const canFollowUp =
+    Boolean(conversationId) &&
+    (status === "done" || status === "paused" || status === "error");
 
   const onDrawComplete = useCallback(() => {
     send({ type: "DRAW_DONE" });
@@ -35,6 +219,90 @@ export function LessonShell() {
   const pausedRef = useRef(false);
   const pauseGateRef = useRef<Promise<void>>(Promise.resolve());
   const resumePauseRef = useRef<(() => void) | null>(null);
+  const lastVisualKeyRef = useRef<string>("");
+
+  function pushNarration(
+    text: string,
+    kind: BoardNarrationLine["kind"] = "narration",
+  ) {
+    narrationSeqRef.current += 1;
+    const id = `n-${narrationSeqRef.current}`;
+    setBoardNarration((prev) => [...prev, { id, text, kind }]);
+  }
+
+  const refreshConversations = useCallback(async () => {
+    if (!accessToken || !user?.id) {
+      setConversations([]);
+      setChatsLoading(false);
+      return;
+    }
+    setChatsLoading(true);
+    try {
+      const res = await fetch("/api/conversations", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!res.ok) {
+        setConversations([]);
+        return;
+      }
+      const data = (await res.json()) as {
+        conversations?: ConversationListItem[];
+      };
+      const list = data.conversations ?? [];
+      setConversations(list);
+      writeCachedChats(list, user.id);
+    } catch {
+      setConversations(readCachedChats(user.id));
+    } finally {
+      setChatsLoading(false);
+    }
+  }, [accessToken, user?.id]);
+
+  function upsertLocalChat(item: ConversationListItem) {
+    setConversations((prev) => {
+      const next = [item, ...prev.filter((c) => c.id !== item.id)].slice(0, 50);
+      writeCachedChats(next, user?.id);
+      return next;
+    });
+  }
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(SIDEBAR_KEY);
+      if (stored === "1") {
+        queueMicrotask(() => setSidebarCollapsed(true));
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    if (authLoading) return;
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      if (!user?.id) {
+        abortRef.current?.abort();
+        setConversations([]);
+        setChatsLoading(false);
+        setAuthModal((prev) => prev ?? "login");
+        return;
+      }
+      setAuthModal(null);
+      setConversations(readCachedChats(user.id));
+      void refreshConversations();
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, refreshConversations, user?.id]);
+
+  useEffect(() => {
+    if (authLoading || user) return;
+    resetLesson();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- clear board when session ends
+  }, [authLoading, user?.id]);
 
   useEffect(() => {
     speedRef.current = speed;
@@ -76,53 +344,122 @@ export function LessonShell() {
     await waitIfPaused();
 
     switch (event.type) {
+      case "student_message":
+        pushNarration(event.text, "student");
+        if (event.conversationId) {
+          setConversationId(event.conversationId);
+          conversationIdRef.current = event.conversationId;
+        }
+        break;
       case "plan_meta":
         setTitle(event.title);
+        if (event.beatCount) setTotalBeats(event.beatCount);
+        if (event.lessonId) setLessonId(event.lessonId);
+        if (event.conversationId) {
+          setConversationId(event.conversationId);
+          conversationIdRef.current = event.conversationId;
+          upsertLocalChat({
+            id: event.conversationId,
+            title: event.title || prompt.slice(0, 80) || "Lesson",
+            rootPrompt: prompt,
+            updatedAt: new Date().toISOString(),
+            preview: prompt.slice(0, 100),
+          });
+        }
         send({ type: "PLAN_READY" });
         send({ type: "VALIDATED" });
-        setLines((prev) => [
-          ...prev,
-          {
-            kind: "system",
-            text: `$ teach --lang ${event.language} · lesson ${event.lessonId?.slice(0, 8) ?? "local"}`,
-          },
-        ]);
         break;
       case "beat_start":
-        setHighlight(event.beat.highlight);
-        setLines((prev) => [
-          ...prev,
-          {
-            kind: "system",
-            text: `$ beat ${event.beat.order} · ${event.beat.kind} · ${event.beat.cognitiveType ?? "—"}`,
-          },
-        ]);
+        setBeatOrder(event.beat.order);
         break;
-      case "visual":
+      case "visual": {
+        const stable = visualStableKey(event.plan);
+        if (stable && stable === lastVisualKeyRef.current) {
+          setVisualPlan((prev) => {
+            if (!prev) return event.plan;
+            const formula = prev.formula?.trim()
+              ? prev.formula
+              : event.plan.formula;
+            if (formula === prev.formula) return prev;
+            return { ...prev, formula };
+          });
+          break;
+        }
+        lastVisualKeyRef.current = stable;
         setVisualPlan(event.plan);
         setPlayKey((k) => k + 1);
-        setLines((prev) => [
-          ...prev,
-          {
-            kind: "system",
-            text: `$ draw · ${event.plan.renderer}${event.plan.assetId ? `:${event.plan.assetId}` : ""}${event.plan.sceneRecipe?.kind ? `:${event.plan.sceneRecipe.kind}` : ""}`,
-          },
-        ]);
         break;
+      }
       case "board":
       case "diagram":
+      case "diagram_plan":
+        // Server holds the full UML JSON; board updates arrive via draw_cmds.
+        break;
+      case "three_scene":
+        if (threeSceneRef.current?.id !== event.plan.id) {
+          setThreeSelected(null);
+        }
+        setThreeScene(event.plan);
+        // Drop placeholder rough/template visuals once 3D takes over.
+        setVisualPlan(null);
+        lastVisualKeyRef.current = "";
+        break;
+      case "draw_session":
+        if (event.reset !== false) {
+          drawQueue.clear();
+          setDrawSessionKey((k) => k + 1);
+          drawClockRef.current = 0;
+          boardBottomYRef.current = 0;
+        }
+        if (event.canvas?.height) {
+          setBoardCanvasHeight((h) => Math.max(h, event.canvas.height));
+        }
+        if (typeof event.scrollToY === "number") {
+          setBoardScrollToY(event.scrollToY);
+        }
+        setPreferDrawEngine(true);
+        setDrawPlaying(true);
+        setDrawSpeech(null);
+        break;
+      case "draw_cmd":
+        setPreferDrawEngine(true);
+        setDrawPlaying(true);
+        drawQueue.enqueue(
+          rebaseDrawCommand(event.command, drawQueue, drawClockRef.current),
+        );
+        boardBottomYRef.current = Math.max(
+          boardBottomYRef.current,
+          commandBottomY(event.command),
+        );
+        setBoardCanvasHeight((h) =>
+          Math.max(h, boardBottomYRef.current + 80),
+        );
+        break;
+      case "draw_cmds":
+        setPreferDrawEngine(true);
+        setDrawPlaying(true);
+        drawQueue.enqueue(
+          rebaseDrawCommands(event.commands, drawQueue, drawClockRef.current),
+        );
+        boardBottomYRef.current = Math.max(
+          boardBottomYRef.current,
+          commandsBottomY(event.commands),
+        );
+        setBoardCanvasHeight((h) =>
+          Math.max(h, boardBottomYRef.current + 80),
+        );
+        break;
+      case "draw_speak":
+        setDrawSpeech(event.text);
         break;
       case "code_delta":
         setCodeBuffer((prev) => prev + event.text);
         break;
       case "narration":
         if (event.text.startsWith("[voice unavailable")) {
-          setLines((prev) => [...prev, { kind: "system", text: event.text }]);
+          pushNarration(event.text, "error");
         } else {
-          setLines((prev) => [
-            ...prev,
-            { kind: "narration", text: event.text },
-          ]);
+          pushNarration(event.text, "narration");
         }
         break;
       case "audio":
@@ -132,23 +469,22 @@ export function LessonShell() {
         send({ type: "NEXT_BEAT" });
         break;
       case "human_summary":
-        setLines((prev) => [...prev, { kind: "summary", text: event.text }]);
+        pushNarration(event.text, "summary");
         break;
-      case "error":
-        send({ type: "ERROR", message: event.message });
-        setLines((prev) => [
-          ...prev,
-          { kind: "system", text: `! error: ${event.message}` },
-        ]);
+      case "error": {
+        const friendly = toUserFacingError(event.message);
+        send({ type: "ERROR", message: friendly });
+        pushNarration(friendly, "error");
         setStatus("error");
         break;
+      }
       case "done":
         send({ type: "COMPLETE" });
-        setLines((prev) => [
-          ...prev,
-          { kind: "system", text: "$ lesson complete" },
-        ]);
+        if (event.conversationId) setConversationId(event.conversationId);
+        if (event.lessonId) setLessonId(event.lessonId);
         setStatus("done");
+        setPrompt("");
+        void refreshConversations();
         break;
       default:
         break;
@@ -168,29 +504,61 @@ export function LessonShell() {
     setTitle(undefined);
     setVisualPlan(null);
     setPlayKey((k) => k + 1);
-    setLines([]);
+    lastVisualKeyRef.current = "";
+    setBeatOrder(1);
+    setTotalBeats(undefined);
+    setBoardNarration([]);
+    narrationSeqRef.current = 0;
     setCodeBuffer("");
-    setHighlight(undefined);
+    setConversationId(undefined);
+    conversationIdRef.current = undefined;
+    setLessonId(undefined);
+    drawQueue.clear();
+    setDrawSessionKey((k) => k + 1);
+    setBoardCanvasHeight(600);
+    setBoardScrollToY(null);
+    setThreeScene(null);
+    setThreeSelected(null);
+    boardBottomYRef.current = 0;
+    setDrawPlaying(false);
+    setPreferDrawEngine(false);
+    setDrawSpeech(null);
   }
 
-  async function startLesson() {
-    const trimmed = prompt.trim();
-    if (!trimmed) return;
+  function prepareSoftContinue() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    audioRef.current?.pause();
+    audioRef.current = null;
+    pausedRef.current = false;
+    resumePauseRef.current?.();
+    resumePauseRef.current = null;
+  }
 
-    resetLesson();
-    send({ type: "START", title: trimmed });
-    setStatus("running");
-    setLines([{ kind: "system", text: `$ teach "${trimmed}"` }]);
-
+  async function runStream(mode: "new" | "follow_up", text: string) {
     const controller = new AbortController();
     abortRef.current = controller;
     let sawTerminal = false;
 
     try {
       await consumeLessonStream({
-        prompt: trimmed,
+        prompt: text,
         withAudio: true,
         signal: controller.signal,
+        mode,
+        conversationId:
+          mode === "follow_up" ? conversationIdRef.current : undefined,
+        visualSummary:
+          mode === "follow_up"
+            ? visualSummary(
+                visualPlanRef.current,
+                threeSceneRef.current,
+                threeSelectedRef.current,
+              )
+            : undefined,
+        boardBottomY:
+          mode === "follow_up" ? boardBottomYRef.current : undefined,
+        accessToken,
         onEvent: async (event) => {
           if (event.type === "error" || event.type === "done") {
             sawTerminal = true;
@@ -203,20 +571,135 @@ export function LessonShell() {
       }
     } catch (error) {
       if (controller.signal.aborted) return;
-      const message =
-        error instanceof Error ? error.message : "Failed to stream lesson";
+      const message = toUserFacingError(
+        error instanceof Error ? error.message : "Failed to stream lesson",
+      );
       send({ type: "ERROR", message });
-      setLines((prev) => [
-        ...prev,
-        { kind: "system", text: `! error: ${message}` },
-      ]);
+      pushNarration(message, "error");
       setStatus("error");
     }
   }
 
+  async function startLesson() {
+    const trimmed = prompt.trim();
+    if (!trimmed) return;
+    if (!user || !accessToken) {
+      setAuthModal("login");
+      return;
+    }
+
+    resetLesson();
+    send({ type: "START", title: trimmed });
+    setStatus("running");
+    await runStream("new", trimmed);
+  }
+
+  async function askFollowUp() {
+    const trimmed = prompt.trim();
+    if (!trimmed || !conversationIdRef.current) return;
+    if (!user || !accessToken) {
+      setAuthModal("login");
+      return;
+    }
+
+    prepareSoftContinue();
+    send({ type: "START", title: trimmed });
+    setStatus("running");
+    await runStream("follow_up", trimmed);
+  }
+
+  function onPromptSubmit() {
+    if (canFollowUp) {
+      void askFollowUp();
+      return;
+    }
+    void startLesson();
+  }
+
+  async function openConversation(id: string) {
+    if (status === "running") return;
+    if (!accessToken) {
+      setAuthModal("login");
+      return;
+    }
+    prepareSoftContinue();
+    try {
+      const res = await fetch(`/api/conversations/${id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      if (!res.ok) return;
+      const data = (await res.json()) as {
+        conversation: {
+          conversationId: string;
+          rootPrompt: string;
+          title?: string | null;
+          lessonId?: string;
+          turns: Array<{ role: string; content: string }>;
+        };
+        visualPlan?: VisualPlan | null;
+        threeScene?: unknown;
+      };
+      const ctx = data.conversation;
+      setConversationId(ctx.conversationId);
+      conversationIdRef.current = ctx.conversationId;
+      setLessonId(ctx.lessonId);
+      setTitle(ctx.title || ctx.rootPrompt || "Lesson");
+      const lines = turnsToNarration(ctx.turns);
+      setBoardNarration(lines);
+      narrationSeqRef.current = lines.length;
+      setCodeBuffer("");
+      setPrompt("");
+      setStatus("done");
+      const restoredThree = threeSceneFromChoiceOrNull(
+        data.threeScene,
+        ctx.title || ctx.rootPrompt || undefined,
+      );
+      if (restoredThree) {
+        setThreeSelected(null);
+        setThreeScene({
+          ...restoredThree,
+          reveal: restoredThree.maxReveal,
+        });
+        setVisualPlan(null);
+        lastVisualKeyRef.current = "";
+        setPreferDrawEngine(false);
+      } else if (data.visualPlan) {
+        setThreeSelected(null);
+        setThreeScene(null);
+        lastVisualKeyRef.current = visualStableKey(data.visualPlan);
+        setVisualPlan(data.visualPlan);
+        setPlayKey((k) => k + 1);
+      } else {
+        setThreeSelected(null);
+        setThreeScene(null);
+        setVisualPlan(null);
+        lastVisualKeyRef.current = "";
+      }
+      send({ type: "RESET" });
+    } catch {
+      // keep current view
+    }
+  }
+
+  function toggleSidebar() {
+    setSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem(SIDEBAR_KEY, next ? "1" : "0");
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  }
+
   function togglePlay() {
-    if (status === "idle" || status === "done" || status === "error") {
+    if (status === "idle" || status === "error") {
       void startLesson();
+      return;
+    }
+    if (status === "done") {
+      if (prompt.trim()) void startLesson();
       return;
     }
     if (status === "running") {
@@ -244,51 +727,133 @@ export function LessonShell() {
 
   const busy = status === "running";
 
-  return (
-    <div className="mx-auto flex min-h-full w-full max-w-[1400px] flex-col gap-4 px-4 py-4 md:px-6 md:py-5">
-      <header className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-        <div className="animate-fade-up">
-          <h1 className="font-sans text-3xl font-extrabold tracking-tight text-ink md:text-4xl">
-            Visual Education
-          </h1>
-        </div>
-        <PaceControls
-          playing={status === "running"}
-          speed={speed}
-          onTogglePlay={togglePlay}
-          onSpeedChange={setSpeed}
-          onSkip={skipBeat}
-          disabled={status === "idle" && !prompt.trim()}
-        />
-      </header>
+  if (authLoading) {
+    return (
+      <div className="flex h-dvh max-h-dvh w-full items-center justify-center bg-[radial-gradient(ellipse_at_top,_#f7f3ea_0%,_#e8eef5_55%,_#d9e4ef_100%)]">
+        <p className="font-sans text-sm text-muted">Checking your session…</p>
+      </div>
+    );
+  }
 
-      <PromptBar
-        value={prompt}
-        onChange={setPrompt}
-        onSubmit={() => {
-          void startLesson();
+  if (!user) {
+    return (
+      <div className="relative flex h-dvh max-h-dvh w-full items-center justify-center overflow-hidden bg-[radial-gradient(ellipse_at_top,#f7f3ea_0%,#e8eef5_55%,#d9e4ef_100%)]">
+        <AuthModal
+          key={authModal ?? "required"}
+          open
+          required
+          initialMode={authModal ?? "login"}
+          onClose={() => setAuthModal(null)}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-dvh max-h-dvh w-full overflow-hidden">
+      <ChatSidebar
+        collapsed={sidebarCollapsed}
+        onToggle={toggleSidebar}
+        conversations={conversations}
+        activeId={conversationId}
+        loading={chatsLoading}
+        onSelect={(id) => {
+          void openConversation(id);
         }}
-        disabled={busy}
+        onNewChat={() => {
+          resetLesson();
+          setPrompt("");
+        }}
+        username={user.username}
+        authLoading={authLoading}
+        onLogin={() => setAuthModal("login")}
+        onSignup={() => setAuthModal("signup")}
+        onLogout={() => {
+          void logout();
+          resetLesson();
+          setConversations([]);
+        }}
       />
 
-      <div className="grid min-h-[min(70vh,720px)] flex-1 grid-cols-1 gap-3 lg:grid-cols-2 lg:gap-4">
-        <VisualStage
-          plan={visualPlan}
-          playKey={playKey}
-          title={title}
-          onDrawComplete={onDrawComplete}
-        />
-        <CliTutor
-          lines={lines}
-          codeBuffer={codeBuffer}
-          highlight={highlight}
-          streaming={status === "running"}
-          title={
-            title
-              ? `${title.replace(/\s+/g, "_").toLowerCase()}.session`
-              : undefined
-          }
-        />
+      <AuthModal
+        key={authModal ?? "closed"}
+        open={authModal != null}
+        initialMode={authModal ?? "login"}
+        onClose={() => setAuthModal(null)}
+      />
+
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        <header className="z-40 flex shrink-0 flex-col gap-3 border-b border-board-edge/80 bg-chalk/90 px-4 py-3 backdrop-blur-md md:flex-row md:items-center md:gap-4 md:px-5">
+          <div className="min-w-0 shrink-0 md:w-[180px]">
+            <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.18em] text-accent">
+              Learn by seeing
+            </p>
+            <h1 className="truncate font-display text-xl font-semibold text-ink md:text-2xl">
+              SeeThrough
+            </h1>
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <PromptBar
+              value={prompt}
+              onChange={setPrompt}
+              onSubmit={onPromptSubmit}
+              disabled={busy}
+              placeholder={
+                canFollowUp
+                  ? "Ask a follow-up about this lesson…"
+                  : "What should we learn today?"
+              }
+              submitLabel={canFollowUp ? "Ask" : "Start"}
+            />
+          </div>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/3d-figures"
+              className="inline-flex h-10 items-center rounded-xl border border-board-edge bg-white px-3 font-sans text-xs font-semibold text-accent-deep transition hover:border-accent hover:bg-accent-soft/40"
+            >
+              3D Figures
+            </Link>
+            <PaceControls
+              playing={status === "running"}
+              speed={speed}
+              onTogglePlay={togglePlay}
+              onSpeedChange={setSpeed}
+              onSkip={skipBeat}
+              disabled={status === "idle" && !prompt.trim()}
+            />
+          </div>
+        </header>
+
+        <div className="relative min-h-0 flex-1">
+          <VisualStage
+            plan={visualPlan}
+            playKey={playKey}
+            title={title}
+            beatOrder={beatOrder}
+            totalBeats={totalBeats}
+            narrationLines={boardNarration}
+            codeBuffer={codeBuffer}
+            streaming={status === "running"}
+            onDrawComplete={onDrawComplete}
+            drawQueue={drawQueue}
+            drawSessionKey={drawSessionKey}
+            drawPlaying={drawPlaying && status !== "paused"}
+            preferDrawEngine={preferDrawEngine}
+            drawSpeech={drawSpeech}
+            canvasHeight={boardCanvasHeight}
+            scrollToY={boardScrollToY}
+            threeScene={threeScene}
+            threePlaying={status === "running"}
+            threeSpeed={speed}
+            threeSelectedStructure={threeSelected}
+            onThreeSelect={setThreeSelected}
+            onDrawClock={(ms) => {
+              drawClockRef.current = ms;
+            }}
+          />
+        </div>
       </div>
     </div>
   );

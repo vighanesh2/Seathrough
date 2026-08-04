@@ -45,7 +45,7 @@ export function CliTutor({
             tutor · cli
           </p>
           <h2 className="truncate font-mono text-xs text-[#c8d5cd]">
-            {title ?? "visual-education — ready"}
+            {title ?? "SeeThrough — ready"}
           </h2>
         </div>
       </header>
@@ -85,7 +85,9 @@ export function CliTutor({
                 key={i}
                 className="animate-fade-up whitespace-pre-wrap rounded-lg border border-terminal-line bg-terminal-panel p-3 text-[#cfe6d9]"
               >
-                <span className="text-warn">// how you&apos;d think it through</span>
+                <span className="text-warn">
+                  {"// how you'd think it through"}
+                </span>
                 {"\n"}
                 {line.text}
               </pre>

@@ -2,6 +2,7 @@ import type { CognitiveType, SceneShape } from "@/lib/schemas/lesson";
 import type { BoardAction } from "@/lib/schemas/boardActions";
 import type { SceneRecipe } from "@/lib/schemas/sceneRecipe";
 import type { VisualPlan } from "@/lib/visuals/types";
+import type { DrawCommand } from "@/lib/draw-engine/commands";
 
 export type BeatKind =
   | "intro"
@@ -53,7 +54,20 @@ export type DiagramScene = {
 };
 
 export type StreamEvent =
-  | { type: "plan_meta"; title: string; language: string; lessonId?: string }
+  | {
+      type: "plan_meta";
+      title: string;
+      language: string;
+      lessonId?: string;
+      conversationId?: string;
+      beatCount?: number;
+      mode?: "new" | "follow_up";
+    }
+  | {
+      type: "student_message";
+      text: string;
+      conversationId?: string;
+    }
   | { type: "beat_start"; beat: LessonBeat }
   | { type: "code_delta"; text: string }
   | {
@@ -67,6 +81,34 @@ export type StreamEvent =
       actions: BoardAction[];
     }
   | { type: "diagram"; scene: DiagramScene }
+  /** Full UML JSON plan generated before drawing (reveal piece-by-piece). */
+  | {
+      type: "diagram_plan";
+      kind: "uml";
+      plan: import("@/lib/draw-engine/umlSchema").UmlDiagramPlan;
+    }
+  /** Interactive Three.js scene chosen by the app for this lesson. */
+  | {
+      type: "three_scene";
+      plan: import("@/lib/three-scenes/decide").ThreeScenePlan;
+    }
+  /** Timed Konva draw-engine session (AI planner → client renderer). */
+  | {
+      type: "draw_session";
+      title: string;
+      canvas: { width: number; height: number };
+      reset?: boolean;
+      /** Scroll the board so this Y is in view (follow-up sections). */
+      scrollToY?: number;
+    }
+  | { type: "draw_cmd"; command: DrawCommand }
+  | { type: "draw_cmds"; commands: DrawCommand[]; beatId?: string }
+  | {
+      type: "draw_speak";
+      text: string;
+      t0: number;
+      beatId?: string;
+    }
   | { type: "narration"; text: string; beatId: string }
   | {
       type: "audio";
@@ -76,6 +118,6 @@ export type StreamEvent =
     }
   | { type: "human_summary"; text: string }
   | { type: "error"; message: string }
-  | { type: "done" };
+  | { type: "done"; conversationId?: string; lessonId?: string };
 
 export type PaceSpeed = 0.75 | 1 | 1.25;

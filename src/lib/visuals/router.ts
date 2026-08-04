@@ -10,7 +10,6 @@ import { matchMetaphor } from "@/lib/visuals/metaphors/map";
 import {
   acceptAssetId,
   matchAssetToPrompt,
-  wantsRightTriangle,
   wantsSimpleMath,
 } from "@/lib/visuals/relevance";
 import type { VisualPlan, VisualRenderer } from "@/lib/visuals/types";
@@ -53,7 +52,11 @@ export function routeVisual(input: RouteVisualInput): VisualPlan {
         actions: [],
       };
     }
-    if (entry.assetId && getVisualAsset(entry.assetId)) {
+    if (
+      entry.assetId &&
+      getVisualAsset(entry.assetId) &&
+      !isWeakIconForConcept(prompt, entry.assetId)
+    ) {
       const rawActions = entry.defaultActions?.length
         ? entry.defaultActions
         : defaultTemplateActions(entry.assetId, entry.id);
@@ -69,23 +72,10 @@ export function routeVisual(input: RouteVisualInput): VisualPlan {
     }
   }
 
-  // 3) Math → figure + formula (never formula alone)
-  if (wantsRightTriangle(prompt) || wantsSimpleMath(prompt)) {
-    if (wantsRightTriangle(prompt) || /\btriangle\b/i.test(prompt)) {
-      return {
-        renderer: "template",
-        assetId: "right-triangle",
-        formula: formulaHint ?? "a^2 + b^2 = c^2",
-        actions: [
-          { type: "draw" },
-          { type: "label", anchor: "a", text: "a" },
-          { type: "label", anchor: "b", text: "b" },
-          { type: "label", anchor: "c", text: "c (hypotenuse)" },
-          { type: "label", anchor: "formula", text: "a² + b² = c²" },
-        ],
-      };
-    }
-
+  // 3) Math → figure + formula (never formula alone).
+  // No topic-specific hardcodes (e.g. Pythagoras → fixed triangle + a²+b²=c²);
+  // board_script / rough teach from the prompt instead.
+  if (wantsSimpleMath(prompt)) {
     if (/\bhexagon\b/i.test(prompt)) {
       return {
         renderer: "template",
@@ -95,15 +85,17 @@ export function routeVisual(input: RouteVisualInput): VisualPlan {
       };
     }
 
-    if (wantsCoordinateGraph(prompt) || wantsEquationBoard(prompt)) {
+    if (wantsCoordinateGraph(prompt)) {
       return {
         renderer: "mafs",
-        source: llm?.source ?? "line",
+        source: llm?.source ?? graphSourceForPrompt(prompt),
         formula: formulaHint ?? guessKatex(prompt),
         actions: [],
       };
     }
 
+    // Algebra / equation teaching → Rough sketch only if no graph was asked.
+    // (Pen board_script heuristics upgrade this in resolveVisualWithLibrary.)
     const mathSketch = buildSceneRecipe({
       prompt,
       conceptKey: input.conceptKey,
@@ -133,6 +125,11 @@ export function routeVisual(input: RouteVisualInput): VisualPlan {
   let asset = fromLlm ?? fromPrompt;
 
   if (asset && metaphor?.entry.forbiddenAssetIds?.includes(asset.id)) {
+    asset = undefined;
+  }
+
+  // Weak icon templates are not enough for conceptual "what/why/meaning" questions
+  if (asset && isWeakIconForConcept(prompt, asset.id)) {
     asset = undefined;
   }
 
@@ -202,13 +199,16 @@ export function routeVisual(input: RouteVisualInput): VisualPlan {
 }
 
 function wantsCoordinateGraph(prompt: string): boolean {
-  return /\b(coordinate|parabola|sine wave|cosine wave|plot graph|xy-plane|graph of|plot the|function graph)\b/i.test(
+  return /\b(coordinate|parabola|sine wave|cosine wave|plot graph|xy-plane|graph of|plot the|function graph|graph (it|this|the))\b/i.test(
     prompt,
   );
 }
 
-function wantsEquationBoard(prompt: string): boolean {
-  return /\b(algebra|equation|formula|sine|cosine|tangent)\b/i.test(prompt);
+function graphSourceForPrompt(prompt: string): string {
+  const t = prompt.toLowerCase();
+  if (/\bparabola|quadratic|x\^2|x²\b/.test(t)) return "parabola";
+  if (/\bsine|sin\b/.test(t)) return "sine";
+  return "line";
 }
 
 function pickFormula(
@@ -230,7 +230,7 @@ function pickFormula(
   ) {
     return llm.source;
   }
-  if (wantsSimpleMath(prompt) || wantsRightTriangle(prompt)) {
+  if (wantsSimpleMath(prompt)) {
     return guessKatex(prompt);
   }
   return undefined;
@@ -258,18 +258,38 @@ function shortLabel(prompt: string, conceptKey?: string): string {
 
 function guessKatex(prompt: string): string {
   const t = prompt.toLowerCase();
-  if (t.includes("pythagoras") || t.includes("hypotenuse")) {
-    return "a^2 + b^2 = c^2";
+  const compact = t
+    .replace(/\s+/g, "")
+    .replace(/²/g, "^2")
+    .replace(/x\^\{2\}/g, "x^2")
+    .replace(/−/g, "-");
+  if (/x\^2-5x\+6/.test(compact)) return "x^2 - 5x + 6 = 0";
+  if (/x\^2/.test(compact) || /\bquadratic\b/.test(t)) {
+    return "ax^2 + bx + c = 0";
   }
   if (/\bsine|\bsin\b/.test(t)) return "\\sin\\theta";
   if (/\bcosine|\bcos\b/.test(t)) return "\\cos\\theta";
   if (/\btangent|\btan\b/.test(t)) return "\\tan\\theta";
-  if (/\bequation|algebra|formula\b/.test(t)) return "y = mx + b";
+  if (/\by\s*=\s*mx|\bslope\s*intercept\b/.test(t)) return "y = mx + b";
   return "E = mc^2";
 }
 
 function isFancyJunk(source: string): boolean {
   return /horse|rider|airplane|saddle/i.test(source);
+}
+
+/** Prefer pen board scripts over single-glyph icons for teaching prompts. */
+function isWeakIconForConcept(prompt: string, assetId: string): boolean {
+  const wantsTeachingVisual =
+    /\b(what (is|does)|what's|meaning|mean\b|explain|why|difference between|how does|using|teach|show|probability|coin|sample space)\b/i.test(
+      prompt,
+    );
+  if (!wantsTeachingVisual) return false;
+  return (
+    assetId.startsWith("tabler-") ||
+    assetId === "chart-area" ||
+    assetId === "chart-dots"
+  );
 }
 
 export function listAssetIdsForPrompt(): string {
@@ -293,8 +313,22 @@ export function listAssetIdsForPrompt(): string {
   ].join(", ");
 }
 
-export function visualKey(plan: VisualPlan): string {
-  return `${plan.renderer}:${plan.assetId ?? ""}:${plan.source ?? ""}:${plan.formula ?? ""}:${plan.sceneRecipe?.kind ?? ""}`;
+/** Identity for remount / keep — ignores formula so equation strips don't vanish on later beats. */
+export function visualStableKey(plan: VisualPlan): string {
+  const scriptSig = plan.boardScript?.steps
+    ?.map((s) => {
+      if (s.type === "write") return `w:${s.text}`;
+      if (s.type === "note") return `n:${s.text}`;
+      if (s.type === "arrow") return `a:${s.label ?? ""}`;
+      return s.type;
+    })
+    .join("|");
+  return `${plan.renderer}:${plan.assetId ?? ""}:${plan.source ?? ""}:${plan.sceneRecipe?.kind ?? ""}:${scriptSig ?? ""}`;
 }
+
+export function visualKey(plan: VisualPlan): string {
+  return `${visualStableKey(plan)}:${plan.formula ?? ""}`;
+}
+
 
 export type { VisualRenderer };

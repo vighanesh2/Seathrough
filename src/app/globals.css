@@ -1,35 +1,43 @@
 @import "tailwindcss";
 
 :root {
-  /* Studio desk — light chalk wall, ink CLI, teal signal (not purple) */
-  --paper: #eef1eb;
-  --paper-deep: #e2e7df;
-  --ink: #1c2420;
-  --ink-soft: #3d4a43;
-  --chalk: #f4f6f2;
-  --board: #2a3530;
-  --board-edge: #1a221e;
-  --terminal: #121916;
-  --terminal-panel: #18211c;
-  --terminal-line: #2c3a33;
-  --accent: #0d8a6a;
-  --accent-soft: #b8e6d6;
-  --warn: #c47a2c;
-  --code: #7dcea0;
-  --muted: #6b7a72;
-  --hairline: rgba(28, 36, 32, 0.12);
-  --glow: rgba(13, 138, 106, 0.18);
+  /* Classroom morning — light, calm, readable (not purple / not cream-terracotta) */
+  --sky: #dceaf5;
+  --sky-deep: #c5d9ea;
+  --paper: #f3f7fb;
+  --paper-deep: #e6eef6;
+  --ink: #1a2b3c;
+  --ink-soft: #3d5166;
+  --chalk: #ffffff;
+  --board: #fbfcfe;
+  --board-edge: #c8d6e4;
+  --marker: #1e3a5f;
+  --marker-soft: #4a6580;
+  --accent: #1b6ca8;
+  --accent-soft: #d4e8f6;
+  --accent-deep: #0f4f7c;
+  --success: #2a7a5c;
+  --success-soft: #d5efe4;
+  --warn: #b86a1e;
+  --warn-soft: #f7e6d0;
+  --error: #c24545;
+  --muted: #6a7d90;
+  --hairline: rgba(26, 43, 60, 0.12);
+  --ruled: rgba(27, 108, 168, 0.08);
 
   --background: var(--paper);
   --foreground: var(--ink);
 
-  --radius-shell: 18px;
-  --shadow-shell: 0 18px 50px rgba(28, 36, 32, 0.12);
+  --radius-shell: 20px;
+  --shadow-shell: 0 12px 40px rgba(26, 43, 60, 0.08);
+  --shadow-board: 0 4px 0 rgba(27, 108, 168, 0.06), 0 16px 48px rgba(26, 43, 60, 0.1);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-sky: var(--sky);
+  --color-sky-deep: var(--sky-deep);
   --color-paper: var(--paper);
   --color-paper-deep: var(--paper-deep);
   --color-ink: var(--ink);
@@ -37,15 +45,19 @@
   --color-chalk: var(--chalk);
   --color-board: var(--board);
   --color-board-edge: var(--board-edge);
-  --color-terminal: var(--terminal);
-  --color-terminal-panel: var(--terminal-panel);
-  --color-terminal-line: var(--terminal-line);
+  --color-marker: var(--marker);
+  --color-marker-soft: var(--marker-soft);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-deep: var(--accent-deep);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
   --color-warn: var(--warn);
-  --color-code: var(--code);
+  --color-warn-soft: var(--warn-soft);
+  --color-error: var(--error);
   --color-muted: var(--muted);
-  --font-sans: var(--font-syne);
+  --font-sans: var(--font-lexend);
+  --font-display: var(--font-fraunces);
   --font-mono: var(--font-ibm-plex-mono);
 }
 
@@ -60,12 +72,13 @@ body {
 
 body {
   margin: 0;
+  overflow: hidden;
   background:
-    radial-gradient(1200px 600px at 12% -10%, rgba(13, 138, 106, 0.09), transparent 55%),
-    radial-gradient(900px 500px at 90% 0%, rgba(196, 122, 44, 0.07), transparent 50%),
-    linear-gradient(180deg, #f5f7f3 0%, var(--paper) 40%, var(--paper-deep) 100%);
+    radial-gradient(900px 420px at 8% -5%, rgba(27, 108, 168, 0.14), transparent 55%),
+    radial-gradient(700px 380px at 96% 8%, rgba(42, 122, 92, 0.08), transparent 50%),
+    linear-gradient(180deg, #eaf3fa 0%, var(--paper) 38%, var(--paper-deep) 100%);
   color: var(--foreground);
-  font-family: var(--font-syne), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-lexend), ui-sans-serif, system-ui, sans-serif;
 }
 
 ::selection {
@@ -87,7 +100,7 @@ body {
 @keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -98,20 +111,43 @@ body {
 @keyframes sketch-in {
   from {
     opacity: 0;
-    transform: scale(0.98);
+    transform: translateY(6px) scale(0.985);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes soft-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
   }
 }
 
 .animate-fade-up {
-  animation: fade-up 420ms ease-out both;
+  animation: fade-up 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 .animate-sketch-in {
   animation: sketch-in 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.font-display {
+  font-family: var(--font-fraunces), ui-serif, Georgia, serif;
+}
+
+.board-surface {
+  background-color: var(--board);
+  background-image:
+    linear-gradient(var(--ruled) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ruled) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: -1px -1px;
 }
 
 .caret-blink::after {
