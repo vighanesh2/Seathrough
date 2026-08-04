@@ -85,7 +85,9 @@ export function CliTutor({
                 key={i}
                 className="animate-fade-up whitespace-pre-wrap rounded-lg border border-terminal-line bg-terminal-panel p-3 text-[#cfe6d9]"
               >
-                <span className="text-warn">// how you&apos;d think it through</span>
+                <span className="text-warn">
+                  {"// how you'd think it through"}
+                </span>
                 {"\n"}
                 {line.text}
               </pre>

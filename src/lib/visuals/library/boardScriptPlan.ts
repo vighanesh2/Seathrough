@@ -81,6 +81,11 @@ function heuristicBoardScript(
     return quadratic;
   }
 
+  const bigBang = matchBigBang(blob);
+  if (bigBang) {
+    return bigBang;
+  }
+
   if (
     /\bdivid(e|ing|es)?\b/.test(blob) &&
     /\bfraction\b/.test(blob)
@@ -378,13 +383,17 @@ Return ONLY JSON matching:
 }
 
 Rules:
-- ALWAYS invent a concrete mini-example on the board (numbers, short labels, before/after).
+- Write COMPLETE sentences (or full short equations) — never keyword fragments like "Big Bang" alone.
+- Prefer: "The universe began from a hot, dense singularity." over "singularity".
+- ALWAYS invent a concrete mini-example on the board when teaching math; for science, narrate the process in full sentences.
 - 4–8 steps. Progressive pen writing. One idea per step.
 - Tag each step with "beat": 1, 2, 3... matching the teaching order (beat 1 = intro, later beats deepen).
-- Prefer compare / transform layouts: write → arrow → write → box.
+- Use arrows ONLY between two write steps for math transforms or process flow (write → arrow → write).
+- Arrow labels must be short connectors only: "then", "so", "therefore", "becomes", "flip" — NEVER content words like "unless" or "inertia".
+- For definitions (e.g. inertia): use write + note + write + box — do NOT insert decorative arrows.
 - No pixel coordinates. No SVG/JS code.
-- write text max 40 chars. note max 80 chars.
-- For definitions: term → meaning → tiny example → boxed takeaway.
+- write text max 100 chars (complete sentence). note max 140 chars.
+- For definitions: full-sentence definition → why it matters → tiny concrete example → boxed takeaway.
 - For compare questions: side A → side B → difference note.
 - Address the misconception if one exists.`,
       },
@@ -461,9 +470,43 @@ function planFromScript(
   return {
     renderer: "board_script",
     formula,
-    boardScript,
+    boardScript: sanitizeScriptSteps(boardScript),
     actions: [],
   };
+}
+
+/** Drop orphan arrows before the script reaches the draw engine. */
+function sanitizeScriptSteps(script: BoardScript): BoardScript {
+  const raw = script.steps;
+  const steps: BoardScript["steps"] = [];
+  for (let i = 0; i < raw.length; i += 1) {
+    const step = raw[i]!;
+    if (step.type !== "arrow") {
+      steps.push(step);
+      continue;
+    }
+    const label = (step.label ?? "").trim().toLowerCase();
+    const connector =
+      !label ||
+      /^(then|so|next|therefore|thus|hence|because|becomes|means|gives|leads to|equals|flip|multiply|divide|use reciprocal|multiply tops & bottoms|ask|inside|around|geometry)$/i.test(
+        label,
+      ) ||
+      /^(then|so|next|therefore)\b/.test(label);
+    if (label && !connector) {
+      if (label.split(/\s+/).length >= 3) {
+        steps.push({
+          type: "note",
+          text: step.label!.slice(0, 160),
+          beat: step.beat,
+        });
+      }
+      continue;
+    }
+    const prevWrite = steps.some((s) => s.type === "write");
+    const nextWrite = raw.slice(i + 1).some((s) => s.type === "write");
+    if (prevWrite && nextWrite) steps.push(step);
+  }
+  return { ...script, steps: steps.length >= 2 ? steps : script.steps };
 }
 
 function normalizeAnalysis(json: unknown): unknown {
@@ -516,6 +559,78 @@ function shortenPrompt(prompt: string): string {
 }
 
 /** Solve / factor a quadratic like x²−5x+6=0 — never a random graph. */
+function matchBigBang(blob: string): VisualPlan | null {
+  if (
+    !/\bbig\s*bang\b/.test(blob) &&
+    !/\bsingularit(?:y|ies)\b/.test(blob) &&
+    !/\borigin of the universe\b/.test(blob)
+  ) {
+    return null;
+  }
+
+  return {
+    renderer: "board_script",
+    boardScript: {
+      title: "The Big Bang Theory",
+      misconception: "Thinking it was an explosion in empty space",
+      steps: [
+        {
+          type: "write",
+          id: "bb1",
+          text: "The Big Bang Theory explains how the universe began.",
+          style: "emphasis",
+          beat: 1,
+        },
+        {
+          type: "write",
+          id: "bb2",
+          text: "Everything started from a hot, dense singularity.",
+          style: "plain",
+          beat: 2,
+        },
+        {
+          type: "arrow",
+          label: "then space itself grew",
+          beat: 2,
+        },
+        {
+          type: "write",
+          id: "bb3",
+          text: "That singularity expanded rapidly into the early universe.",
+          style: "plain",
+          beat: 3,
+        },
+        {
+          type: "note",
+          text: "Space itself stretched — matter rode along with it.",
+          beat: 3,
+        },
+        {
+          type: "write",
+          id: "bb4",
+          text: "As it expanded and cooled, atoms, stars, and galaxies formed.",
+          style: "plain",
+          beat: 4,
+        },
+        {
+          type: "write",
+          id: "bb5",
+          text: "This all began about 13.8 billion years ago.",
+          style: "emphasis",
+          beat: 5,
+        },
+        { type: "box", targetId: "bb5", beat: 5 },
+        {
+          type: "note",
+          text: "Evidence: cosmic microwave background and expanding galaxies.",
+          beat: 5,
+        },
+      ],
+    },
+    actions: [],
+  };
+}
+
 function matchQuadraticSolve(blob: string): VisualPlan | null {
   const compact = blob
     .toLowerCase()

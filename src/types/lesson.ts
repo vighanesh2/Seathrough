@@ -2,6 +2,7 @@ import type { CognitiveType, SceneShape } from "@/lib/schemas/lesson";
 import type { BoardAction } from "@/lib/schemas/boardActions";
 import type { SceneRecipe } from "@/lib/schemas/sceneRecipe";
 import type { VisualPlan } from "@/lib/visuals/types";
+import type { DrawCommand } from "@/lib/draw-engine/commands";
 
 export type BeatKind =
   | "intro"
@@ -80,6 +81,34 @@ export type StreamEvent =
       actions: BoardAction[];
     }
   | { type: "diagram"; scene: DiagramScene }
+  /** Full UML JSON plan generated before drawing (reveal piece-by-piece). */
+  | {
+      type: "diagram_plan";
+      kind: "uml";
+      plan: import("@/lib/draw-engine/umlSchema").UmlDiagramPlan;
+    }
+  /** Interactive Three.js scene chosen by the app for this lesson. */
+  | {
+      type: "three_scene";
+      plan: import("@/lib/three-scenes/decide").ThreeScenePlan;
+    }
+  /** Timed Konva draw-engine session (AI planner → client renderer). */
+  | {
+      type: "draw_session";
+      title: string;
+      canvas: { width: number; height: number };
+      reset?: boolean;
+      /** Scroll the board so this Y is in view (follow-up sections). */
+      scrollToY?: number;
+    }
+  | { type: "draw_cmd"; command: DrawCommand }
+  | { type: "draw_cmds"; commands: DrawCommand[]; beatId?: string }
+  | {
+      type: "draw_speak";
+      text: string;
+      t0: number;
+      beatId?: string;
+    }
   | { type: "narration"; text: string; beatId: string }
   | {
       type: "audio";

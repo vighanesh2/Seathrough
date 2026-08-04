@@ -31,6 +31,8 @@ export function InfiniteCanvas({
   const viewportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Resetting the viewport is the intended response to a new visual key.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setTransform({ x: 0, y: 0, scale: 1 });
   }, [resetKey]);
 

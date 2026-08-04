@@ -10,7 +10,6 @@ import { matchMetaphor } from "@/lib/visuals/metaphors/map";
 import {
   acceptAssetId,
   matchAssetToPrompt,
-  wantsRightTriangle,
   wantsSimpleMath,
 } from "@/lib/visuals/relevance";
 import type { VisualPlan, VisualRenderer } from "@/lib/visuals/types";
@@ -73,23 +72,10 @@ export function routeVisual(input: RouteVisualInput): VisualPlan {
     }
   }
 
-  // 3) Math → figure + formula (never formula alone)
-  if (wantsRightTriangle(prompt) || wantsSimpleMath(prompt)) {
-    if (wantsRightTriangle(prompt) || /\btriangle\b/i.test(prompt)) {
-      return {
-        renderer: "template",
-        assetId: "right-triangle",
-        formula: formulaHint ?? "a^2 + b^2 = c^2",
-        actions: [
-          { type: "draw" },
-          { type: "label", anchor: "a", text: "a" },
-          { type: "label", anchor: "b", text: "b" },
-          { type: "label", anchor: "c", text: "c (hypotenuse)" },
-          { type: "label", anchor: "formula", text: "a² + b² = c²" },
-        ],
-      };
-    }
-
+  // 3) Math → figure + formula (never formula alone).
+  // No topic-specific hardcodes (e.g. Pythagoras → fixed triangle + a²+b²=c²);
+  // board_script / rough teach from the prompt instead.
+  if (wantsSimpleMath(prompt)) {
     if (/\bhexagon\b/i.test(prompt)) {
       return {
         renderer: "template",
@@ -244,7 +230,7 @@ function pickFormula(
   ) {
     return llm.source;
   }
-  if (wantsSimpleMath(prompt) || wantsRightTriangle(prompt)) {
+  if (wantsSimpleMath(prompt)) {
     return guessKatex(prompt);
   }
   return undefined;
@@ -277,9 +263,6 @@ function guessKatex(prompt: string): string {
     .replace(/²/g, "^2")
     .replace(/x\^\{2\}/g, "x^2")
     .replace(/−/g, "-");
-  if (t.includes("pythagoras") || t.includes("hypotenuse")) {
-    return "a^2 + b^2 = c^2";
-  }
   if (/x\^2-5x\+6/.test(compact)) return "x^2 - 5x + 6 = 0";
   if (/x\^2/.test(compact) || /\bquadratic\b/.test(t)) {
     return "ax^2 + bx + c = 0";

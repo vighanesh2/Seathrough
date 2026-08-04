@@ -43,7 +43,9 @@ export function BoardScriptStage({
   onDrawComplete,
 }: BoardScriptStageProps) {
   const onDoneRef = useRef(onDrawComplete);
-  onDoneRef.current = onDrawComplete;
+  useEffect(() => {
+    onDoneRef.current = onDrawComplete;
+  }, [onDrawComplete]);
 
   const steps = useMemo(() => script.steps ?? [], [script]);
   const targetThrough = revealThroughStepIndex({
@@ -61,6 +63,8 @@ export function BoardScriptStage({
   // New script → reset
   useEffect(() => {
     visibleRef.current = 0;
+    // A new script starts a fresh progressive reveal.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setVisibleCount(0);
     setBoxedIds(new Set());
     setCrossedIds(new Set());

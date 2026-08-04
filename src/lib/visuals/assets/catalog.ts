@@ -258,15 +258,8 @@ export const rightTriangle: VisualAsset = {
   id: "right-triangle",
   title: "Right triangle",
   viewBox: "0 0 480 280",
-  tags: [
-    "pythagoras",
-    "pythagorean",
-    "hypotenuse",
-    "right triangle",
-    "right-angled",
-    "right angled triangle",
-    "triangle",
-  ],
+  // Only match when the user asks for a right triangle — not theorem topics.
+  tags: ["right triangle", "right-angled", "right angled triangle"],
   paths: [
     {
       id: "triangle",

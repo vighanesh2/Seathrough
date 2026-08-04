@@ -2429,7 +2429,6 @@ export const GENERATED_ASSETS: VisualAsset[] = [
     "viewBox": "0 0 24 24",
     "tags": [
       "triangle",
-      "pythagoras",
       "geometry",
       "delta",
       "shape",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getVisualAsset } from "@/lib/visuals/assets/catalog";
 import type { VisualAction, VisualPlan } from "@/lib/visuals/types";
 
@@ -30,16 +30,15 @@ export function TemplateStage({
   onDrawComplete,
 }: TemplateStageProps) {
   const onDoneRef = useRef(onDrawComplete);
-  onDoneRef.current = onDrawComplete;
+  useEffect(() => {
+    onDoneRef.current = onDrawComplete;
+  }, [onDrawComplete]);
 
   const [labels, setLabels] = useState<LabelMark[]>([]);
   const [arrows, setArrows] = useState<ArrowMark[]>([]);
   const [highlight, setHighlight] = useState<string | null>(null);
 
-  const asset = useMemo(
-    () => (plan?.assetId ? getVisualAsset(plan.assetId) : undefined),
-    [plan?.assetId],
-  );
+  const asset = plan?.assetId ? getVisualAsset(plan.assetId) : undefined;
 
   useEffect(() => {
     if (!plan || plan.renderer !== "template" || !asset) return;
@@ -88,6 +87,8 @@ export function TemplateStage({
       }
     }
 
+    // Resetting the staged overlay is the purpose of this playback effect.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHighlight(hl);
     // Stagger labels slightly so the figure reads first
     setLabels([]);

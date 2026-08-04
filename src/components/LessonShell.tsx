@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { useMachine } from "@xstate/react";
 import type { BoardNarrationLine } from "@/components/board/BoardNarration";
 import { AuthModal } from "@/components/AuthModal";
@@ -11,11 +12,18 @@ import { PromptBar } from "@/components/PromptBar";
 import { VisualStage } from "@/components/VisualStage";
 import { consumeLessonStream } from "@/lib/client/consumeLessonStream";
 import type { ConversationListItem } from "@/lib/conversations/types";
+import type { AnatomyStructureId } from "@/lib/anatomy/types";
+import { DrawCommandQueue } from "@/lib/draw-engine/resolve";
+import type { DrawCommand } from "@/lib/draw-engine/commands";
 import { toUserFacingError } from "@/lib/errors/userFacing";
 import { lessonMachine } from "@/lib/lesson/machine";
 import { visualStableKey } from "@/lib/visuals/router";
 import type { VisualPlan } from "@/lib/visuals/types";
 import type { PaceSpeed, StreamEvent } from "@/types/lesson";
+import {
+  threeSceneFromChoiceOrNull,
+  type ThreeScenePlan,
+} from "@/lib/three-scenes/decide";
 
 type LessonStatus = "idle" | "running" | "paused" | "done" | "error";
 
@@ -25,7 +33,22 @@ function chatsCacheKey(userId?: string | null): string {
   return userId ? `ve.chatSidebar.cache.${userId}` : "ve.chatSidebar.cache.anon";
 }
 
-function visualSummary(plan: VisualPlan | null): string {
+function visualSummary(
+  plan: VisualPlan | null,
+  threeScene: ThreeScenePlan | null,
+  selectedStructure: AnatomyStructureId | null,
+): string {
+  if (threeScene) {
+    return [
+      `renderer=three`,
+      `scene=${threeScene.id}`,
+      `title=${threeScene.title}`,
+      `reveal=${threeScene.reveal}/${threeScene.maxReveal}`,
+      selectedStructure ? `selected=${selectedStructure}` : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  }
   if (!plan) return "No figure on the board yet.";
   return [
     `renderer=${plan.renderer}`,
@@ -81,6 +104,61 @@ function writeCachedChats(
   }
 }
 
+function rebaseDrawCommands(
+  commands: DrawCommand[],
+  queue: DrawCommandQueue,
+  clockMs: number,
+): DrawCommand[] {
+  if (!commands.length) return commands;
+  const existing = queue.getAll();
+  const prevEnd = existing.reduce(
+    (m, c) => Math.max(m, c.t0 + (c.durationMs || 0)),
+    0,
+  );
+  const minT = Math.min(...commands.map((c) => c.t0));
+  const base = Math.max(clockMs + 80, prevEnd + 120);
+  return commands.map((c) => ({
+    ...c,
+    t0: base + (c.t0 - minT),
+  }));
+}
+
+function rebaseDrawCommand(
+  command: DrawCommand,
+  queue: DrawCommandQueue,
+  clockMs: number,
+): DrawCommand {
+  return rebaseDrawCommands([command], queue, clockMs)[0]!;
+}
+
+function commandBottomY(cmd: DrawCommand): number {
+  switch (cmd.type) {
+    case "text":
+      return cmd.y + (cmd.fontSize ?? 18) * 1.6;
+    case "rect":
+    case "highlight":
+    case "image":
+      return cmd.y + cmd.h;
+    case "circle":
+      return cmd.y + cmd.radius;
+    case "line":
+    case "arrow":
+      return Math.max(cmd.y1, cmd.y2);
+    case "stroke":
+      return Math.max(...cmd.points.map((p) => p.y), 0);
+    default:
+      return 0;
+  }
+}
+
+function commandsBottomY(commands: DrawCommand[]): number {
+  let max = 0;
+  for (const c of commands) {
+    max = Math.max(max, commandBottomY(c));
+  }
+  return max;
+}
+
 export function LessonShell() {
   const { user, loading: authLoading, accessToken, logout } = useAuth();
   const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
@@ -97,7 +175,7 @@ export function LessonShell() {
   );
   const [codeBuffer, setCodeBuffer] = useState("");
   const [conversationId, setConversationId] = useState<string | undefined>();
-  const [lessonId, setLessonId] = useState<string | undefined>();
+  const [, setLessonId] = useState<string | undefined>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [conversations, setConversations] = useState<ConversationListItem[]>(
     [],
@@ -107,9 +185,25 @@ export function LessonShell() {
   const narrationSeqRef = useRef(0);
   const visualPlanRef = useRef<VisualPlan | null>(null);
   const conversationIdRef = useRef<string | undefined>(undefined);
+  const drawQueue = useMemo(() => new DrawCommandQueue(), []);
+  const [drawSessionKey, setDrawSessionKey] = useState(0);
+  const [drawPlaying, setDrawPlaying] = useState(false);
+  const [preferDrawEngine, setPreferDrawEngine] = useState(false);
+  const [drawSpeech, setDrawSpeech] = useState<string | null>(null);
+  const [boardCanvasHeight, setBoardCanvasHeight] = useState(600);
+  const [boardScrollToY, setBoardScrollToY] = useState<number | null>(null);
+  const [threeScene, setThreeScene] = useState<ThreeScenePlan | null>(null);
+  const [threeSelected, setThreeSelected] =
+    useState<AnatomyStructureId | null>(null);
+  const drawClockRef = useRef(0);
+  const boardBottomYRef = useRef(0);
+  const threeSceneRef = useRef<ThreeScenePlan | null>(null);
+  const threeSelectedRef = useRef<AnatomyStructureId | null>(null);
 
   visualPlanRef.current = visualPlan;
   conversationIdRef.current = conversationId;
+  threeSceneRef.current = threeScene;
+  threeSelectedRef.current = threeSelected;
 
   const canFollowUp =
     Boolean(conversationId) &&
@@ -175,7 +269,9 @@ export function LessonShell() {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(SIDEBAR_KEY);
-      if (stored === "1") setSidebarCollapsed(true);
+      if (stored === "1") {
+        queueMicrotask(() => setSidebarCollapsed(true));
+      }
     } catch {
       // ignore
     }
@@ -183,16 +279,23 @@ export function LessonShell() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user?.id) {
-      abortRef.current?.abort();
-      setConversations([]);
-      setChatsLoading(false);
-      setAuthModal((prev) => prev ?? "login");
-      return;
-    }
-    setAuthModal(null);
-    setConversations(readCachedChats(user.id));
-    void refreshConversations();
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      if (!user?.id) {
+        abortRef.current?.abort();
+        setConversations([]);
+        setChatsLoading(false);
+        setAuthModal((prev) => prev ?? "login");
+        return;
+      }
+      setAuthModal(null);
+      setConversations(readCachedChats(user.id));
+      void refreshConversations();
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [authLoading, refreshConversations, user?.id]);
 
   useEffect(() => {
@@ -289,6 +392,65 @@ export function LessonShell() {
       }
       case "board":
       case "diagram":
+      case "diagram_plan":
+        // Server holds the full UML JSON; board updates arrive via draw_cmds.
+        break;
+      case "three_scene":
+        if (threeSceneRef.current?.id !== event.plan.id) {
+          setThreeSelected(null);
+        }
+        setThreeScene(event.plan);
+        // Drop placeholder rough/template visuals once 3D takes over.
+        setVisualPlan(null);
+        lastVisualKeyRef.current = "";
+        break;
+      case "draw_session":
+        if (event.reset !== false) {
+          drawQueue.clear();
+          setDrawSessionKey((k) => k + 1);
+          drawClockRef.current = 0;
+          boardBottomYRef.current = 0;
+        }
+        if (event.canvas?.height) {
+          setBoardCanvasHeight((h) => Math.max(h, event.canvas.height));
+        }
+        if (typeof event.scrollToY === "number") {
+          setBoardScrollToY(event.scrollToY);
+        }
+        setPreferDrawEngine(true);
+        setDrawPlaying(true);
+        setDrawSpeech(null);
+        break;
+      case "draw_cmd":
+        setPreferDrawEngine(true);
+        setDrawPlaying(true);
+        drawQueue.enqueue(
+          rebaseDrawCommand(event.command, drawQueue, drawClockRef.current),
+        );
+        boardBottomYRef.current = Math.max(
+          boardBottomYRef.current,
+          commandBottomY(event.command),
+        );
+        setBoardCanvasHeight((h) =>
+          Math.max(h, boardBottomYRef.current + 80),
+        );
+        break;
+      case "draw_cmds":
+        setPreferDrawEngine(true);
+        setDrawPlaying(true);
+        drawQueue.enqueue(
+          rebaseDrawCommands(event.commands, drawQueue, drawClockRef.current),
+        );
+        boardBottomYRef.current = Math.max(
+          boardBottomYRef.current,
+          commandsBottomY(event.commands),
+        );
+        setBoardCanvasHeight((h) =>
+          Math.max(h, boardBottomYRef.current + 80),
+        );
+        break;
+      case "draw_speak":
+        setDrawSpeech(event.text);
         break;
       case "code_delta":
         setCodeBuffer((prev) => prev + event.text);
@@ -351,6 +513,16 @@ export function LessonShell() {
     setConversationId(undefined);
     conversationIdRef.current = undefined;
     setLessonId(undefined);
+    drawQueue.clear();
+    setDrawSessionKey((k) => k + 1);
+    setBoardCanvasHeight(600);
+    setBoardScrollToY(null);
+    setThreeScene(null);
+    setThreeSelected(null);
+    boardBottomYRef.current = 0;
+    setDrawPlaying(false);
+    setPreferDrawEngine(false);
+    setDrawSpeech(null);
   }
 
   function prepareSoftContinue() {
@@ -378,8 +550,14 @@ export function LessonShell() {
           mode === "follow_up" ? conversationIdRef.current : undefined,
         visualSummary:
           mode === "follow_up"
-            ? visualSummary(visualPlanRef.current)
+            ? visualSummary(
+                visualPlanRef.current,
+                threeSceneRef.current,
+                threeSelectedRef.current,
+              )
             : undefined,
+        boardBottomY:
+          mode === "follow_up" ? boardBottomYRef.current : undefined,
         accessToken,
         onEvent: async (event) => {
           if (event.type === "error" || event.type === "done") {
@@ -459,6 +637,7 @@ export function LessonShell() {
           turns: Array<{ role: string; content: string }>;
         };
         visualPlan?: VisualPlan | null;
+        threeScene?: unknown;
       };
       const ctx = data.conversation;
       setConversationId(ctx.conversationId);
@@ -471,11 +650,28 @@ export function LessonShell() {
       setCodeBuffer("");
       setPrompt("");
       setStatus("done");
-      if (data.visualPlan) {
+      const restoredThree = threeSceneFromChoiceOrNull(
+        data.threeScene,
+        ctx.title || ctx.rootPrompt || undefined,
+      );
+      if (restoredThree) {
+        setThreeSelected(null);
+        setThreeScene({
+          ...restoredThree,
+          reveal: restoredThree.maxReveal,
+        });
+        setVisualPlan(null);
+        lastVisualKeyRef.current = "";
+        setPreferDrawEngine(false);
+      } else if (data.visualPlan) {
+        setThreeSelected(null);
+        setThreeScene(null);
         lastVisualKeyRef.current = visualStableKey(data.visualPlan);
         setVisualPlan(data.visualPlan);
         setPlayKey((k) => k + 1);
       } else {
+        setThreeSelected(null);
+        setThreeScene(null);
         setVisualPlan(null);
         lastVisualKeyRef.current = "";
       }
@@ -613,6 +809,12 @@ export function LessonShell() {
           </div>
 
           <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/3d-figures"
+              className="inline-flex h-10 items-center rounded-xl border border-board-edge bg-white px-3 font-sans text-xs font-semibold text-accent-deep transition hover:border-accent hover:bg-accent-soft/40"
+            >
+              3D Figures
+            </Link>
             <PaceControls
               playing={status === "running"}
               speed={speed}
@@ -635,6 +837,21 @@ export function LessonShell() {
             codeBuffer={codeBuffer}
             streaming={status === "running"}
             onDrawComplete={onDrawComplete}
+            drawQueue={drawQueue}
+            drawSessionKey={drawSessionKey}
+            drawPlaying={drawPlaying && status !== "paused"}
+            preferDrawEngine={preferDrawEngine}
+            drawSpeech={drawSpeech}
+            canvasHeight={boardCanvasHeight}
+            scrollToY={boardScrollToY}
+            threeScene={threeScene}
+            threePlaying={status === "running"}
+            threeSpeed={speed}
+            threeSelectedStructure={threeSelected}
+            onThreeSelect={setThreeSelected}
+            onDrawClock={(ms) => {
+              drawClockRef.current = ms;
+            }}
           />
         </div>
       </div>

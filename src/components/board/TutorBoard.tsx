@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
@@ -11,8 +12,39 @@ import { BoardScriptStage } from "@/components/board/BoardScriptStage";
 import { InfiniteCanvas } from "@/components/board/InfiniteCanvas";
 import { RoughSketch } from "@/components/RoughSketch";
 import { TemplateStage } from "@/components/board/TemplateStage";
+import type { DrawCommandQueue } from "@/lib/draw-engine/resolve";
+import type { AnatomyStructureId } from "@/lib/anatomy/types";
 import type { SceneRecipe } from "@/lib/schemas/sceneRecipe";
+import type { ThreeScenePlan } from "@/lib/three-scenes/decide";
 import type { VisualPlan } from "@/lib/visuals/types";
+
+const KonvaDrawStage = dynamic(
+  () =>
+    import("@/components/draw-engine/KonvaDrawStage").then(
+      (m) => m.KonvaDrawStage,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full min-h-[320px] items-center justify-center bg-white font-sans text-sm text-muted">
+        Loading draw engine…
+      </div>
+    ),
+  },
+);
+
+const ThreeBoard = dynamic(
+  () =>
+    import("@/components/board/ThreeBoard").then((m) => m.ThreeBoard),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full min-h-[280px] items-center justify-center bg-[#f7fafc] font-sans text-sm text-muted">
+        Loading 3D…
+      </div>
+    ),
+  },
+);
 
 type TutorBoardProps = {
   plan: VisualPlan | null;
@@ -24,6 +56,19 @@ type TutorBoardProps = {
   codeBuffer?: string;
   streaming?: boolean;
   onDrawComplete?: () => void;
+  drawQueue?: DrawCommandQueue;
+  drawSessionKey?: number;
+  drawPlaying?: boolean;
+  preferDrawEngine?: boolean;
+  drawSpeech?: string | null;
+  canvasHeight?: number;
+  scrollToY?: number | null;
+  threeScene?: ThreeScenePlan | null;
+  threePlaying?: boolean;
+  threeSpeed?: number;
+  threeSelectedStructure?: AnatomyStructureId | null;
+  onThreeSelect?: (structure: AnatomyStructureId | null) => void;
+  onDrawClock?: (ms: number) => void;
 };
 
 /**
@@ -39,20 +84,44 @@ export function TutorBoard({
   codeBuffer,
   streaming,
   onDrawComplete,
+  drawQueue,
+  drawSessionKey = 0,
+  drawPlaying = false,
+  preferDrawEngine = false,
+  drawSpeech = null,
+  canvasHeight,
+  scrollToY = null,
+  threeScene = null,
+  threePlaying = true,
+  threeSpeed = 1,
+  threeSelectedStructure = null,
+  onThreeSelect,
+  onDrawClock,
 }: TutorBoardProps) {
   const onDoneRef = useRef(onDrawComplete);
-  onDoneRef.current = onDrawComplete;
+  useEffect(() => {
+    onDoneRef.current = onDrawComplete;
+  }, [onDrawComplete]);
 
-  const showTemplate = plan?.renderer === "template";
-  const showKatexOnly = plan?.renderer === "katex";
-  const showMafs = plan?.renderer === "mafs";
-  const showRough = plan?.renderer === "rough" || plan?.renderer === "icon";
+  const showThree = Boolean(threeScene);
+  const useDrawEngine = !showThree && Boolean(preferDrawEngine && drawQueue);
+  const showTemplate = !showThree && !useDrawEngine && plan?.renderer === "template";
+  const showKatexOnly = !showThree && !useDrawEngine && plan?.renderer === "katex";
+  const showMafs = !showThree && !useDrawEngine && plan?.renderer === "mafs";
+  const showRough =
+    !showThree &&
+    !useDrawEngine &&
+    (plan?.renderer === "rough" || plan?.renderer === "icon");
   const showBoardScript =
+    !showThree &&
+    !useDrawEngine &&
     plan?.renderer === "board_script" &&
     (plan.boardScript?.steps?.length ?? 0) > 0;
-  const showMermaid = plan?.renderer === "mermaid";
+  const showMermaid =
+    !showThree && !useDrawEngine && plan?.renderer === "mermaid";
   const showFigure = Boolean(
-    showTemplate ||
+    useDrawEngine ||
+      showTemplate ||
       showMafs ||
       showRough ||
       showKatexOnly ||
@@ -66,7 +135,50 @@ export function TutorBoard({
       aria-label="Tutor whiteboard"
     >
       <div className="relative min-h-0 min-w-0 flex-1">
-        {showMermaid && plan?.source ? (
+        {showThree && threeScene ? (
+          <div className="absolute inset-0 flex flex-col bg-white">
+            {drawSpeech ? (
+              <p className="shrink-0 border-b border-board-edge/60 bg-accent-soft/30 px-4 py-2 font-sans text-sm text-ink">
+                <span className="font-semibold text-accent-deep">Tutor: </span>
+                {drawSpeech}
+              </p>
+            ) : null}
+            <div className="min-h-0 flex-1 p-2 md:p-3">
+              <ThreeBoard
+                plan={threeScene}
+                playing={threePlaying}
+                speed={threeSpeed}
+                selectedStructure={threeSelectedStructure}
+                focusStructures={
+                  threeSelectedStructure ? [threeSelectedStructure] : []
+                }
+                onSelectStructure={onThreeSelect}
+                showStructureControls={threeScene.id === "cardiopulmonary"}
+                className="h-full min-h-[280px] w-full overflow-hidden rounded-xl border border-board-edge bg-[#f7fafc]"
+              />
+            </div>
+          </div>
+        ) : useDrawEngine && drawQueue ? (
+          <div className="absolute inset-0 flex flex-col bg-white">
+            {drawSpeech ? (
+              <p className="shrink-0 border-b border-board-edge/60 bg-accent-soft/30 px-4 py-2 font-sans text-sm text-ink">
+                <span className="font-semibold text-accent-deep">Tutor: </span>
+                {drawSpeech}
+              </p>
+            ) : null}
+            <div className="relative min-h-0 flex-1 p-2 md:p-3">
+              <KonvaDrawStage
+                queue={drawQueue}
+                sessionKey={drawSessionKey}
+                playing={drawPlaying}
+                onClock={onDrawClock}
+                canvasHeight={canvasHeight}
+                scrollToY={scrollToY}
+                className="h-full min-h-[280px] w-full overflow-auto rounded-xl border border-board-edge bg-white"
+              />
+            </div>
+          </div>
+        ) : showMermaid && plan?.source ? (
           <MermaidPane
             key={`m-${playKey}`}
             source={plan.source}
@@ -279,7 +391,9 @@ function MafsPanel({
   source?: string;
 }) {
   const onDoneRef = useRef(onDone);
-  onDoneRef.current = onDone;
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
 
   useEffect(() => {
     const t = setTimeout(() => onDoneRef.current?.(), 400);
@@ -331,7 +445,9 @@ function RoughPanel({
   playKey: number;
 }) {
   const onDoneRef = useRef(onDone);
-  onDoneRef.current = onDone;
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
 
   useEffect(() => {
     const t = setTimeout(() => onDoneRef.current?.(), 450);

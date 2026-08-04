@@ -5,6 +5,35 @@ import {
   loadConversationContext,
   summarizeTurnsForPrompt,
 } from "@/lib/conversations/store";
+import {
+  DRAW_CANVAS_HEIGHT,
+  DRAW_CANVAS_WIDTH,
+} from "@/lib/draw-engine/commands";
+import {
+  commandsForBeat,
+  createBoardLayout,
+  drawCommandsEndMs,
+  type BoardLayout,
+} from "@/lib/draw-engine/fromVisualPlan";
+import {
+  layoutExtentY,
+  registerUmlOccupancy,
+  SECTION_GAP,
+} from "@/lib/draw-engine/boardLayout";
+import { generateUmlDiagramPlan } from "@/lib/draw-engine/generateUmlPlan";
+import {
+  revealForBeat,
+  threeSceneFromLessonPlan,
+  type ThreeScenePlan,
+} from "@/lib/three-scenes/decide";
+import {
+  UML_BOX_WIDTH,
+  classBoxHeight,
+} from "@/lib/draw-engine/umlLayout";
+import {
+  shouldGenerateUmlPlan,
+  type UmlDiagramPlan,
+} from "@/lib/draw-engine/umlSchema";
 import { toUserFacingError } from "@/lib/errors/userFacing";
 import {
   generateFollowUpPlan,
@@ -27,9 +56,21 @@ export type RunLessonOptions = {
   mode?: "new" | "follow_up";
   /** Optional live board summary from the client */
   visualSummary?: string;
+  /** Lowest Y of existing board content (follow-ups stack below this). */
+  boardBottomY?: number;
   /** Signed-in user id when available */
   userId?: string | null;
 };
+
+function offsetUmlPlanY(plan: UmlDiagramPlan, dy: number): UmlDiagramPlan {
+  if (!dy) return plan;
+  return {
+    ...plan,
+    classes: plan.classes.map((c) => ({ ...c, y: c.y + dy })),
+    actors: plan.actors.map((a) => ({ ...a })),
+    messages: plan.messages.map((m) => ({ ...m, y: m.y + dy })),
+  };
+}
 
 function assertNotAborted(signal?: AbortSignal) {
   if (signal?.aborted) {
@@ -61,8 +102,6 @@ export async function* runLessonStream(
     assertNotAborted(options.signal);
 
     let plan: LessonPlanParsed;
-    let rootPromptForVisual = prompt;
-
     if (isFollowUp && conversationId) {
       const ctx = await loadConversationContext(conversationId);
       if (!ctx) {
@@ -72,8 +111,6 @@ export async function* runLessonStream(
         };
         return;
       }
-
-      rootPromptForVisual = ctx.rootPrompt || prompt;
 
       if (!ctx.userId || ctx.userId !== options.userId) {
         yield {
@@ -199,36 +236,112 @@ export async function* runLessonStream(
       mode: isFollowUp ? "follow_up" : "new",
     };
 
+    // UML lessons: generate the FULL diagram JSON once, then reveal beat-by-beat.
+    let umlPlan: UmlDiagramPlan | null = null;
+    const umlRevealed = new Set<string>();
+    const umlPrompt = prompt;
+
+    if (shouldGenerateUmlPlan(umlPrompt)) {
+      try {
+        assertNotAborted(options.signal);
+        umlPlan = await generateUmlDiagramPlan({
+          prompt: umlPrompt,
+          lessonTitle: plan.title,
+          beatCount: plan.beats.length,
+          lessonText: [
+            plan.title,
+            plan.humanSummary,
+            ...plan.beats.map((b) => b.narration),
+          ]
+            .filter(Boolean)
+            .join("\n"),
+        });
+        yield { type: "diagram_plan", kind: "uml", plan: umlPlan };
+      } catch (umlError) {
+        console.error(
+          "[lesson-stream] UML plan generation failed",
+          umlError instanceof Error ? umlError.message : umlError,
+        );
+        umlPlan = null;
+      }
+    }
+
+    // Planner decides whether this lesson gets interactive Three.js (not keywords).
+    let threePlan: ThreeScenePlan | null = null;
+    if (!umlPlan) {
+      threePlan = threeSceneFromLessonPlan(plan);
+      if (threePlan) {
+        threePlan = {
+          ...threePlan,
+          reveal: revealForBeat(threePlan, 1, plan.beats.length),
+        };
+        yield { type: "three_scene", plan: threePlan };
+      }
+    }
+
+    const priorBottom = Math.max(0, options.boardBottomY ?? 0);
+    const sectionOffsetY =
+      isFollowUp && priorBottom > 40
+        ? Math.ceil(priorBottom + SECTION_GAP)
+        : 0;
+    const keepPriorBoard = isFollowUp && sectionOffsetY > 0;
+    if (umlPlan && sectionOffsetY > 0) {
+      umlPlan = offsetUmlPlanY(umlPlan, sectionOffsetY);
+    }
+
     let hasVisual = false;
     let activeVisualKey: string | undefined;
+    let activePlan: VisualPlan | null = null;
+    let drawClockMs = 0;
+    let drawSessionStarted = false;
+    let boardLayout: BoardLayout = createBoardLayout(sectionOffsetY);
 
     for (const beat of plan.beats) {
       assertNotAborted(options.signal);
 
       yield { type: "beat_start", beat };
 
-      const decision = await resolveVisualWithLibrary({
-        // Include original lesson prompt so follow-ups still match topic heuristics
-        prompt: isFollowUp
-          ? `${rootPromptForVisual}\n${prompt}`
-          : prompt,
-        beat: isFollowUp
-          ? {
-              ...beat,
-              // Keep the live board unless this is clearly a visual shift
-              // Heuristics still upgrade wrong graphs in resolveVisualWithLibrary
-              imageAction:
-                beat.kind === "visual_shift" ? beat.imageAction : "keep",
-              visual:
-                beat.kind === "visual_shift" ? beat.visual : undefined,
-            }
-          : beat,
-        activeVisualKey,
-        hasVisual,
-      });
+      if (threePlan) {
+        const nextReveal = revealForBeat(
+          threePlan,
+          beat.order,
+          plan.beats.length,
+        );
+        if (nextReveal !== threePlan.reveal) {
+          threePlan = { ...threePlan, reveal: nextReveal };
+          yield { type: "three_scene", plan: threePlan };
+        }
+      }
+
+      const decision = threePlan
+        ? {
+            action: "keep" as const,
+            reason: "Interactive 3D scene owns the visual stage",
+            plan: null,
+          }
+        : await resolveVisualWithLibrary({
+            // Always route visuals from the CURRENT question only.
+            // Including prior lesson text here falsely rematches old assets
+            // (e.g. "class" → "Class blueprint → objects" on a cryptography follow-up).
+            prompt,
+            beat: isFollowUp
+              ? {
+                  ...beat,
+                  // Keep the live board unless this is clearly a visual shift
+                  // Heuristics still upgrade wrong graphs in resolveVisualWithLibrary
+                  imageAction:
+                    beat.kind === "visual_shift" ? beat.imageAction : "keep",
+                  visual:
+                    beat.kind === "visual_shift" ? beat.visual : undefined,
+                }
+              : beat,
+            activeVisualKey,
+            hasVisual,
+          });
 
       if (decision.action === "generate" && decision.plan) {
         activeVisualKey = visualStableKey(decision.plan);
+        activePlan = decision.plan;
         hasVisual = true;
         yield {
           type: "visual",
@@ -237,11 +350,100 @@ export async function* runLessonStream(
         };
       } else if (decision.action === "retire" && decision.plan) {
         activeVisualKey = undefined;
+        activePlan = null;
         yield {
           type: "visual",
           beatId: beat.id,
           plan: decision.plan,
         };
+        if (drawSessionStarted) {
+          if (!keepPriorBoard) {
+            yield {
+              type: "draw_cmd",
+              command: {
+                id: `clear-${beat.id}`,
+                type: "clear",
+                t0: drawClockMs,
+                durationMs: 0,
+              },
+            };
+            drawClockMs += 200;
+            boardLayout = createBoardLayout(sectionOffsetY);
+          }
+        }
+      } else if (decision.action === "keep" && decision.plan) {
+        // Keep identity, but refresh active plan if library returned one.
+        activePlan = decision.plan;
+      }
+
+      if (!threePlan) {
+        // Every 2D beat draws something — 3D lessons update their live scene.
+        if (!drawSessionStarted) {
+          drawSessionStarted = true;
+          boardLayout = createBoardLayout(sectionOffsetY);
+          if (umlPlan?.kind === "class") {
+            registerUmlOccupancy(
+              boardLayout,
+              umlPlan.classes.map((c) => ({
+                id: `uml-${c.id}`,
+                x: c.x,
+                y: c.y,
+                w: UML_BOX_WIDTH,
+                h: classBoxHeight(c),
+              })),
+              [],
+            );
+          }
+          const canvasHeight = Math.max(
+            DRAW_CANVAS_HEIGHT,
+            layoutExtentY(boardLayout),
+            sectionOffsetY + DRAW_CANVAS_HEIGHT,
+          );
+          yield {
+            type: "draw_session",
+            title: plan.title,
+            canvas: {
+              width: DRAW_CANVAS_WIDTH,
+              height: canvasHeight,
+            },
+            reset: !keepPriorBoard,
+            scrollToY: keepPriorBoard ? sectionOffsetY : undefined,
+          };
+        }
+
+        const drawBeatId =
+          sectionOffsetY > 0
+            ? `s${Math.round(sectionOffsetY)}-${beat.id}`
+            : beat.id;
+
+        const drawCmds = commandsForBeat({
+          plan: activePlan,
+          beatOrder: beat.order,
+          totalBeats: plan.beats.length,
+          beatId: drawBeatId,
+          t0Base: drawClockMs,
+          includeChrome: decision.action === "generate" || beat.order <= 1,
+          progressive: true,
+          narration: beat.narration,
+          highlight: beat.highlight,
+          prompt: umlPrompt,
+          umlPlan,
+          umlRevealed,
+          layout: boardLayout,
+          beatKind: beat.kind,
+        });
+
+        if (drawCmds.length) {
+          yield {
+            type: "draw_cmds",
+            commands: drawCmds,
+            beatId: drawBeatId,
+          };
+          drawClockMs = Math.max(
+            drawClockMs + 400,
+            drawCommandsEndMs(drawCmds) + 250,
+          );
+        }
       }
 
       if (beat.codeDelta) {
@@ -251,6 +453,13 @@ export async function* runLessonStream(
       yield {
         type: "narration",
         text: beat.narration,
+        beatId: beat.id,
+      };
+
+      yield {
+        type: "draw_speak",
+        text: beat.narration,
+        t0: Math.max(0, drawClockMs - 200),
         beatId: beat.id,
       };
 

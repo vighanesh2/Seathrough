@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "license": "CC-BY-4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "assets": [
+    {
+      "file": "heart-male-v1.2.glb",
+      "structure": "heart",
+      "title": "3D Reference Organ for Heart, Male v1.2",
+      "creators": ["Kristen Browne", "Heidi Schlehlein"],
+      "sourceEntry": "https://3d.nih.gov/entries/3DPX-021000",
+      "doi": "https://doi.org/10.48539/HBM373.VSTV.568",
+      "downloadFileId": 741932,
+      "sha256": "b1237e7e765178e9357fd2ea7ccf19d55d0bf9ca55e187886635febe28244c70",
+      "transformations": "Loaded as reference surface geometry; recentered, uniformly scaled, and rendered with application materials at runtime."
+    },
+    {
+      "file": "lung-male-v1.3.glb",
+      "structure": "lungs",
+      "title": "3D Reference Organ for Lung, Male v1.3",
+      "creators": ["Kristen Browne", "Heidi Schlehlein"],
+      "sourceEntry": "https://3d.nih.gov/entries/3DPX-021008",
+      "doi": "https://doi.org/10.48539/HBM737.FFBT.876",
+      "downloadFileId": 741717,
+      "sha256": "323d27bb76ba2c5b140ff31ad5190627eeb8d4e37cd220e4b541655d67789c1a",
+      "transformations": "Loaded as reference surface geometry; recentered, uniformly scaled, and rendered with application materials at runtime."
+    },
+    {
+      "file": "main-bronchus-male-v1.0.glb",
+      "structure": "main bronchi",
+      "title": "3D Reference Organ for Main Bronchus, Male v1.0",
+      "creators": ["Kristen Browne", "Heidi Schlehlein"],
+      "sourceEntry": "https://3d.nih.gov/entries/3DPX-021010",
+      "doi": "https://doi.org/10.48539/HBM795.LVRX.842",
+      "downloadFileId": 741711,
+      "sha256": "6db5b11213570514f9c2f637423cd1b369ed6a796fb2f661193b708aba1733fa",
+      "transformations": "Loaded as reference airway geometry; recentered, uniformly scaled, and rendered with application materials at runtime."
+    }
+  ]
+}

@@ -36,6 +36,7 @@ export async function GET(request: Request, context: RouteContext) {
   }
 
   let visualPlan: VisualPlan | null = null;
+  let threeScene: unknown = null;
   try {
     const supabase = getServiceSupabase();
     const { data: lesson } = await supabase
@@ -47,9 +48,16 @@ export async function GET(request: Request, context: RouteContext) {
       .maybeSingle();
 
     const plan = lesson?.plan as
-      | { beats?: Array<{ visual?: VisualPlan }> }
+      | {
+          beats?: Array<{ visual?: VisualPlan }>;
+          threeScene?: unknown;
+          title?: string;
+        }
       | null
       | undefined;
+    if (plan?.threeScene != null) {
+      threeScene = plan.threeScene;
+    }
     const fromBeats = plan?.beats
       ?.map((b) => b.visual)
       .filter(Boolean)
@@ -80,5 +88,6 @@ export async function GET(request: Request, context: RouteContext) {
   return Response.json({
     conversation: ctx,
     visualPlan,
+    threeScene,
   });
 }

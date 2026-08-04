@@ -2,6 +2,9 @@
 
 import dynamic from "next/dynamic";
 import type { BoardNarrationLine } from "@/components/board/BoardNarration";
+import type { DrawCommandQueue } from "@/lib/draw-engine/resolve";
+import type { AnatomyStructureId } from "@/lib/anatomy/types";
+import type { ThreeScenePlan } from "@/lib/three-scenes/decide";
 import type { VisualPlan } from "@/lib/visuals/types";
 
 const TutorBoard = dynamic(
@@ -26,6 +29,19 @@ type VisualStageProps = {
   codeBuffer?: string;
   streaming?: boolean;
   onDrawComplete?: () => void;
+  drawQueue?: DrawCommandQueue;
+  drawSessionKey?: number;
+  drawPlaying?: boolean;
+  preferDrawEngine?: boolean;
+  drawSpeech?: string | null;
+  canvasHeight?: number;
+  scrollToY?: number | null;
+  threeScene?: ThreeScenePlan | null;
+  threePlaying?: boolean;
+  threeSpeed?: number;
+  threeSelectedStructure?: AnatomyStructureId | null;
+  onThreeSelect?: (structure: AnatomyStructureId | null) => void;
+  onDrawClock?: (ms: number) => void;
 };
 
 export function VisualStage({
@@ -38,6 +54,19 @@ export function VisualStage({
   codeBuffer,
   streaming,
   onDrawComplete,
+  drawQueue,
+  drawSessionKey,
+  drawPlaying,
+  preferDrawEngine,
+  drawSpeech,
+  canvasHeight,
+  scrollToY,
+  threeScene,
+  threePlaying,
+  threeSpeed,
+  threeSelectedStructure,
+  onThreeSelect,
+  onDrawClock,
 }: VisualStageProps) {
   return (
     <TutorBoard
@@ -50,6 +79,19 @@ export function VisualStage({
       codeBuffer={codeBuffer}
       streaming={streaming}
       onDrawComplete={onDrawComplete}
+      drawQueue={drawQueue}
+      drawSessionKey={drawSessionKey}
+      drawPlaying={drawPlaying}
+      preferDrawEngine={preferDrawEngine}
+      drawSpeech={drawSpeech}
+      canvasHeight={canvasHeight}
+      scrollToY={scrollToY}
+      threeScene={threeScene}
+      threePlaying={threePlaying}
+      threeSpeed={threeSpeed}
+      threeSelectedStructure={threeSelectedStructure}
+      onThreeSelect={onThreeSelect}
+      onDrawClock={onDrawClock}
     />
   );
 }

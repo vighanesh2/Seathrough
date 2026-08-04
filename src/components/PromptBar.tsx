@@ -48,9 +48,8 @@ export function PromptBar({
   const wantListeningRef = useRef(false);
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
 
-  valueRef.current = value;
-
   useEffect(() => {
+    valueRef.current = value;
     if (!wantListeningRef.current) {
       committedRef.current = value;
       return;
@@ -62,7 +61,9 @@ export function PromptBar({
   }, [value]);
 
   useEffect(() => {
-    setSpeechSupported(Boolean(getSpeechRecognitionCtor()));
+    queueMicrotask(() =>
+      setSpeechSupported(Boolean(getSpeechRecognitionCtor())),
+    );
   }, []);
 
   useEffect(() => {

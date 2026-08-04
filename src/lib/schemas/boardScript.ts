@@ -8,7 +8,7 @@ export const boardScriptStepSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("write"),
     id: z.string().min(1).max(32).optional(),
-    text: z.string().min(1).max(80),
+    text: z.string().min(1).max(120),
     style: z.enum(["plain", "equation", "emphasis"]).optional(),
     /** When set, this step appears on/after this lesson beat order */
     beat: z.number().int().positive().max(40).optional(),
@@ -16,7 +16,7 @@ export const boardScriptStepSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("arrow"),
     id: z.string().min(1).max(32).optional(),
-    label: z.string().max(40).optional(),
+    label: z.string().max(60).optional(),
     beat: z.number().int().positive().max(40).optional(),
   }),
   z.object({
@@ -24,7 +24,7 @@ export const boardScriptStepSchema = z.discriminatedUnion("type", [
     id: z.string().min(1).max(32).optional(),
     /** Box the write step with this id; defaults to latest write */
     targetId: z.string().min(1).max(32).optional(),
-    text: z.string().max(80).optional(),
+    text: z.string().max(120).optional(),
     beat: z.number().int().positive().max(40).optional(),
   }),
   z.object({
@@ -36,7 +36,7 @@ export const boardScriptStepSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("note"),
     id: z.string().min(1).max(32).optional(),
-    text: z.string().min(1).max(120),
+    text: z.string().min(1).max(160),
     beat: z.number().int().positive().max(40).optional(),
   }),
   z.object({

@@ -8,6 +8,7 @@ export type ConsumeLessonOptions = {
   mode?: "new" | "follow_up";
   conversationId?: string;
   visualSummary?: string;
+  boardBottomY?: number;
   accessToken?: string | null;
   onEvent: (event: StreamEvent) => void | Promise<void>;
 };
@@ -34,6 +35,7 @@ export async function consumeLessonStream(
       mode: options.mode,
       conversationId: options.conversationId,
       visualSummary: options.visualSummary,
+      boardBottomY: options.boardBottomY,
     }),
     signal: options.signal,
   });

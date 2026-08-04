@@ -24,7 +24,7 @@ export function toUserFacingError(error: unknown): string {
 
   // Known safe / intentional product messages — keep as-is
   if (
-    /^(Prompt is required|Conversation not found|Lesson stream returned an empty body)/i.test(
+    /^(Prompt is required|Description is required|Description is too long|Conversation not found|Lesson stream returned an empty body|Add OPENAI_API_KEY)/i.test(
       raw,
     )
   ) {

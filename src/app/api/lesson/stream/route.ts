@@ -13,6 +13,7 @@ type Body = {
   mode?: "new" | "follow_up";
   conversationId?: string;
   visualSummary?: string;
+  boardBottomY?: number;
 };
 
 function sseEncode(event: StreamEvent): string {
@@ -75,6 +76,11 @@ export async function POST(request: Request) {
           mode: body.mode === "follow_up" ? "follow_up" : "new",
           conversationId: body.conversationId?.trim(),
           visualSummary: body.visualSummary?.trim(),
+          boardBottomY:
+            typeof body.boardBottomY === "number" &&
+            Number.isFinite(body.boardBottomY)
+              ? Math.max(0, body.boardBottomY)
+              : undefined,
           userId: user.id,
         })) {
           send(event);
