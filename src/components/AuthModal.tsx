@@ -2,6 +2,16 @@
 
 import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 type AuthModalProps = {
   open: boolean;
@@ -24,8 +34,6 @@ export function AuthModal({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  if (!open) return null;
-
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -45,74 +53,57 @@ export function AuthModal({
   }
 
   return (
-    <div
-      className={[
-        "fixed inset-0 z-[80] flex items-center justify-center p-4",
-        required
-          ? "bg-[radial-gradient(ellipse_at_top,#f7f3ea_0%,#e8eef5_55%,#d9e4ef_100%)]"
-          : "bg-[rgba(26,43,60,0.55)]",
-      ].join(" ")}
-      role="dialog"
-      aria-modal="true"
-      aria-label={mode === "login" ? "Log in" : "Sign up"}
-      onClick={(e) => {
-        if (e.target === e.currentTarget && !busy && !required) onClose();
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next && !busy && !required) onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-2xl border border-board-edge bg-chalk p-6 shadow-[var(--shadow-board)]">
-        <div className="mb-5 flex flex-col items-center text-center">
+      <DialogContent
+        showCloseButton={!required}
+        className="max-w-md sm:max-w-md"
+        onPointerDownOutside={(event) => {
+          if (required || busy) event.preventDefault();
+        }}
+        onEscapeKeyDown={(event) => {
+          if (required || busy) event.preventDefault();
+        }}
+      >
+        <DialogHeader className="items-center text-center">
           {/* eslint-disable-next-line @next/next/no-img-element -- static brand asset */}
           <img
             src="/SeeThrough_logo.png"
-            alt="SeeThrough"
-            className="mb-4 h-20 w-auto object-contain"
+            alt=""
+            className="mb-1 h-16 w-auto object-contain"
           />
-          <div className="relative w-full">
-            {!required ? (
-              <button
-                type="button"
-                onClick={onClose}
-                disabled={busy}
-                className="absolute top-0 right-0 rounded-lg px-2 py-1 font-sans text-sm text-muted hover:text-ink"
-                aria-label="Close"
-              >
-                ✕
-              </button>
-            ) : null}
-            <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
-              {mode === "login" ? "Welcome back" : "Create account"}
-            </p>
-            <h2 className="mt-1 font-display text-2xl font-semibold text-ink">
-              {mode === "login" ? "Log in" : "Sign up"}
-            </h2>
-            <p className="mt-1 font-sans text-sm text-muted">
-              {required
-                ? "Sign in to open your whiteboard and private lesson chats."
-                : "Use a username and password to save your lessons."}
-            </p>
-          </div>
-        </div>
+          <DialogTitle className="font-display text-2xl">
+            {mode === "login" ? "Log in" : "Create an account"}
+          </DialogTitle>
+          <DialogDescription>
+            {required
+              ? "Sign in to open your whiteboard and private lesson chats."
+              : "Save lessons to this device’s account."}
+          </DialogDescription>
+        </DialogHeader>
 
         <form className="flex flex-col gap-3" onSubmit={(e) => void onSubmit(e)}>
-          <label className="flex flex-col gap-1.5">
-            <span className="font-sans text-xs font-semibold text-ink-soft">
-              Username
-            </span>
-            <input
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="auth-username">Username</Label>
+            <Input
+              id="auth-username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               autoComplete="username"
               disabled={busy}
               placeholder="e.g. alex"
-              className="h-11 rounded-xl border border-board-edge bg-paper px-3 font-sans text-sm text-ink outline-none focus:border-accent focus:ring-3 focus:ring-accent-soft"
+              className="h-11"
             />
-          </label>
+          </div>
 
-          <label className="flex flex-col gap-1.5">
-            <span className="font-sans text-xs font-semibold text-ink-soft">
-              Password
-            </span>
-            <input
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="auth-password">Password</Label>
+            <Input
+              id="auth-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -121,30 +112,31 @@ export function AuthModal({
               }
               disabled={busy}
               placeholder="At least 6 characters"
-              className="h-11 rounded-xl border border-board-edge bg-paper px-3 font-sans text-sm text-ink outline-none focus:border-accent focus:ring-3 focus:ring-accent-soft"
+              className="h-11"
             />
-          </label>
+          </div>
 
           {error ? (
-            <p className="rounded-xl bg-warn-soft px-3 py-2 font-sans text-sm text-warn">
+            <p className="rounded-lg bg-warn-soft px-3 py-2 text-sm text-warn">
               {error}
             </p>
           ) : null}
 
-          <button
+          <Button
             type="submit"
+            size="lg"
             disabled={busy || !username.trim() || !password}
-            className="mt-1 h-11 rounded-xl bg-accent font-sans text-sm font-semibold text-white transition hover:bg-accent-deep disabled:opacity-40"
+            className="mt-1 w-full"
           >
             {busy
               ? "Please wait…"
               : mode === "login"
                 ? "Log in"
                 : "Create account"}
-          </button>
+          </Button>
         </form>
 
-        <p className="mt-4 text-center font-sans text-sm text-muted">
+        <p className="text-center text-sm text-muted">
           {mode === "login" ? (
             <>
               New here?{" "}
@@ -175,7 +167,7 @@ export function AuthModal({
             </>
           )}
         </p>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

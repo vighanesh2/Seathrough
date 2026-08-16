@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { Fraunces, IBM_Plex_Mono, Lexend } from "next/font/google";
+import { Fraunces, Geist, IBM_Plex_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import "./globals.css";
 
-const lexend = Lexend({
-  variable: "--font-lexend",
+const geist = Geist({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-geist",
 });
 
 const fraunces = Fraunces({
@@ -24,7 +25,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "SeeThrough",
   description:
-    "Learn by watching ideas drawn on a whiteboard — visuals and narration, beat by beat.",
+    "Stuck on homework? Ask a question or upload a photo — we’ll draw it out on a whiteboard.",
   icons: {
     icon: [{ url: "/SeeThrough_logo.png", type: "image/png" }],
     apple: [{ url: "/SeeThrough_logo.png", type: "image/png" }],
@@ -39,10 +40,17 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${lexend.variable} ${fraunces.variable} ${ibmPlexMono.variable} h-full antialiased`}
+      className={cn(
+        "h-full antialiased",
+        geist.variable,
+        fraunces.variable,
+        ibmPlexMono.variable,
+      )}
     >
       <body className="flex min-h-full flex-col font-sans text-ink">
-        <AuthProvider>{children}</AuthProvider>
+        <AuthProvider>
+          <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -115,6 +115,10 @@ export type StreamEvent =
       beatId: string;
       mimeType: string;
       base64: string;
+      /** Caption for this chunk of speech (set when a beat speaks in units). */
+      text?: string;
+      /** Board-clock time on the server timeline to start speaking. */
+      cueT0?: number;
     }
   | { type: "human_summary"; text: string }
   | { type: "error"; message: string }

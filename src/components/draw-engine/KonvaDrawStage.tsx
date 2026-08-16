@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Arrow, Circle, Image as KonvaImage, Layer, Line, Rect, Stage, Text } from "react-konva";
 import type { DrawCommand } from "@/lib/draw-engine/commands";
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/lib/draw-engine/commands";
 import {
   DrawCommandQueue,
+  penPositionAt,
   resolveDrawablesAt,
   type DrawablePrimitive,
 } from "@/lib/draw-engine/resolve";
@@ -17,27 +18,44 @@ type KonvaDrawStageProps = {
   queue: DrawCommandQueue;
   /** Bump to reset the animation clock (e.g. on each new stream session). */
   sessionKey?: number | string;
-  /** External clock in ms. If omitted, uses wall clock from session start. */
+  /** External clock in ms. If omitted, uses an internal pause-aware clock. */
   clockMs?: number | null;
   playing?: boolean;
+  /** Pen speed multiplier — keeps writing in step with narration pace. */
+  speed?: number;
   className?: string;
   onClock?: (ms: number) => void;
+  /** Fires once the pen finishes every queued command. */
+  onComplete?: () => void;
+  /** Show the tutor's hand writing on the board. */
+  showPen?: boolean;
   /** Logical canvas height (grows for stacked follow-up sections). */
   canvasHeight?: number;
   /** Scroll so this logical Y is near the top of the viewport. */
   scrollToY?: number | null;
 };
 
+function queueEndMs(commands: DrawCommand[]): number {
+  let end = 0;
+  for (const c of commands) end = Math.max(end, c.t0 + (c.durationMs || 0));
+  return end;
+}
+
 /**
  * Client render engine: AI is only a planner — this layer owns animation.
+ * The clock only advances while playing, so pausing freezes the pen instead of
+ * letting wall time run ahead of what the student saw.
  */
 export function KonvaDrawStage({
   queue,
   sessionKey = 0,
   clockMs = null,
   playing = true,
+  speed = 1,
   className,
   onClock,
+  onComplete,
+  showPen = true,
   canvasHeight = DRAW_CANVAS_HEIGHT,
   scrollToY = null,
 }: KonvaDrawStageProps) {
@@ -45,16 +63,33 @@ export function KonvaDrawStage({
   const [size, setSize] = useState({ width: 640, height: 420 });
   const [tick, setTick] = useState(0);
   const [drawables, setDrawables] = useState<DrawablePrimitive[]>([]);
-  const originRef = useRef<number | null>(null);
+  const [pen, setPen] = useState<{ x: number; y: number } | null>(null);
+  const penRef = useRef<{ x: number; y: number } | null>(null);
+  const clockRef = useRef(0);
+  const lastFrameRef = useRef<number | null>(null);
   const rafRef = useRef<number>(0);
+  const speedRef = useRef(speed);
+  const scaleRef = useRef(1);
+  const onClockRef = useRef(onClock);
+  const onCompleteRef = useRef(onComplete);
+  const completedEndRef = useRef<number | null>(null);
+
+  speedRef.current = speed > 0 ? speed : 1;
+  onClockRef.current = onClock;
+  onCompleteRef.current = onComplete;
 
   const logicalHeight = Math.max(DRAW_CANVAS_HEIGHT, canvasHeight);
 
   useEffect(() => {
-    originRef.current = null;
+    clockRef.current = 0;
+    lastFrameRef.current = null;
+    completedEndRef.current = null;
+    penRef.current = null;
     // A new session intentionally clears primitives from the previous timeline.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setDrawables([]);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPen(null);
   }, [sessionKey]);
 
   useEffect(() => {
@@ -77,30 +112,79 @@ export function KonvaDrawStage({
     return queue.subscribe(() => setTick((t) => t + 1));
   }, [queue]);
 
+  /** Keep the writing point in view as the board grows past one screen. */
+  const followPen = useCallback((logicalY: number) => {
+    const el = viewportRef.current;
+    if (!el || el.scrollHeight <= el.clientHeight) return;
+    const y = logicalY * scaleRef.current;
+    const margin = 90;
+    const top = el.scrollTop;
+    const bottom = top + el.clientHeight;
+    if (y > bottom - margin) {
+      el.scrollTop = Math.max(0, y - el.clientHeight + margin * 1.6);
+    } else if (y < top + margin * 0.5) {
+      el.scrollTop = Math.max(0, y - margin);
+    }
+  }, []);
+
   useEffect(() => {
     if (!playing) {
       cancelAnimationFrame(rafRef.current);
+      // Drop the frame anchor so resuming continues instead of jumping ahead.
+      lastFrameRef.current = null;
       return;
     }
 
     const loop = (now: number) => {
-      if (originRef.current == null) originRef.current = now;
-      const external = clockMs;
-      const ms =
-        external != null ? external : now - (originRef.current ?? now);
-      onClock?.(ms);
-      setDrawables(resolveDrawablesAt(queue.getAll(), ms));
+      if (lastFrameRef.current == null) lastFrameRef.current = now;
+      const delta = now - lastFrameRef.current;
+      lastFrameRef.current = now;
+      clockRef.current += delta * speedRef.current;
+
+      const ms = clockMs != null ? clockMs : clockRef.current;
+      onClockRef.current?.(ms);
+
+      const commands = queue.getAll();
+      setDrawables(resolveDrawablesAt(commands, ms));
+
+      const target = penPositionAt(commands, ms);
+      if (target) {
+        // Glide toward the writing point instead of teleporting between steps.
+        const prev = penRef.current;
+        const next = prev
+          ? {
+              x: prev.x + (target.x - prev.x) * 0.35,
+              y: prev.y + (target.y - prev.y) * 0.35,
+            }
+          : { x: target.x, y: target.y };
+        penRef.current = next;
+        setPen(next);
+        if (target.writing) followPen(next.y);
+      } else if (penRef.current) {
+        penRef.current = null;
+        setPen(null);
+      }
+
+      if (commands.length) {
+        const end = queueEndMs(commands);
+        if (ms >= end && completedEndRef.current !== end) {
+          completedEndRef.current = end;
+          onCompleteRef.current?.();
+        }
+      }
+
       rafRef.current = requestAnimationFrame(loop);
     };
 
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
-  }, [playing, clockMs, queue, onClock, tick, sessionKey]);
+  }, [playing, clockMs, queue, tick, sessionKey, followPen]);
 
   // Fit width; allow vertical scroll for taller stacked boards.
   const scale = useMemo(() => {
     return size.width / DRAW_CANVAS_WIDTH;
   }, [size.width]);
+  scaleRef.current = scale;
 
   const stageHeight = Math.max(1, Math.floor(logicalHeight * scale));
   const stageWidth = Math.max(1, Math.floor(DRAW_CANVAS_WIDTH * scale));
@@ -155,10 +239,41 @@ export function KonvaDrawStage({
             {drawables.map((d) => (
               <DrawableNode key={d.id} d={d} />
             ))}
+
+            {showPen && pen ? <PenCursor x={pen.x} y={pen.y} /> : null}
           </Layer>
         </Stage>
       </div>
     </div>
+  );
+}
+
+/** The tutor's hand: a marker resting on the board at the writing point. */
+function PenCursor({ x, y }: { x: number; y: number }) {
+  return (
+    <>
+      <Circle x={x} y={y} radius={3} fill="#1b6ca8" opacity={0.35} />
+      <Line
+        points={[x, y, x + 20, y - 34]}
+        stroke="#1a2b3c"
+        strokeWidth={7}
+        lineCap="round"
+        opacity={0.9}
+      />
+      <Line
+        points={[x + 20, y - 34, x + 27, y - 46]}
+        stroke="#1b6ca8"
+        strokeWidth={8}
+        lineCap="round"
+        opacity={0.95}
+      />
+      <Line
+        points={[x, y, x + 6, y - 10]}
+        stroke="#0f4f7c"
+        strokeWidth={4}
+        lineCap="round"
+      />
+    </>
   );
 }
 

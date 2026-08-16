@@ -1,15 +1,19 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { PanelLeft } from "lucide-react";
 import { useMachine } from "@xstate/react";
 import type { BoardNarrationLine } from "@/components/board/BoardNarration";
 import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
 import { ChatSidebar } from "@/components/ChatSidebar";
+import { AppHeader } from "@/components/lms/AppHeader";
+import { AppShell } from "@/components/lms/AppShell";
 import { PaceControls } from "@/components/PaceControls";
 import { PromptBar } from "@/components/PromptBar";
 import { VisualStage } from "@/components/VisualStage";
+import { Button } from "@/components/ui/button";
+import { PenCueTracker } from "@/lib/board/penCues";
 import { consumeLessonStream } from "@/lib/client/consumeLessonStream";
 import type { ConversationListItem } from "@/lib/conversations/types";
 import type { AnatomyStructureId } from "@/lib/anatomy/types";
@@ -162,7 +166,7 @@ function commandsBottomY(commands: DrawCommand[]): number {
 export function LessonShell() {
   const { user, loading: authLoading, accessToken, logout } = useAuth();
   const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
-  const [prompt, setPrompt] = useState("explain what a class is in Java");
+  const [prompt, setPrompt] = useState("");
   const [status, setStatus] = useState<LessonStatus>("idle");
   const [speed, setSpeed] = useState<PaceSpeed>(1);
   const [title, setTitle] = useState<string | undefined>();
@@ -217,6 +221,14 @@ export function LessonShell() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const speedRef = useRef<PaceSpeed>(1);
   const pausedRef = useRef(false);
+  const penCues = useMemo(
+    () =>
+      new PenCueTracker({
+        clock: () => drawClockRef.current,
+        isPaused: () => pausedRef.current,
+      }),
+    [],
+  );
   const pauseGateRef = useRef<Promise<void>>(Promise.resolve());
   const resumePauseRef = useRef<(() => void) | null>(null);
   const lastVisualKeyRef = useRef<string>("");
@@ -315,8 +327,9 @@ export function LessonShell() {
     return () => {
       abortRef.current?.abort();
       audioRef.current?.pause();
+      penCues.stopWaiting();
     };
-  }, []);
+  }, [penCues]);
 
   function waitIfPaused(): Promise<void> {
     if (!pausedRef.current) return Promise.resolve();
@@ -410,6 +423,7 @@ export function LessonShell() {
           setDrawSessionKey((k) => k + 1);
           drawClockRef.current = 0;
           boardBottomYRef.current = 0;
+          penCues.reset();
         }
         if (event.canvas?.height) {
           setBoardCanvasHeight((h) => Math.max(h, event.canvas.height));
@@ -423,7 +437,7 @@ export function LessonShell() {
         break;
       case "draw_cmd":
         setPreferDrawEngine(true);
-        setDrawPlaying(true);
+        if (!pausedRef.current) setDrawPlaying(true);
         drawQueue.enqueue(
           rebaseDrawCommand(event.command, drawQueue, drawClockRef.current),
         );
@@ -435,12 +449,18 @@ export function LessonShell() {
           Math.max(h, boardBottomYRef.current + 80),
         );
         break;
-      case "draw_cmds":
+      case "draw_cmds": {
         setPreferDrawEngine(true);
-        setDrawPlaying(true);
-        drawQueue.enqueue(
-          rebaseDrawCommands(event.commands, drawQueue, drawClockRef.current),
+        if (!pausedRef.current) setDrawPlaying(true);
+        const rebased = rebaseDrawCommands(
+          event.commands,
+          drawQueue,
+          drawClockRef.current,
         );
+        if (event.beatId) {
+          penCues.registerBeat(event.beatId, event.commands, rebased);
+        }
+        drawQueue.enqueue(rebased);
         boardBottomYRef.current = Math.max(
           boardBottomYRef.current,
           commandsBottomY(event.commands),
@@ -449,6 +469,7 @@ export function LessonShell() {
           Math.max(h, boardBottomYRef.current + 80),
         );
         break;
+      }
       case "draw_speak":
         setDrawSpeech(event.text);
         break;
@@ -462,12 +483,15 @@ export function LessonShell() {
           pushNarration(event.text, "narration");
         }
         break;
-      case "audio":
-        send({ type: "DRAW_DONE" });
+      case "audio": {
+        const cue = penCues.cueFor(event.beatId, event.cueT0);
+        if (cue != null) await penCues.waitForPen(cue);
+        if (event.text) setDrawSpeech(event.text);
         await playAudio(event.mimeType, event.base64);
         send({ type: "SPEAK_DONE" });
         send({ type: "NEXT_BEAT" });
         break;
+      }
       case "human_summary":
         pushNarration(event.text, "summary");
         break;
@@ -496,6 +520,7 @@ export function LessonShell() {
     abortRef.current = null;
     audioRef.current?.pause();
     audioRef.current = null;
+    penCues.reset();
     pausedRef.current = false;
     resumePauseRef.current?.();
     resumePauseRef.current = null;
@@ -530,6 +555,7 @@ export function LessonShell() {
     abortRef.current = null;
     audioRef.current?.pause();
     audioRef.current = null;
+    penCues.stopWaiting();
     pausedRef.current = false;
     resumePauseRef.current?.();
     resumePauseRef.current = null;
@@ -638,22 +664,43 @@ export function LessonShell() {
         };
         visualPlan?: VisualPlan | null;
         threeScene?: unknown;
+        board?: {
+          title: string;
+          canvas: { width: number; height: number };
+          commands: DrawCommand[];
+          visualPlan: VisualPlan | null;
+          threeScene: ThreeScenePlan | null;
+        } | null;
       };
       const ctx = data.conversation;
       setConversationId(ctx.conversationId);
       conversationIdRef.current = ctx.conversationId;
       setLessonId(ctx.lessonId);
-      setTitle(ctx.title || ctx.rootPrompt || "Lesson");
+      setTitle(
+        data.board?.title || ctx.title || ctx.rootPrompt || "Lesson",
+      );
       const lines = turnsToNarration(ctx.turns);
       setBoardNarration(lines);
       narrationSeqRef.current = lines.length;
       setCodeBuffer("");
       setPrompt("");
       setStatus("done");
-      const restoredThree = threeSceneFromChoiceOrNull(
-        data.threeScene,
-        ctx.title || ctx.rootPrompt || undefined,
-      );
+      setDrawSpeech(null);
+
+      const boardThree = data.board?.threeScene ?? null;
+      const restoredThree =
+        boardThree ??
+        threeSceneFromChoiceOrNull(
+          data.threeScene,
+          ctx.title || ctx.rootPrompt || undefined,
+        );
+
+      drawQueue.clear();
+      setDrawSessionKey((k) => k + 1);
+      drawClockRef.current = 0;
+      boardBottomYRef.current = 0;
+      setBoardScrollToY(null);
+
       if (restoredThree) {
         setThreeSelected(null);
         setThreeScene({
@@ -663,17 +710,56 @@ export function LessonShell() {
         setVisualPlan(null);
         lastVisualKeyRef.current = "";
         setPreferDrawEngine(false);
-      } else if (data.visualPlan) {
+        setDrawPlaying(false);
+        setBoardCanvasHeight(600);
+      } else if (data.board?.commands?.length) {
         setThreeSelected(null);
         setThreeScene(null);
-        lastVisualKeyRef.current = visualStableKey(data.visualPlan);
-        setVisualPlan(data.visualPlan);
+        const restoredPlan = data.board.visualPlan ?? data.visualPlan ?? null;
+        if (restoredPlan) {
+          lastVisualKeyRef.current = visualStableKey(restoredPlan);
+          setVisualPlan(restoredPlan);
+        } else {
+          setVisualPlan(null);
+          lastVisualKeyRef.current = "";
+        }
+        setBoardCanvasHeight(
+          Math.max(600, data.board.canvas?.height ?? 600),
+        );
+        setPreferDrawEngine(true);
+        // Replay the exact streamed commands so reopen matches generate.
+        const cmds = data.board.commands;
+        const minT = Math.min(...cmds.map((c) => c.t0));
+        const rebased = cmds.map((c) => ({
+          ...c,
+          t0: Math.max(0, c.t0 - minT),
+        }));
+        drawQueue.enqueue(rebased);
+        boardBottomYRef.current = Math.max(
+          boardBottomYRef.current,
+          commandsBottomY(rebased),
+        );
+        setBoardCanvasHeight((h) =>
+          Math.max(h, boardBottomYRef.current + 80),
+        );
+        setDrawPlaying(true);
+        setPlayKey((k) => k + 1);
+      } else if (data.visualPlan || data.board?.visualPlan) {
+        const plan = data.board?.visualPlan ?? data.visualPlan!;
+        setThreeSelected(null);
+        setThreeScene(null);
+        lastVisualKeyRef.current = visualStableKey(plan);
+        setVisualPlan(plan);
+        setPreferDrawEngine(false);
+        setDrawPlaying(false);
         setPlayKey((k) => k + 1);
       } else {
         setThreeSelected(null);
         setThreeScene(null);
         setVisualPlan(null);
         lastVisualKeyRef.current = "";
+        setPreferDrawEngine(false);
+        setDrawPlaying(false);
       }
       send({ type: "RESET" });
     } catch {
@@ -718,6 +804,7 @@ export function LessonShell() {
   }
 
   function skipBeat() {
+    penCues.stopWaiting();
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.currentTime = audioRef.current.duration || 0;
@@ -729,15 +816,15 @@ export function LessonShell() {
 
   if (authLoading) {
     return (
-      <div className="flex h-dvh max-h-dvh w-full items-center justify-center bg-[radial-gradient(ellipse_at_top,_#f7f3ea_0%,_#e8eef5_55%,_#d9e4ef_100%)]">
-        <p className="font-sans text-sm text-muted">Checking your session…</p>
+      <div className="flex h-dvh max-h-dvh w-full items-center justify-center bg-background">
+        <p className="text-sm text-muted">Checking your session…</p>
       </div>
     );
   }
 
   if (!user) {
     return (
-      <div className="relative flex h-dvh max-h-dvh w-full items-center justify-center overflow-hidden bg-[radial-gradient(ellipse_at_top,#f7f3ea_0%,#e8eef5_55%,#d9e4ef_100%)]">
+      <div className="relative flex h-dvh max-h-dvh w-full items-center justify-center overflow-hidden bg-background">
         <AuthModal
           key={authModal ?? "required"}
           open
@@ -750,7 +837,7 @@ export function LessonShell() {
   }
 
   return (
-    <div className="flex h-dvh max-h-dvh w-full overflow-hidden">
+    <AppShell>
       <ChatSidebar
         collapsed={sidebarCollapsed}
         onToggle={toggleSidebar}
@@ -783,38 +870,25 @@ export function LessonShell() {
       />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        <header className="z-40 flex shrink-0 flex-col gap-3 border-b border-board-edge/80 bg-chalk/90 px-4 py-3 backdrop-blur-md md:flex-row md:items-center md:gap-4 md:px-5">
-          <div className="min-w-0 shrink-0 md:w-[180px]">
-            <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.18em] text-accent">
-              Learn by seeing
-            </p>
-            <h1 className="truncate font-display text-xl font-semibold text-ink md:text-2xl">
-              SeeThrough
-            </h1>
-          </div>
-
-          <div className="min-w-0 flex-1">
-            <PromptBar
-              value={prompt}
-              onChange={setPrompt}
-              onSubmit={onPromptSubmit}
-              disabled={busy}
-              placeholder={
-                canFollowUp
-                  ? "Ask a follow-up about this lesson…"
-                  : "What should we learn today?"
-              }
-              submitLabel={canFollowUp ? "Ask" : "Start"}
-            />
-          </div>
-
-          <div className="flex shrink-0 items-center gap-2">
-            <Link
-              href="/3d-figures"
-              className="inline-flex h-10 items-center rounded-xl border border-board-edge bg-white px-3 font-sans text-xs font-semibold text-accent-deep transition hover:border-accent hover:bg-accent-soft/40"
-            >
-              3D Figures
-            </Link>
+        <AppHeader
+          current="lessons"
+          eyebrow="Lesson"
+          title={title ?? "Ask a question"}
+          leading={
+            sidebarCollapsed ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={toggleSidebar}
+                aria-label="Show chats"
+                aria-expanded={false}
+              >
+                <PanelLeft className="size-4" />
+              </Button>
+            ) : null
+          }
+          actions={
             <PaceControls
               playing={status === "running"}
               speed={speed}
@@ -823,8 +897,21 @@ export function LessonShell() {
               onSkip={skipBeat}
               disabled={status === "idle" && !prompt.trim()}
             />
-          </div>
-        </header>
+          }
+        >
+          <PromptBar
+            value={prompt}
+            onChange={setPrompt}
+            onSubmit={onPromptSubmit}
+            disabled={busy}
+            placeholder={
+              canFollowUp
+                ? "Ask a follow-up about this lesson…"
+                : "What should we learn today?"
+            }
+            submitLabel={canFollowUp ? "Ask" : "Start"}
+          />
+        </AppHeader>
 
         <div className="relative min-h-0 flex-1">
           <VisualStage
@@ -840,6 +927,7 @@ export function LessonShell() {
             drawQueue={drawQueue}
             drawSessionKey={drawSessionKey}
             drawPlaying={drawPlaying && status !== "paused"}
+            drawSpeed={speed}
             preferDrawEngine={preferDrawEngine}
             drawSpeech={drawSpeech}
             canvasHeight={boardCanvasHeight}
@@ -855,6 +943,6 @@ export function LessonShell() {
           />
         </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

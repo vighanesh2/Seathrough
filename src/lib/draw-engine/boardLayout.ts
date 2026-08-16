@@ -42,6 +42,8 @@ export const LAYOUT_PAD = 10;
 export const TEXT_GAP = 28;
 /** Gap between prior board content and a new follow-up section. */
 export const SECTION_GAP = 72;
+/** How far one section may grow before we stop adding to it. */
+export const MAX_SECTION_HEIGHT = DRAW_CANVAS_HEIGHT * 3;
 
 const BOARD_BG = "#f3f5f7";
 
@@ -196,25 +198,17 @@ export function placeContent(
 ): { x: number; y: number } | null {
   const x = clamp(preferX, 40, DRAW_CANVAS_WIDTH - w - 40);
   const top = layout.sectionOffsetY + CONTENT_TOP;
-  const bottom = layout.contentBottom;
 
   // Start at cursor, then push below anything that intersects this column.
   let y = Math.max(layout.contentCursorY, top);
-  y = nextFreeYInColumn(layout, x, w, y, h, bottom);
+  y = nextFreeYInColumn(layout, x, w, y, h, layout.contentBottom);
 
-  if (y + h > bottom) {
-    // Try a second column to the right of preferred (if room before image band).
-    const altX = clamp(x + w + TEXT_GAP, 40, DRAW_CANVAS_WIDTH - w - 40);
-    if (altX !== x && altX + w <= 520) {
-      let y2 = top;
-      y2 = nextFreeYInColumn(layout, altX, w, y2, h, bottom);
-      if (y2 + h <= bottom) {
-        reserve(layout, { id, x: altX, y: y2, w, h, kind: "content" });
-        layout.contentCursorY = Math.max(layout.contentCursorY, y2 + h + TEXT_GAP);
-        return { x: altX, y: y2 };
-      }
-    }
-    return null;
+  if (y + h > layout.contentBottom) {
+    // Keep the working out in one column and grow the board downward. A second
+    // column starting back at the top reads out of order to a student.
+    const grown = y + h + TEXT_GAP;
+    if (grown > layout.sectionOffsetY + MAX_SECTION_HEIGHT) return null;
+    layout.contentBottom = grown;
   }
 
   reserve(layout, { id, x, y, w, h, kind: "content" });
@@ -317,7 +311,11 @@ export function footerChipCommands(input: {
   const { layout, beatOrder, beatId, t0Base } = input;
   const slot = ((Math.max(1, beatOrder) - 1) % 3) as 0 | 1 | 2;
   const x = FOOTER_SLOT_X[slot];
-  const y = layout.sectionOffsetY + FOOTER_Y;
+  // Stay under the working out, which can push past the default footer line.
+  const y = Math.max(
+    layout.sectionOffsetY + FOOTER_Y,
+    layout.contentBottom + LAYOUT_PAD,
+  );
   const w = FOOTER_SLOT_W;
   const h = FOOTER_H;
 

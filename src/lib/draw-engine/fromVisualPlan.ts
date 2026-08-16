@@ -19,6 +19,7 @@ import {
 } from "@/lib/draw-engine/topicSketches";
 import { revealUmlPlanCommands } from "@/lib/draw-engine/umlReveal";
 import type { UmlDiagramPlan } from "@/lib/draw-engine/umlSchema";
+import { latexToBoardText } from "@/lib/math/latexToBoardText";
 import { revealThroughStepIndex } from "@/lib/visuals/library/scriptReveal";
 import type { VisualPlan } from "@/lib/visuals/types";
 
@@ -231,25 +232,16 @@ export function commandsForBeat(input: BeatDrawInput): DrawCommand[] {
     }
   }
 
-  // 4) Always show something meaningful — never a random empty box/arrow.
-  if (!cmds.length || strategy === "narration") {
-    const narrCmds = narrationSentenceCommands({
-      beatId,
-      beatOrder,
-      t0Base: cmds.length ? t + 80 : t0Base,
-      narration,
-      highlight,
-      prompt,
-      layout,
-      leftX: sketchAwareLeftX(prompt, layout),
-    });
-    // If we already drew script content, only add narration when still empty.
-    if (!cmds.length) {
-      cmds.push(...narrCmds);
-    }
-  }
+  // 4) Never leave a blank board — but never copy the transcript onto it
+  // either. Once a script is up there, a beat with nothing new to add means
+  // the tutor is talking about what is already written.
+  const boardCarriesScript =
+    Boolean(plan?.boardScript?.steps?.length) &&
+    (layout
+      ? layout.occupied.some((o) => o.kind === "content" || o.kind === "title")
+      : beatOrder > 1);
 
-  if (!cmds.length) {
+  if (!cmds.length && !boardCarriesScript) {
     cmds.push(
       ...narrationSentenceCommands({
         beatId,
@@ -259,7 +251,7 @@ export function commandsForBeat(input: BeatDrawInput): DrawCommand[] {
         highlight,
         prompt,
         layout,
-        leftX: 80,
+        leftX: sketchAwareLeftX(prompt, layout),
       }),
     );
   }
@@ -395,13 +387,14 @@ function boardScriptBeatCommands(input: {
 
   if (includeChrome && formula) {
     const formulaId = `${prefix}-formula`;
-    if (!layout?.occupied.some((o) => o.id === "board-formula")) {
+    const formulaText = latexToBoardText(formula).slice(0, 100);
+    if (formulaText && !layout?.occupied.some((o) => o.id === "board-formula")) {
       cmds.push({
         id: formulaId,
         type: "text",
         t0: t,
         durationMs: 500,
-        text: formula.slice(0, 80),
+        text: formulaText,
         x: left,
         y: 90,
         color: "#1b6ca8",
@@ -412,7 +405,7 @@ function boardScriptBeatCommands(input: {
           id: "board-formula",
           x: left,
           y: 84,
-          w: Math.min(720, 24 + formula.length * 11),
+          w: Math.min(720, 24 + formulaText.length * 11),
           h: 30,
           kind: "title",
         });
@@ -461,7 +454,13 @@ function stepId(prefix: string, step: BoardScriptStep, i: number): string {
  * Keep only connector arrows that sit between two write steps.
  */
 function sanitizeBoardScript(script: BoardScript): BoardScript {
-  const raw = script.steps;
+  const raw = script.steps.map((step) => {
+    if (step.type === "write" || step.type === "note") {
+      const text = latexToBoardText(step.text).slice(0, step.type === "note" ? 140 : 100);
+      return text && text !== step.text ? { ...step, text } : step;
+    }
+    return step;
+  });
   const cleaned: BoardScriptStep[] = [];
 
   for (let i = 0; i < raw.length; i += 1) {
@@ -477,7 +476,7 @@ function sanitizeBoardScript(script: BoardScript): BoardScript {
       if (label.split(/\s+/).length >= 3) {
         cleaned.push({
           type: "note",
-          text: label.slice(0, 160),
+          text: latexToBoardText(label).slice(0, 160),
           beat: step.beat,
         });
       }
@@ -492,7 +491,7 @@ function sanitizeBoardScript(script: BoardScript): BoardScript {
   }
 
   if (cleaned.filter((s) => s.type === "write" || s.type === "note").length < 1) {
-    return script;
+    return { ...script, steps: raw };
   }
   return { ...script, steps: cleaned };
 }
@@ -1011,13 +1010,15 @@ function formulaCommands(
   t0Base: number,
   prefix: string,
 ): DrawCommand[] {
+  const text = latexToBoardText(formula).slice(0, 100);
+  if (!text) return [];
   return [
     {
       id: `${prefix}-eq`,
       type: "text",
       t0: t0Base + 100,
       durationMs: 600,
-      text: formula.slice(0, 80),
+      text,
       x: 120,
       y: 220,
       color: "#1a2b3c",

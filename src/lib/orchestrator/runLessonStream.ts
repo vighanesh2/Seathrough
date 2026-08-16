@@ -36,9 +36,17 @@ import {
 } from "@/lib/draw-engine/umlSchema";
 import { toUserFacingError } from "@/lib/errors/userFacing";
 import {
+  saveBoardSnapshot,
+  type LessonBoardSnapshot,
+} from "@/lib/lessons/boardSnapshot";
+import {
   generateFollowUpPlan,
   generateLessonPlan,
 } from "@/lib/providers/llm";
+import {
+  buildSpeechUnits,
+  paceCommandsToNarration,
+} from "@/lib/orchestrator/speechUnits";
 import { synthesizeSpeech } from "@/lib/providers/tts";
 import { getServiceSupabase } from "@/lib/supabase/server";
 import { resolveVisualWithLibrary } from "@/lib/visuals/library";
@@ -295,11 +303,17 @@ export async function* runLessonStream(
     let drawClockMs = 0;
     let drawSessionStarted = false;
     let boardLayout: BoardLayout = createBoardLayout(sectionOffsetY);
+    const snapshotCommands: import("@/lib/draw-engine/commands").DrawCommand[] =
+      [];
+    let snapshotCanvasHeight = DRAW_CANVAS_HEIGHT;
 
     for (const beat of plan.beats) {
       assertNotAborted(options.signal);
 
       yield { type: "beat_start", beat };
+
+      /** This beat's writing steps — the voice is cued off them. */
+      let beatDrawCmds: import("@/lib/draw-engine/commands").DrawCommand[] = [];
 
       if (threePlan) {
         const nextReveal = revealForBeat(
@@ -358,14 +372,16 @@ export async function* runLessonStream(
         };
         if (drawSessionStarted) {
           if (!keepPriorBoard) {
+            const clearCmd = {
+              id: `clear-${beat.id}`,
+              type: "clear" as const,
+              t0: drawClockMs,
+              durationMs: 0,
+            };
+            snapshotCommands.push(clearCmd);
             yield {
               type: "draw_cmd",
-              command: {
-                id: `clear-${beat.id}`,
-                type: "clear",
-                t0: drawClockMs,
-                durationMs: 0,
-              },
+              command: clearCmd,
             };
             drawClockMs += 200;
             boardLayout = createBoardLayout(sectionOffsetY);
@@ -399,6 +415,7 @@ export async function* runLessonStream(
             layoutExtentY(boardLayout),
             sectionOffsetY + DRAW_CANVAS_HEIGHT,
           );
+          snapshotCanvasHeight = Math.max(snapshotCanvasHeight, canvasHeight);
           yield {
             type: "draw_session",
             title: plan.title,
@@ -416,7 +433,7 @@ export async function* runLessonStream(
             ? `s${Math.round(sectionOffsetY)}-${beat.id}`
             : beat.id;
 
-        const drawCmds = commandsForBeat({
+        beatDrawCmds = commandsForBeat({
           plan: activePlan,
           beatOrder: beat.order,
           totalBeats: plan.beats.length,
@@ -433,15 +450,23 @@ export async function* runLessonStream(
           beatKind: beat.kind,
         });
 
-        if (drawCmds.length) {
+        // Let the writing breathe across the narration instead of racing it.
+        beatDrawCmds = paceCommandsToNarration(beatDrawCmds, beat.narration);
+
+        if (beatDrawCmds.length) {
+          snapshotCommands.push(...beatDrawCmds);
+          snapshotCanvasHeight = Math.max(
+            snapshotCanvasHeight,
+            layoutExtentY(boardLayout),
+          );
           yield {
             type: "draw_cmds",
-            commands: drawCmds,
+            commands: beatDrawCmds,
             beatId: drawBeatId,
           };
           drawClockMs = Math.max(
             drawClockMs + 400,
-            drawCommandsEndMs(drawCmds) + 250,
+            drawCommandsEndMs(beatDrawCmds) + 250,
           );
         }
       }
@@ -456,10 +481,21 @@ export async function* runLessonStream(
         beatId: beat.id,
       };
 
+      const speechUnits = buildSpeechUnits(
+        beat.narration,
+        beatDrawCmds,
+        Math.max(0, drawClockMs - 200),
+      );
+
+      // With voice on, each unit updates the caption as it is spoken; without
+      // it the board caption carries the whole line.
       yield {
         type: "draw_speak",
-        text: beat.narration,
-        t0: Math.max(0, drawClockMs - 200),
+        text:
+          withAudio && speechUnits.length
+            ? speechUnits[0]!.text
+            : beat.narration,
+        t0: speechUnits[0]?.cueT0 ?? Math.max(0, drawClockMs - 200),
         beatId: beat.id,
       };
 
@@ -474,17 +510,34 @@ export async function* runLessonStream(
       }
 
       if (withAudio) {
-        try {
-          const audio = await synthesizeSpeech(beat.narration);
+        // Synthesize the whole beat at once so units play back-to-back
+        // instead of leaving a TTS gap between sentences.
+        const clips = await Promise.allSettled(
+          speechUnits.map((unit) => synthesizeSpeech(unit.text)),
+        );
+
+        let spoke = false;
+        for (const [i, unit] of speechUnits.entries()) {
+          const clip = clips[i];
+          if (clip?.status !== "fulfilled") continue;
+          spoke = true;
           yield {
             type: "audio",
             beatId: beat.id,
-            mimeType: audio.mimeType,
-            base64: audio.base64,
+            mimeType: clip.value.mimeType,
+            base64: clip.value.base64,
+            text: unit.text,
+            cueT0: unit.cueT0,
           };
-        } catch (ttsError) {
+        }
+
+        // Only call the beat silent when nothing at all came back.
+        if (speechUnits.length && !spoke) {
+          const failure = clips.find((c) => c.status === "rejected");
+          const reason =
+            failure?.status === "rejected" ? failure.reason : undefined;
           const message =
-            ttsError instanceof Error ? ttsError.message : "TTS failed";
+            reason instanceof Error ? reason.message : "TTS failed";
           yield {
             type: "narration",
             text: `[voice unavailable: ${message}]`,
@@ -522,6 +575,43 @@ export async function* runLessonStream(
         content: plan.humanSummary,
         meta: { kind: "human_summary" },
       });
+    }
+
+    if (lessonId) {
+      const snapshot: LessonBoardSnapshot = {
+        version: 1,
+        title: plan.title,
+        prompt,
+        canvas: {
+          width: DRAW_CANVAS_WIDTH,
+          height: Math.max(
+            snapshotCanvasHeight,
+            layoutExtentY(boardLayout),
+            DRAW_CANVAS_HEIGHT,
+          ),
+        },
+        commands: snapshotCommands,
+        visualPlan: threePlan ? null : activePlan,
+        threeScene: threePlan
+          ? {
+              ...threePlan,
+              reveal: revealForBeat(
+                threePlan,
+                plan.beats.length,
+                plan.beats.length,
+              ),
+            }
+          : null,
+        umlPlan,
+      };
+      try {
+        await saveBoardSnapshot(lessonId, snapshot);
+      } catch (snapError) {
+        console.error(
+          "[lesson-stream] board snapshot save failed",
+          snapError instanceof Error ? snapError.message : snapError,
+        );
+      }
     }
 
     yield { type: "done", conversationId, lessonId };

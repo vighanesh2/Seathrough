@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useCallback, useRef, useState } from "react";
+import { AppHeader } from "@/components/lms/AppHeader";
+import { AppShell } from "@/components/lms/AppShell";
 import {
   Whiteboard,
   type WhiteboardHandle,
@@ -105,23 +106,12 @@ export function WhiteboardShell() {
   }
 
   return (
-    <div className="flex h-dvh max-h-dvh flex-col overflow-hidden">
-      <header className="z-30 flex shrink-0 flex-wrap items-center gap-3 border-b border-board-edge/80 bg-chalk/90 px-4 py-3 backdrop-blur-md md:px-5">
-        <div className="min-w-0 flex-1">
-          <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.18em] text-accent">
-            Automatic whiteboard
-          </p>
-          <h1 className="truncate font-display text-xl font-semibold text-ink md:text-2xl">
-            SeeThrough
-          </h1>
-        </div>
-        <Link
-          href="/"
-          className="rounded-xl border border-board-edge bg-chalk px-3 py-2 font-sans text-sm font-medium text-ink hover:bg-paper"
-        >
-          Back to lessons
-        </Link>
-      </header>
+    <AppShell className="flex-col">
+      <AppHeader
+        current="automatic-drawing"
+        eyebrow="Lab"
+        title="Automatic whiteboard"
+      />
 
       <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-3 overflow-hidden p-4 md:p-5">
         <form
@@ -300,6 +290,6 @@ export function WhiteboardShell() {
           → watch it draw → edit → export PNG.
         </p>
       </div>
-    </div>
+    </AppShell>
   );
 }

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type PromptBarProps = {
   value: string;
@@ -211,7 +213,7 @@ export function PromptBar({
           <label className="sr-only" htmlFor="lesson-prompt">
             Lesson prompt
           </label>
-          <input
+          <Input
             id="lesson-prompt"
             value={value}
             onChange={(e) => {
@@ -223,7 +225,7 @@ export function PromptBar({
             }}
             disabled={disabled}
             placeholder={placeholder}
-            className="h-11 w-full rounded-xl border border-board-edge bg-chalk py-2 pr-12 pl-4 font-sans text-sm text-ink outline-none transition placeholder:text-muted focus:border-accent focus:ring-3 focus:ring-accent-soft disabled:opacity-60"
+            className="h-11 bg-card pr-12 pl-4"
           />
           {speechSupported ? (
             <button
@@ -249,13 +251,14 @@ export function PromptBar({
             </button>
           ) : null}
         </div>
-        <button
+        <Button
           type="submit"
+          size="lg"
           disabled={disabled || !value.trim()}
-          className="h-11 shrink-0 rounded-xl bg-accent px-4 font-sans text-sm font-semibold text-white transition hover:bg-accent-deep disabled:cursor-not-allowed disabled:opacity-40 md:px-5"
+          className="shrink-0"
         >
           {submitLabel}
-        </button>
+        </Button>
       </div>
       {listening ? (
         <p className="font-sans text-[11px] text-accent">

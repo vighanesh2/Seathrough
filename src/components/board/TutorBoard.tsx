@@ -59,6 +59,7 @@ type TutorBoardProps = {
   drawQueue?: DrawCommandQueue;
   drawSessionKey?: number;
   drawPlaying?: boolean;
+  drawSpeed?: number;
   preferDrawEngine?: boolean;
   drawSpeech?: string | null;
   canvasHeight?: number;
@@ -87,6 +88,7 @@ export function TutorBoard({
   drawQueue,
   drawSessionKey = 0,
   drawPlaying = false,
+  drawSpeed = 1,
   preferDrawEngine = false,
   drawSpeech = null,
   canvasHeight,
@@ -153,7 +155,10 @@ export function TutorBoard({
                   threeSelectedStructure ? [threeSelectedStructure] : []
                 }
                 onSelectStructure={onThreeSelect}
-                showStructureControls={threeScene.id === "cardiopulmonary"}
+                showStructureControls={
+                  threeScene.id === "cardiopulmonary" ||
+                  threeScene.id === "eye"
+                }
                 className="h-full min-h-[280px] w-full overflow-hidden rounded-xl border border-board-edge bg-[#f7fafc]"
               />
             </div>
@@ -166,12 +171,19 @@ export function TutorBoard({
                 {drawSpeech}
               </p>
             ) : null}
+            {formula ? (
+              <div className="shrink-0 border-b border-board-edge/50 bg-chalk/80 px-3 py-2">
+                <FormulaStrip source={formula} playKey={playKey} />
+              </div>
+            ) : null}
             <div className="relative min-h-0 flex-1 p-2 md:p-3">
               <KonvaDrawStage
                 queue={drawQueue}
                 sessionKey={drawSessionKey}
                 playing={drawPlaying}
+                speed={drawSpeed}
                 onClock={onDrawClock}
+                onComplete={onDrawComplete}
                 canvasHeight={canvasHeight}
                 scrollToY={scrollToY}
                 className="h-full min-h-[280px] w-full overflow-auto rounded-xl border border-board-edge bg-white"

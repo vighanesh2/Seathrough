@@ -1,7 +1,6 @@
 import { loadConversationContext } from "@/lib/conversations/store";
 import { getUserFromRequest } from "@/lib/auth/requestUser";
-import { getServiceSupabase } from "@/lib/supabase/server";
-import type { VisualPlan } from "@/lib/visuals/types";
+import { loadConversationBoard } from "@/lib/lessons/boardSnapshot";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,59 +34,35 @@ export async function GET(request: Request, context: RouteContext) {
     return Response.json({ error: "Conversation not found" }, { status: 404 });
   }
 
-  let visualPlan: VisualPlan | null = null;
-  let threeScene: unknown = null;
+  let visualPlan = null as Awaited<
+    ReturnType<typeof loadConversationBoard>
+  >["visualPlan"];
+  let threeScene = null as Awaited<
+    ReturnType<typeof loadConversationBoard>
+  >["threeScene"];
+  let board = null as Awaited<
+    ReturnType<typeof loadConversationBoard>
+  >["board"];
+
   try {
-    const supabase = getServiceSupabase();
-    const { data: lesson } = await supabase
-      .from("lessons")
-      .select("plan")
-      .eq("conversation_id", conversationId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    const plan = lesson?.plan as
-      | {
-          beats?: Array<{ visual?: VisualPlan }>;
-          threeScene?: unknown;
-          title?: string;
-        }
-      | null
-      | undefined;
-    if (plan?.threeScene != null) {
-      threeScene = plan.threeScene;
-    }
-    const fromBeats = plan?.beats
-      ?.map((b) => b.visual)
-      .filter(Boolean)
-      .at(-1);
-    if (fromBeats) visualPlan = fromBeats;
-
-    const { data: beatRow } = await supabase
-      .from("lesson_beats")
-      .select("payload")
-      .eq("lesson_id", ctx.lessonId ?? "")
-      .order("beat_order", { ascending: false })
-      .limit(8);
-
-    for (const row of beatRow ?? []) {
-      const payload = row.payload as {
-        visualTrigger?: { plan?: VisualPlan | null };
-      };
-      const p = payload?.visualTrigger?.plan;
-      if (p) {
-        visualPlan = p;
-        break;
-      }
-    }
-  } catch {
-    // optional
+    const restored = await loadConversationBoard({
+      conversationId,
+      rootPrompt: ctx.rootPrompt,
+    });
+    board = restored.board;
+    visualPlan = restored.visualPlan;
+    threeScene = restored.threeScene;
+  } catch (error) {
+    console.error(
+      "[conversations-get] board restore failed",
+      error instanceof Error ? error.message : error,
+    );
   }
 
   return Response.json({
     conversation: ctx,
     visualPlan,
     threeScene,
+    board,
   });
 }

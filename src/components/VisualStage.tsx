@@ -32,6 +32,7 @@ type VisualStageProps = {
   drawQueue?: DrawCommandQueue;
   drawSessionKey?: number;
   drawPlaying?: boolean;
+  drawSpeed?: number;
   preferDrawEngine?: boolean;
   drawSpeech?: string | null;
   canvasHeight?: number;
@@ -57,6 +58,7 @@ export function VisualStage({
   drawQueue,
   drawSessionKey,
   drawPlaying,
+  drawSpeed,
   preferDrawEngine,
   drawSpeech,
   canvasHeight,
@@ -82,6 +84,7 @@ export function VisualStage({
       drawQueue={drawQueue}
       drawSessionKey={drawSessionKey}
       drawPlaying={drawPlaying}
+      drawSpeed={drawSpeed}
       preferDrawEngine={preferDrawEngine}
       drawSpeech={drawSpeech}
       canvasHeight={canvasHeight}

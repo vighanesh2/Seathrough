@@ -10,6 +10,7 @@ export const threeSceneIdSchema = z.enum([
   "molecule",
   "vectors",
   "cardiopulmonary",
+  "eye",
   "heart",
   "cell",
   "generic",
@@ -60,6 +61,11 @@ const SCENE_DEFAULTS: Record<
     maxReveal: 6,
     params: { animationMode: "overview" },
   },
+  eye: {
+    title: "Eye and vision",
+    maxReveal: 6,
+    params: { animationMode: "overview" },
+  },
   heart: { title: "How the heart works", maxReveal: 5 },
   cell: { title: "Cell structure", maxReveal: 4 },
   generic: { title: "Interactive model", maxReveal: 4 },
@@ -99,6 +105,15 @@ const ID_ALIASES: Record<string, ThreeSceneId> = {
   respiratory: "cardiopulmonary",
   breathing: "cardiopulmonary",
   gas_exchange: "cardiopulmonary",
+  eye: "eye",
+  vision: "eye",
+  eyeball: "eye",
+  retina: "eye",
+  cornea: "eye",
+  pupil: "eye",
+  optics: "eye",
+  seeing: "eye",
+  sight: "eye",
   cell: "cell",
   cellular: "cell",
   organelle: "cell",
@@ -167,16 +182,38 @@ export function threeSceneFromLessonPlan(
       /\b(breath|air|oxygen|carbon dioxide|gas exchange|blood)\b/.test(
         lessonText,
       ));
+  const isEyeLesson =
+    /\b(cornea|retina|fovea|photoreceptor|optic nerve|visual cortex|accommodation|pupil)\b/.test(
+      lessonText,
+    ) ||
+    (/\b(eye|vision|seeing|sight)\b/.test(lessonText) &&
+      /\b(see|light|focus|lens|image|inverted|upside|rod|cone|iris)\b/.test(
+        lessonText,
+      ));
   // New heart lessons use the full cardiopulmonary model. Keep the legacy
   // `heart` builder only for reopening conversations created before this scene.
   if (
     selected?.id === "heart" ||
     (isCardiopulmonaryLesson &&
+      !isEyeLesson &&
       (!selected || selected.id === "generic"))
   ) {
     const defaults = SCENE_DEFAULTS.cardiopulmonary;
     return {
       id: "cardiopulmonary",
+      title: selected?.title ?? plan.title,
+      maxReveal: defaults.maxReveal,
+      reveal: 1,
+      params: { ...(defaults.params ?? {}) },
+    };
+  }
+  if (
+    isEyeLesson &&
+    (!selected || selected.id === "generic" || selected.id === "eye")
+  ) {
+    const defaults = SCENE_DEFAULTS.eye;
+    return {
+      id: "eye",
       title: selected?.title ?? plan.title,
       maxReveal: defaults.maxReveal,
       reveal: 1,

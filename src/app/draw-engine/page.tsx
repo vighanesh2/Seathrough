@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { DrawEngineShell } from "@/components/draw-engine/DrawEngineShell";
+import { Workspace } from "@/modules/draw-engine";
+import { drawEngineMode } from "@/modules/draw-engine/mode";
 
 export const metadata: Metadata = {
-  title: "Draw engine · SeeThrough",
-  description:
-    "Client Konva draw engine fed by a timed SSE command stream (AI as planner).",
+  title: drawEngineMode.metaTitle,
+  description: drawEngineMode.metaDescription,
 };
 
 export default function DrawEnginePage() {
-  return <DrawEngineShell />;
+  return <Workspace />;
 }

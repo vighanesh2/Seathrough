@@ -7,6 +7,7 @@ import {
 import { listAssetIdsForPrompt } from "@/lib/visuals/router";
 import { threeSceneCatalogForPrompt } from "@/lib/three-scenes/decide";
 import { retrieveCardiopulmonaryKnowledge } from "@/lib/anatomy/knowledge/cardiopulmonary";
+import { retrieveEyeKnowledge } from "@/lib/anatomy/knowledge/eye";
 import type { AnatomyStructureId } from "@/lib/anatomy/types";
 
 const ASSETS = listAssetIdsForPrompt();
@@ -39,6 +40,32 @@ function cardiopulmonaryEvidence(
     .join("\n\n");
 }
 
+function eyeEvidence(question: string, visualSummary?: string): string {
+  const selected = selectedAnatomyStructure(visualSummary);
+  const sceneIsActive = visualSummary?.includes("scene=eye");
+  const entries = retrieveEyeKnowledge(
+    question,
+    sceneIsActive ? selected : undefined,
+    4,
+  );
+  if (!entries.length) return "";
+  return entries
+    .map(
+      (entry, index) =>
+        `[Eye/vision evidence ${index + 1}: ${entry.title}]\n${entry.excerpt}`,
+    )
+    .join("\n\n");
+}
+
+function anatomyEvidenceForPrompt(
+  question: string,
+  visualSummary?: string,
+): string {
+  return [cardiopulmonaryEvidence(question, visualSummary), eyeEvidence(question, visualSummary)]
+    .filter(Boolean)
+    .join("\n\n");
+}
+
 const SYSTEM_PROMPT = `You are the lesson planner for SeeThrough.
 Voice is Deepgram TTS. You plan beats only.
 
@@ -58,6 +85,8 @@ INTERACTIVE 3D (Three.js) — YOU decide, do not rely on keyword lists:
 - When use=true, pick id from this catalog ONLY: ${THREE_SCENES}
 - For heart pumping, chambers, valves, blood flow, lungs, breathing, pulmonary circulation, or gas exchange, use id "cardiopulmonary". The legacy "heart" id is restore-only.
 - For cardiopulmonary lessons, teach flow in anatomical order and distinguish pulmonary arteries (away from the heart, oxygen-poor) from pulmonary veins (toward the heart, oxygen-rich).
+- For eye, vision, seeing, light path, cornea, lens focus, pupil, retina, rods/cones, or how the brain interprets the inverted image, use id "eye".
+- For eye lessons, teach light path in order (cornea → pupil → lens → retina → optic nerve → cortex) and state that the retinal image is inverted.
 - If nothing fits but 3D still helps, use id "generic".
 - When use=false or not needed, set threeScene to null.
 
@@ -103,6 +132,7 @@ Examples:
 - "horseriding" → horse-rider ONLY; threeScene null
 - "java class" → class-blueprint; threeScene null
 - "how does the heart pump blood" → threeScene { use:true, id:"cardiopulmonary", title:"Heart and lungs" }
+- "how does the eye see" → threeScene { use:true, id:"eye", title:"Eye and vision" }
 - "how does the solar system orbit" → threeScene { use:true, id:"solar_system", title:"Solar System" }
 - "what is a variable" → threeScene null
 - Math theorems: rough + formula; threeScene only if spatial geometry truly helps (e.g. pythagoras)
@@ -224,14 +254,14 @@ export async function generateLessonPlan(prompt: string): Promise<LessonPlanPars
   if (!trimmed) {
     throw new Error("Prompt is empty");
   }
-  const evidence = cardiopulmonaryEvidence(trimmed);
+  const evidence = anatomyEvidenceForPrompt(trimmed);
 
   return completeLessonPlan(
     SYSTEM_PROMPT,
     [
       `Create a SeeThrough lesson for:\n\n${trimmed}`,
       evidence
-        ? `For claims about normal heart/lung physiology, use only this reviewed evidence and do not add unsupported medical claims:\n\n${evidence}`
+        ? `For claims about normal heart/lung or eye/vision physiology, use only this reviewed evidence and do not add unsupported medical claims:\n\n${evidence}`
         : "",
       "Use only simple, directly relevant visuals. No invented metaphors.",
     ]
@@ -253,7 +283,7 @@ export async function generateFollowUpPlan(
   const planSnippet = context.priorPlanJson
     ? context.priorPlanJson.slice(0, 3500)
     : "(plan unavailable)";
-  const anatomyEvidence = cardiopulmonaryEvidence(
+  const anatomyEvidence = anatomyEvidenceForPrompt(
     trimmed,
     context.visualSummary,
   );
@@ -270,7 +300,7 @@ export async function generateFollowUpPlan(
         ? `Current board visual:\n${context.visualSummary}`
         : "",
       anatomyEvidence
-        ? `Reviewed cardiopulmonary evidence for this answer. Use only this evidence for biological claims:\n${anatomyEvidence}`
+        ? `Reviewed anatomy evidence for this answer. Use only this evidence for biological claims:\n${anatomyEvidence}`
         : "",
       `Conversation so far:\n${context.transcript}`,
       `Prior plan (truncated JSON):\n${planSnippet}`,

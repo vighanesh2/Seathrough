@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { AnatomyWorkspace } from "@/components/anatomy/AnatomyWorkspace";
+import { Workspace } from "@/modules/figures-3d";
+import { figures3dMode } from "@/modules/figures-3d/mode";
 
 export const metadata: Metadata = {
-  title: "3D Figures: Heart and Lungs | SeeThrough",
-  description:
-    "Explore an animated, source-grounded 3D model of normal heart and lung physiology.",
+  title: figures3dMode.metaTitle,
+  description: figures3dMode.metaDescription,
 };
 
 export default function ThreeDFiguresPage() {
-  return <AnatomyWorkspace />;
+  return <Workspace />;
 }

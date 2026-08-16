@@ -1,6 +1,6 @@
 import type * as THREE from "three";
 
-export const ANATOMY_STRUCTURE_IDS = [
+export const CARDIOPULMONARY_STRUCTURE_IDS = [
   "heart",
   "right-atrium",
   "tricuspid-valve",
@@ -26,9 +26,31 @@ export const ANATOMY_STRUCTURE_IDS = [
   "diaphragm",
 ] as const;
 
-export type AnatomyStructureId = (typeof ANATOMY_STRUCTURE_IDS)[number];
+export const EYE_STRUCTURE_IDS = [
+  "eye",
+  "sclera",
+  "cornea",
+  "iris",
+  "pupil",
+  "lens",
+  "aqueous-humor",
+  "vitreous",
+  "retina",
+  "fovea",
+  "photoreceptors",
+  "optic-nerve",
+  "visual-cortex",
+] as const;
 
-export const ANATOMY_ANIMATION_MODES = [
+export const ANATOMY_STRUCTURE_IDS = [
+  ...CARDIOPULMONARY_STRUCTURE_IDS,
+  ...EYE_STRUCTURE_IDS,
+] as const;
+
+export type AnatomyStructureId = (typeof ANATOMY_STRUCTURE_IDS)[number];
+export type EyeStructureId = (typeof EYE_STRUCTURE_IDS)[number];
+
+export const CARDIOPULMONARY_ANIMATION_MODES = [
   "overview",
   "cardiac-cycle",
   "pulmonary-circulation",
@@ -37,13 +59,50 @@ export const ANATOMY_ANIMATION_MODES = [
   "gas-exchange",
 ] as const;
 
+export const EYE_ANIMATION_MODES = [
+  "overview",
+  "light-path",
+  "accommodation",
+  "pupil-reflex",
+  "photoreceptors",
+  "neural-signal",
+] as const;
+
+/** Union of all anatomy animation modes (shared "overview" appears once). */
+export const ANATOMY_ANIMATION_MODES = [
+  "overview",
+  "cardiac-cycle",
+  "pulmonary-circulation",
+  "systemic-outflow",
+  "ventilation",
+  "gas-exchange",
+  "light-path",
+  "accommodation",
+  "pupil-reflex",
+  "photoreceptors",
+  "neural-signal",
+] as const;
+
 export type AnatomyAnimationMode = (typeof ANATOMY_ANIMATION_MODES)[number];
+export type CardiopulmonaryAnimationMode =
+  (typeof CARDIOPULMONARY_ANIMATION_MODES)[number];
+export type EyeAnimationMode = (typeof EYE_ANIMATION_MODES)[number];
+
+export const ANATOMY_SCENE_IDS = ["cardiopulmonary", "eye"] as const;
+export type AnatomySceneId = (typeof ANATOMY_SCENE_IDS)[number];
 
 export type CardiacPhase =
   | "filling"
   | "atrial-systole"
   | "ventricular-systole"
   | "ejection";
+
+export type VisionPhase =
+  | "incoming"
+  | "focusing"
+  | "inverted"
+  | "transducing"
+  | "cortical";
 
 export type AnatomySource = {
   id: string;
@@ -56,7 +115,14 @@ export type AnatomyStructure = {
   id: AnatomyStructureId;
   label: string;
   shortLabel: string;
-  system: "cardiac" | "pulmonary" | "vascular" | "respiratory";
+  system:
+    | "cardiac"
+    | "pulmonary"
+    | "vascular"
+    | "respiratory"
+    | "ocular"
+    | "optical"
+    | "neural";
   description: string;
   function: string;
   reveal: number;
@@ -77,8 +143,10 @@ export type AnatomySceneSnapshot = {
   selectedStructure: AnatomyStructureId | null;
   focusedStructures: AnatomyStructureId[];
   animationMode: AnatomyAnimationMode;
-  cardiacPhase: CardiacPhase;
-  oxygenation: "deoxygenated" | "oxygenating" | "oxygenated" | "mixed";
+  cardiacPhase?: CardiacPhase;
+  oxygenation?: "deoxygenated" | "oxygenating" | "oxygenated" | "mixed";
+  visionPhase?: VisionPhase;
+  imageOrientation?: "inverted" | "cortical";
 };
 
 export type AnatomySceneHandle = {
@@ -101,6 +169,7 @@ export type AnatomyQuestionRequest = {
   question: string;
   selectedStructure?: AnatomyStructureId | null;
   sceneMode?: AnatomyAnimationMode;
+  sceneId?: AnatomySceneId;
 };
 
 export type AnatomyCitation = AnatomySource & {

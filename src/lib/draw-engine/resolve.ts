@@ -1,3 +1,4 @@
+import { latexToBoardText } from "@/lib/math/latexToBoardText";
 import type { DrawCommand, StrokeCommand } from "@/lib/draw-engine/commands";
 
 export type Point = { x: number; y: number };
@@ -268,15 +269,18 @@ export function resolveDrawablesAt(
         break;
       }
       case "text": {
+        // Reveal per character so the board reads as someone writing it out.
+        const chars = Math.max(1, Math.round(cmd.text.length * raw));
+        const shown = raw >= 1 ? cmd.text : cmd.text.slice(0, chars);
         out.push({
           kind: "text",
           id: cmd.id,
-          text: cmd.text,
+          text: shown,
           x: cmd.x,
           y: cmd.y,
           color: cmd.color ?? "#1a2b3c",
           fontSize: cmd.fontSize,
-          opacity: p,
+          opacity: Math.min(1, 0.55 + raw * 0.45),
         });
         break;
       }
@@ -314,13 +318,100 @@ export function resolveDrawablesAt(
   return out;
 }
 
+/** Rough glyph advance for the board font — good enough to track a pen tip. */
+const CHAR_ADVANCE = 0.55;
+
+/** Point the pen has reached partway through a single command. */
+function penPointFor(cmd: DrawCommand, raw: number): Point | null {
+  const p = easeOutCubic(raw);
+
+  switch (cmd.type) {
+    case "text": {
+      const chars = Math.max(1, Math.round(cmd.text.length * raw));
+      return {
+        x: cmd.x + chars * cmd.fontSize * CHAR_ADVANCE,
+        y: cmd.y + cmd.fontSize * 0.9,
+      };
+    }
+    case "stroke": {
+      const pts = strokeProgressPoints(cmd, raw);
+      const last = pts[pts.length - 1];
+      return last ? { x: last.x, y: last.y } : null;
+    }
+    case "line":
+    case "arrow":
+      return { x: lerp(cmd.x1, cmd.x2, p), y: lerp(cmd.y1, cmd.y2, p) };
+    case "rect":
+    case "highlight":
+      return { x: cmd.x + cmd.w * p, y: cmd.y + cmd.h * p };
+    case "circle":
+      return { x: cmd.x + cmd.radius * p, y: cmd.y };
+    default:
+      return null;
+  }
+}
+
+export type PenState = Point & {
+  /** True while a stroke is actually being drawn, false when resting. */
+  writing: boolean;
+};
+
+/**
+ * Where the tutor's pen is at `nowMs`, or null when the hand is off the board.
+ *
+ * Between steps the pen rests where it last wrote rather than disappearing —
+ * a tutor pausing to talk still holds the marker against the board. It only
+ * lifts before the first stroke and after the last one.
+ */
+export function penPositionAt(
+  commands: DrawCommand[],
+  nowMs: number,
+): PenState | null {
+  let current: DrawCommand | null = null;
+  let lastDone: DrawCommand | null = null;
+  let more = false;
+
+  for (const cmd of commands) {
+    if (cmd.type === "pause" || cmd.type === "clear") continue;
+    const dur = Math.max(1, cmd.durationMs || 1);
+    if (cmd.t0 > nowMs) {
+      more = true;
+      continue;
+    }
+    if (nowMs < cmd.t0 + dur) {
+      if (!current || cmd.t0 >= current.t0) current = cmd;
+      continue;
+    }
+    if (!lastDone || cmd.t0 >= lastDone.t0) lastDone = cmd;
+  }
+
+  if (current) {
+    const dur = Math.max(1, current.durationMs || 1);
+    const at = penPointFor(current, clamp01((nowMs - current.t0) / dur));
+    return at ? { ...at, writing: true } : null;
+  }
+
+  // Idling mid-lesson: keep the marker where it finished the last step.
+  if (lastDone && more) {
+    const at = penPointFor(lastDone, 1);
+    return at ? { ...at, writing: false } : null;
+  }
+
+  return null;
+}
+
 /** Mutable command queue used by the Konva stage. */
 export class DrawCommandQueue {
   private commands: DrawCommand[] = [];
   private listeners = new Set<() => void>();
 
   enqueue(cmd: DrawCommand | DrawCommand[]) {
-    const list = Array.isArray(cmd) ? cmd : [cmd];
+    const list = (Array.isArray(cmd) ? cmd : [cmd]).map((c) => {
+      if (c.type !== "text") return c;
+      const text = latexToBoardText(c.text).slice(0, 120);
+      if (!text) return c;
+      return text === c.text ? c : { ...c, text };
+    });
     this.commands.push(...list);
     this.commands.sort((a, b) => a.t0 - b.t0);
     this.emit();

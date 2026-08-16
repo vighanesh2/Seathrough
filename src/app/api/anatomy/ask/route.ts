@@ -1,13 +1,28 @@
 import { generateGroundedAnatomyAnswer } from "@/lib/anatomy/answer";
-import {
-  citationsForKnowledge,
-  retrieveCardiopulmonaryKnowledge,
-} from "@/lib/anatomy/knowledge/cardiopulmonary";
+import { citationsForKnowledge } from "@/lib/anatomy/knowledge/shared";
+import { retrieveCardiopulmonaryKnowledge } from "@/lib/anatomy/knowledge/cardiopulmonary";
+import { retrieveEyeKnowledge } from "@/lib/anatomy/knowledge/eye";
 import { anatomyQuestionRequestSchema } from "@/lib/anatomy/schemas";
 import { getUserFromRequest } from "@/lib/auth/requestUser";
+import type { AnatomySceneId } from "@/lib/anatomy/types";
+import { EYE_STRUCTURE_IDS } from "@/lib/anatomy/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+function resolveSceneId(
+  requested: AnatomySceneId | undefined,
+  selectedStructure: string | null | undefined,
+): AnatomySceneId {
+  if (requested === "eye" || requested === "cardiopulmonary") return requested;
+  if (
+    selectedStructure &&
+    (EYE_STRUCTURE_IDS as readonly string[]).includes(selectedStructure)
+  ) {
+    return "eye";
+  }
+  return "cardiopulmonary";
+}
 
 export async function POST(request: Request) {
   const user = await getUserFromRequest(request);
@@ -36,14 +51,27 @@ export async function POST(request: Request) {
     );
   }
 
-  const entries = retrieveCardiopulmonaryKnowledge(
-    parsed.data.question,
+  const sceneId = resolveSceneId(
+    parsed.data.sceneId,
     parsed.data.selectedStructure,
   );
+  const entries =
+    sceneId === "eye"
+      ? retrieveEyeKnowledge(
+          parsed.data.question,
+          parsed.data.selectedStructure,
+        )
+      : retrieveCardiopulmonaryKnowledge(
+          parsed.data.question,
+          parsed.data.selectedStructure,
+        );
+
   if (!entries.length) {
     return Response.json({
       answer:
-        "I do not have enough cardiopulmonary evidence in the reviewed source set to answer that reliably. Ask about heart chambers, valves, pulmonary blood flow, breathing, or alveolar gas exchange.",
+        sceneId === "eye"
+          ? "I do not have enough eye/vision evidence in the reviewed source set to answer that reliably. Ask about the light path, cornea, lens focus, pupil, retina, rods and cones, or signals to the brain."
+          : "I do not have enough cardiopulmonary evidence in the reviewed source set to answer that reliably. Ask about heart chambers, valves, pulmonary blood flow, breathing, or alveolar gas exchange.",
       citations: [],
       focusStructures: parsed.data.selectedStructure
         ? [parsed.data.selectedStructure]
@@ -59,6 +87,7 @@ export async function POST(request: Request) {
       question: parsed.data.question,
       selectedStructure: parsed.data.selectedStructure,
       entries,
+      sceneId,
       signal: request.signal,
     });
     return Response.json(answer, {

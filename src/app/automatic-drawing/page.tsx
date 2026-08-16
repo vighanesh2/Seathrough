@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { WhiteboardShell } from "@/components/whiteboard/WhiteboardShell";
+import { Workspace } from "@/modules/automatic-drawing";
+import { automaticDrawingMode } from "@/modules/automatic-drawing/mode";
 
 export const metadata: Metadata = {
-  title: "Whiteboard · SeeThrough",
-  description: "Prompt SeeThrough’s whiteboard and watch it draw automatically.",
+  title: automaticDrawingMode.metaTitle,
+  description: automaticDrawingMode.metaDescription,
 };
 
 export default function AutomaticDrawingPage() {
-  return <WhiteboardShell />;
+  return <Workspace />;
 }

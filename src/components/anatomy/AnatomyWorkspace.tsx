@@ -1,18 +1,23 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
+import { AppHeader } from "@/components/lms/AppHeader";
+import { AppShell } from "@/components/lms/AppShell";
+import { Button } from "@/components/ui/button";
 import {
   ANATOMY_MODE_LABELS,
-  CARDIOPULMONARY_STRUCTURES,
+  modesForScene,
+  SCENE_STRUCTURES,
+  SCENE_TITLES,
   STRUCTURE_BY_ID,
 } from "@/lib/anatomy/registry";
 import type {
   AnatomyAnswer,
   AnatomyAnimationMode,
+  AnatomySceneId,
   AnatomyStructureId,
 } from "@/lib/anatomy/types";
 import type { ThreeScenePlan } from "@/lib/three-scenes/decide";
@@ -38,15 +43,40 @@ type AnswerTurn = {
 };
 
 const SPEEDS = [0.5, 1, 1.5] as const;
-const EXAMPLE_QUESTIONS = [
-  "How does blood travel from the body through the lungs and back?",
-  "Why do pulmonary arteries carry deoxygenated blood?",
-  "What happens at the alveoli?",
-];
+
+const EXAMPLE_QUESTIONS: Record<AnatomySceneId, string[]> = {
+  cardiopulmonary: [
+    "How does blood travel from the body through the lungs and back?",
+    "Why do pulmonary arteries carry deoxygenated blood?",
+    "What happens at the alveoli?",
+  ],
+  eye: [
+    "How does light travel through the eye?",
+    "Why is the image on the retina upside down?",
+    "How does the lens focus for near objects?",
+  ],
+};
+
+const LEGENDS: Record<
+  AnatomySceneId,
+  Array<{ color: string; label: string }>
+> = {
+  cardiopulmonary: [
+    { color: "bg-blue-600", label: "oxygen-poor blood" },
+    { color: "bg-red-500", label: "oxygen-rich blood" },
+    { color: "bg-cyan-400", label: "airflow / oxygen" },
+  ],
+  eye: [
+    { color: "bg-amber-400", label: "light rays" },
+    { color: "bg-rose-500", label: "inverted retinal image" },
+    { color: "bg-sky-400", label: "neural signal" },
+  ],
+};
 
 export function AnatomyWorkspace() {
   const { user, accessToken, loading: authLoading } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
+  const [sceneId, setSceneId] = useState<AnatomySceneId>("eye");
   const [selected, setSelected] = useState<AnatomyStructureId | null>(null);
   const [focused, setFocused] = useState<AnatomyStructureId[]>([]);
   const [mode, setMode] = useState<AnatomyAnimationMode>("overview");
@@ -66,27 +96,43 @@ export function AnatomyWorkspace() {
     [],
   );
 
+  function switchScene(next: AnatomySceneId) {
+    if (next === sceneId) return;
+    setSceneId(next);
+    setSelected(null);
+    setFocused([]);
+    setMode("overview");
+    setReveal(6);
+    setTurns([]);
+    setQuestion("");
+  }
+
   const scenePlan = useMemo<ThreeScenePlan>(
     () => ({
-      id: "cardiopulmonary",
-      title: "Normal cardiopulmonary physiology",
+      id: sceneId,
+      title:
+        sceneId === "eye"
+          ? "Normal eye and vision physiology"
+          : "Normal cardiopulmonary physiology",
       reveal,
       maxReveal: 6,
       params: { animationMode: mode },
     }),
-    [mode, reveal],
+    [mode, reveal, sceneId],
   );
 
+  const availableModes = useMemo(() => modesForScene(sceneId), [sceneId]);
+
   const structuresBySystem = useMemo(() => {
-    const groups = new Map<string, typeof CARDIOPULMONARY_STRUCTURES>();
-    for (const structure of CARDIOPULMONARY_STRUCTURES) {
+    const groups = new Map<string, typeof SCENE_STRUCTURES.eye>();
+    for (const structure of SCENE_STRUCTURES[sceneId]) {
       if (structure.reveal > reveal) continue;
       const group = groups.get(structure.system) ?? [];
       group.push(structure);
       groups.set(structure.system, group);
     }
     return [...groups.entries()];
-  }, [reveal]);
+  }, [reveal, sceneId]);
 
   function selectStructure(structure: AnatomyStructureId | null) {
     setSelected(structure);
@@ -121,6 +167,7 @@ export function AnatomyWorkspace() {
           question: trimmed,
           selectedStructure: selected,
           sceneMode: mode,
+          sceneId,
         }),
         signal: controller.signal,
       });
@@ -161,42 +208,48 @@ export function AnatomyWorkspace() {
   const selectedInfo = selected ? STRUCTURE_BY_ID[selected] : null;
 
   return (
-    <main className="flex h-dvh min-h-0 flex-col overflow-y-auto bg-paper text-ink md:overflow-hidden">
+    <AppShell className="flex-col md:overflow-hidden overflow-y-auto">
       <AuthModal
         open={authOpen}
         onClose={() => setAuthOpen(false)}
         initialMode="login"
       />
 
-      <header className="flex shrink-0 flex-wrap items-center gap-3 border-b border-board-edge bg-white/90 px-4 py-3 backdrop-blur md:px-6">
-        <Link
-          href="/"
-          className="rounded-lg font-display text-xl font-semibold text-ink transition hover:text-accent"
-        >
-          SeeThrough
-        </Link>
-        <span className="h-5 w-px bg-board-edge" aria-hidden />
-        <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-accent">
-            3D Figures
-          </p>
-          <h1 className="truncate font-sans text-sm font-semibold">
-            Heart and lungs
-          </h1>
-        </div>
-        <p className="hidden max-w-md text-right font-sans text-[11px] text-muted lg:block">
-          Source-grounded educational model · not medical advice
-        </p>
-        {!authLoading && !user ? (
-          <button
-            type="button"
-            onClick={() => setAuthOpen(true)}
-            className="rounded-lg border border-board-edge bg-white px-3 py-2 font-sans text-xs font-semibold text-accent-deep hover:border-accent"
-          >
-            Sign in to ask
-          </button>
-        ) : null}
-      </header>
+      <AppHeader
+        current="figures-3d"
+        eyebrow="Body"
+        title={SCENE_TITLES[sceneId]}
+        actions={
+          <div className="flex items-center gap-1 rounded-lg border border-border bg-secondary p-0.5">
+            {(
+              [
+                ["eye", "Eye"],
+                ["cardiopulmonary", "Heart"],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => switchScene(id)}
+                className={`rounded-md px-2.5 py-1.5 text-[11px] font-semibold transition ${
+                  sceneId === id
+                    ? "bg-card text-accent-deep shadow-sm"
+                    : "text-muted hover:text-ink"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        }
+        account={
+          !authLoading && !user ? (
+            <Button variant="outline" size="sm" onClick={() => setAuthOpen(true)}>
+              Sign in to ask
+            </Button>
+          ) : null
+        }
+      />
 
       <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[250px_minmax(0,1fr)_360px]">
         <aside className="hidden min-h-0 overflow-y-auto border-r border-board-edge bg-white/75 p-3 xl:block">
@@ -289,9 +342,9 @@ export function AnatomyWorkspace() {
                 }
                 className="min-w-0 flex-1 rounded-lg border border-board-edge bg-white px-2.5 py-2 text-xs font-semibold text-ink outline-none focus:border-accent"
               >
-                {Object.entries(ANATOMY_MODE_LABELS).map(([id, label]) => (
+                {availableModes.map((id) => (
                   <option key={id} value={id}>
-                    {label}
+                    {ANATOMY_MODE_LABELS[id]}
                   </option>
                 ))}
               </select>
@@ -311,18 +364,14 @@ export function AnatomyWorkspace() {
           </div>
 
           <div className="mt-2 flex flex-wrap items-center gap-3 px-1 font-sans text-[10px] text-muted">
-            <span>
-              <i className="mr-1 inline-block size-2 rounded-full bg-blue-600" />
-              oxygen-poor blood
-            </span>
-            <span>
-              <i className="mr-1 inline-block size-2 rounded-full bg-red-500" />
-              oxygen-rich blood
-            </span>
-            <span>
-              <i className="mr-1 inline-block size-2 rounded-full bg-cyan-400" />
-              airflow / oxygen
-            </span>
+            {LEGENDS[sceneId].map((item) => (
+              <span key={item.label}>
+                <i
+                  className={`mr-1 inline-block size-2 rounded-full ${item.color}`}
+                />
+                {item.label}
+              </span>
+            ))}
           </div>
         </section>
 
@@ -361,7 +410,11 @@ export function AnatomyWorkspace() {
                 onChange={(event) => setQuestion(event.target.value)}
                 maxLength={600}
                 rows={3}
-                placeholder="How does the right ventricle send blood to the lungs?"
+                placeholder={
+                  sceneId === "eye"
+                    ? "Why is the retinal image upside down?"
+                    : "How does the right ventricle send blood to the lungs?"
+                }
                 className="w-full resize-none rounded-xl border border-board-edge bg-paper px-3 py-2.5 font-sans text-sm text-ink outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent-soft"
               />
               <div className="mt-2 flex items-center justify-between">
@@ -380,7 +433,7 @@ export function AnatomyWorkspace() {
 
             {!turns.length ? (
               <div className="mt-4 space-y-2">
-                {EXAMPLE_QUESTIONS.map((example) => (
+                {EXAMPLE_QUESTIONS[sceneId].map((example) => (
                   <button
                     key={example}
                     type="button"
@@ -446,11 +499,12 @@ export function AnatomyWorkspace() {
           </div>
 
           <footer className="shrink-0 border-t border-board-edge px-4 py-2.5 font-sans text-[9px] leading-4 text-muted">
-            Geometry: NIH 3D Human Reference Atlas, CC BY 4.0. Normal physiology
-            visualization for education; not diagnosis or treatment guidance.
+            {sceneId === "cardiopulmonary"
+              ? "Geometry: NIH 3D Human Reference Atlas, CC BY 4.0. Normal physiology visualization for education; not diagnosis or treatment guidance."
+              : "Procedural educational model grounded in reviewed anatomy sources. Normal vision physiology for education; not diagnosis or treatment guidance."}
           </footer>
         </aside>
       </div>
-    </main>
+    </AppShell>
   );
 }

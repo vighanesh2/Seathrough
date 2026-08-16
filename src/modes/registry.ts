@@ -1,0 +1,50 @@
+import { automaticDrawingMode } from "@/modules/automatic-drawing/mode";
+import { drawEngineMode } from "@/modules/draw-engine/mode";
+import { figures3dMode } from "@/modules/figures-3d/mode";
+import { leetcodeMode } from "@/modules/leetcode/mode";
+import { lessonsMode } from "@/modules/lessons/mode";
+import { screenshotExplainMode } from "@/modules/screenshot-explain/mode";
+import type { ModeDefinition, ModeId, ModeKind } from "@/modes/types";
+
+/**
+ * Master catalog. To plug a mode out: set `enabled: false` on its mode.ts
+ * (or remove it from ALL_MODES). Home + ModeNav read only enabled entries.
+ */
+const ALL_MODES: ModeDefinition[] = [
+  lessonsMode,
+  screenshotExplainMode,
+  leetcodeMode,
+  figures3dMode,
+  automaticDrawingMode,
+  drawEngineMode,
+];
+
+function byOrder(a: ModeDefinition, b: ModeDefinition) {
+  return a.order - b.order;
+}
+
+/** All registered modes (including disabled) — for admin/debug. */
+export function listAllModes(): ModeDefinition[] {
+  return [...ALL_MODES].sort(byOrder);
+}
+
+/** Modes shown on home and in ModeNav. */
+export function listEnabledModes(kind?: ModeKind): ModeDefinition[] {
+  return ALL_MODES.filter((m) => m.enabled && (kind ? m.kind === kind : true)).sort(
+    byOrder,
+  );
+}
+
+export function getMode(id: ModeId): ModeDefinition | undefined {
+  return ALL_MODES.find((m) => m.id === id);
+}
+
+export function getModeByHref(href: string): ModeDefinition | undefined {
+  const normalized = href.replace(/\/$/, "") || "/";
+  return ALL_MODES.find((m) => m.href === normalized);
+}
+
+/** Sibling modes for ModeNav (exclude current, only enabled). */
+export function listSiblingModes(currentId?: ModeId): ModeDefinition[] {
+  return listEnabledModes().filter((m) => m.id !== currentId);
+}

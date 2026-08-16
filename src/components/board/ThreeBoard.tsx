@@ -327,7 +327,13 @@ export function ThreeBoard({
   }, [plan, plan.reveal, rendererReady]);
 
   const availableStructures = useMemo(
-    () => (plan.id === "cardiopulmonary" ? structuresForReveal(plan.reveal) : []),
+    () =>
+      plan.id === "cardiopulmonary" || plan.id === "eye"
+        ? structuresForReveal(
+            plan.reveal,
+            plan.id === "eye" ? "eye" : "cardiopulmonary",
+          )
+        : [],
     [plan.id, plan.reveal],
   );
 
@@ -374,7 +380,7 @@ export function ThreeBoard({
           role="status"
         >
           <div className="mb-1.5 flex justify-between">
-            <span>Loading licensed anatomy…</span>
+            <span>Loading anatomy model…</span>
             <span>{Math.round(loadProgress * 100)}%</span>
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-board-edge/50">

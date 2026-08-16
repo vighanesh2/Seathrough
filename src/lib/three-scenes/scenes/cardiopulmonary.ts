@@ -38,9 +38,11 @@ type FlowParticle = {
   oxygenated: boolean;
 };
 
-const FOCUS_TARGETS: Record<
-  AnatomyStructureId,
-  { position: [number, number, number]; target: [number, number, number] }
+const FOCUS_TARGETS: Partial<
+  Record<
+    AnatomyStructureId,
+    { position: [number, number, number]; target: [number, number, number] }
+  >
 > = {
   heart: { position: [3.5, 2.2, 5.4], target: [0.15, 0, 0.75] },
   "right-atrium": { position: [2.3, 1.5, 4], target: [-0.35, 0.42, 1] },

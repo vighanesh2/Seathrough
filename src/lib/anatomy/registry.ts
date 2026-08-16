@@ -1,8 +1,15 @@
 import type {
   AnatomyAnimationMode,
+  AnatomySceneId,
   AnatomySource,
   AnatomyStructure,
   AnatomyStructureId,
+  CardiopulmonaryAnimationMode,
+  EyeAnimationMode,
+} from "@/lib/anatomy/types";
+import {
+  CARDIOPULMONARY_ANIMATION_MODES,
+  EYE_ANIMATION_MODES,
 } from "@/lib/anatomy/types";
 
 export const ANATOMY_SOURCES: Record<string, AnatomySource> = {
@@ -35,6 +42,36 @@ export const ANATOMY_SOURCES: Record<string, AnatomySource> = {
     title: "Lung Circulation",
     publisher: "Physiological Reviews / PubMed Central",
     url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC7432532/",
+  },
+  eyeAnatomy: {
+    id: "eye-anatomy",
+    title: "Anatomy, Head and Neck, Eye",
+    publisher: "NCBI Bookshelf / StatPearls",
+    url: "https://www.ncbi.nlm.nih.gov/books/NBK482428/",
+  },
+  retina: {
+    id: "retina",
+    title: "Anatomy, Head and Neck: Eye Retina",
+    publisher: "NCBI Bookshelf / StatPearls",
+    url: "https://www.ncbi.nlm.nih.gov/books/NBK542332/",
+  },
+  accommodation: {
+    id: "accommodation",
+    title: "Physiology, Accommodation",
+    publisher: "NCBI Bookshelf / StatPearls",
+    url: "https://www.ncbi.nlm.nih.gov/books/NBK542189/",
+  },
+  visualPathway: {
+    id: "visual-pathway",
+    title: "Neuroanatomy, Visual Pathway",
+    publisher: "NCBI Bookshelf / StatPearls",
+    url: "https://www.ncbi.nlm.nih.gov/books/NBK553189/",
+  },
+  pupil: {
+    id: "pupillary-light-reflex",
+    title: "Neuroanatomy, Pupillary Light Reflexes and Pathway",
+    publisher: "NCBI Bookshelf / StatPearls",
+    url: "https://www.ncbi.nlm.nih.gov/books/NBK553169/",
   },
 };
 
@@ -84,8 +121,27 @@ export const CARDIOPULMONARY_STRUCTURES: AnatomyStructure[] = [
   s("diaphragm", "Diaphragm", "Diaphragm", "respiratory", "The dome-shaped primary muscle of inspiration.", "Contracts downward to expand thoracic volume and draw air into the lungs.", 4, ["lung-anatomy"]),
 ];
 
+export const EYE_STRUCTURES: AnatomyStructure[] = [
+  s("eye", "Eye", "Eye", "ocular", "The organ of vision that focuses light and starts neural signaling.", "Forms an optical image on the retina and converts it into signals for the brain.", 1, ["eye-anatomy"]),
+  s("sclera", "Sclera", "Sclera", "ocular", "The tough white outer coat of the eyeball.", "Protects the globe and gives it mechanical shape.", 1, ["eye-anatomy"]),
+  s("cornea", "Cornea", "Cornea", "optical", "The clear front window of the eye.", "Provides most of the eye's refractive power so light can be focused.", 1, ["eye-anatomy"]),
+  s("iris", "Iris", "Iris", "ocular", "The colored ring that surrounds the pupil.", "Adjusts pupil size to control how much light reaches the retina.", 2, ["eye-anatomy", "pupillary-light-reflex"]),
+  s("pupil", "Pupil", "Pupil", "optical", "The aperture in the center of the iris.", "Acts as the opening that admits light into the eye.", 2, ["pupillary-light-reflex"]),
+  s("lens", "Lens", "Lens", "optical", "The transparent biconvex body behind the iris.", "Changes shape to fine-tune focus for near and distant objects.", 2, ["accommodation"]),
+  s("aqueous-humor", "Aqueous humor", "Aqueous", "ocular", "The clear fluid in the anterior chamber.", "Nourishes the cornea and lens and helps maintain intraocular pressure.", 3, ["eye-anatomy"]),
+  s("vitreous", "Vitreous body", "Vitreous", "ocular", "The gel filling the large posterior chamber.", "Maintains the eye's shape and keeps the retina apposed.", 3, ["eye-anatomy"]),
+  s("retina", "Retina", "Retina", "neural", "The light-sensitive lining at the back of the eye.", "Receives the focused optical image and begins phototransduction.", 3, ["retina"]),
+  s("fovea", "Fovea", "Fovea", "neural", "The central pit specialized for sharp central vision.", "Provides the highest visual acuity when gaze is directed at a target.", 4, ["retina"]),
+  s("photoreceptors", "Rods and cones", "Photoreceptors", "neural", "The photoreceptor cells of the retina.", "Rods support dim-light vision; cones support daylight and color vision.", 4, ["retina"]),
+  s("optic-nerve", "Optic nerve", "Optic nerve", "neural", "The cranial nerve leaving the back of the eye.", "Carries retinal signals toward the brain's visual pathway.", 4, ["visual-pathway"]),
+  s("visual-cortex", "Visual cortex", "Cortex", "neural", "The occipital cortex that interprets visual signals.", "Constructs the upright perceptual world from inverted retinal input.", 5, ["visual-pathway"]),
+];
+
 export const STRUCTURE_BY_ID = Object.fromEntries(
-  CARDIOPULMONARY_STRUCTURES.map((structure) => [structure.id, structure]),
+  [...CARDIOPULMONARY_STRUCTURES, ...EYE_STRUCTURES].map((structure) => [
+    structure.id,
+    structure,
+  ]),
 ) as Record<AnatomyStructureId, AnatomyStructure>;
 
 export const ANATOMY_MODE_LABELS: Record<AnatomyAnimationMode, string> = {
@@ -95,10 +151,52 @@ export const ANATOMY_MODE_LABELS: Record<AnatomyAnimationMode, string> = {
   "systemic-outflow": "Systemic outflow",
   ventilation: "Breathing",
   "gas-exchange": "Gas exchange",
+  "light-path": "Light path",
+  accommodation: "Focus / accommodation",
+  "pupil-reflex": "Pupil reflex",
+  photoreceptors: "Rods & cones",
+  "neural-signal": "Signal to brain",
 };
 
-export function structuresForReveal(reveal: number): AnatomyStructure[] {
-  return CARDIOPULMONARY_STRUCTURES.filter(
+export const SCENE_MODE_SETS: Record<
+  AnatomySceneId,
+  readonly AnatomyAnimationMode[]
+> = {
+  cardiopulmonary: CARDIOPULMONARY_ANIMATION_MODES,
+  eye: EYE_ANIMATION_MODES,
+};
+
+export const SCENE_STRUCTURES: Record<AnatomySceneId, AnatomyStructure[]> = {
+  cardiopulmonary: CARDIOPULMONARY_STRUCTURES,
+  eye: EYE_STRUCTURES,
+};
+
+export const SCENE_TITLES: Record<AnatomySceneId, string> = {
+  cardiopulmonary: "Heart and lungs",
+  eye: "Eye and vision",
+};
+
+export function isCardiopulmonaryMode(
+  mode: AnatomyAnimationMode,
+): mode is CardiopulmonaryAnimationMode {
+  return (CARDIOPULMONARY_ANIMATION_MODES as readonly string[]).includes(mode);
+}
+
+export function isEyeMode(
+  mode: AnatomyAnimationMode,
+): mode is EyeAnimationMode {
+  return (EYE_ANIMATION_MODES as readonly string[]).includes(mode);
+}
+
+export function structuresForReveal(
+  reveal: number,
+  scene: AnatomySceneId = "cardiopulmonary",
+): AnatomyStructure[] {
+  return SCENE_STRUCTURES[scene].filter(
     (structure) => structure.reveal <= reveal,
   );
+}
+
+export function modesForScene(scene: AnatomySceneId): AnatomyAnimationMode[] {
+  return [...SCENE_MODE_SETS[scene]];
 }

@@ -26,6 +26,31 @@ async function main() {
   );
   assert.ok(displayLabelFromKey("dividing-by-fractions").includes("Dividing"));
 
+  // Two equations of the same concept must not share a board script.
+  const eqA = makeTopicKey({
+    prompt: "solve 4x + 8 = 24 step by step",
+    conceptKey: "solve for x",
+  });
+  const eqB = makeTopicKey({
+    prompt: "solve 2x + 5 = 17 step by step",
+    conceptKey: "solve for x",
+  });
+  assert.notEqual(eqA, eqB, "concrete problems get their own key");
+  assert.ok(eqA.includes("4x"), `key keeps the numbers: ${eqA}`);
+  assert.equal(
+    makeTopicKey({ prompt: "what is 12 x 7", conceptKey: "multiplication" }),
+    makeTopicKey({ prompt: "what is 12 x 7" }),
+    "arithmetic keys off the prompt, not the concept",
+  );
+  // Plain topics still share a concept key, digits in prose and all.
+  assert.equal(
+    makeTopicKey({
+      prompt: "explain photosynthesis in 3 steps",
+      conceptKey: "photosynthesis",
+    }),
+    "photosynthesis",
+  );
+
   assert.equal(
     classifyVisualPlan({
       renderer: "template",

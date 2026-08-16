@@ -1,12 +1,35 @@
 import { buildThreeScene, type ThreeSceneHandle } from "@/lib/three-scenes/buildScene";
 import { loadCardiopulmonaryScene } from "@/lib/three-scenes/scenes/cardiopulmonary";
+import { loadEyeScene } from "@/lib/three-scenes/scenes/eye";
 import type { ThreeScenePlan } from "@/lib/three-scenes/decide";
-import type { AnatomySceneHandle } from "@/lib/anatomy/types";
+import type {
+  AnatomyAnimationMode,
+  AnatomySceneHandle,
+} from "@/lib/anatomy/types";
+import { isCardiopulmonaryMode, isEyeMode } from "@/lib/anatomy/registry";
 
 export type LoadedThreeScene = {
   handle: ThreeSceneHandle;
   anatomy: AnatomySceneHandle | null;
 };
+
+function animationModeFromParams(
+  plan: ThreeScenePlan,
+  scene: "cardiopulmonary" | "eye",
+): AnatomyAnimationMode {
+  const raw =
+    typeof plan.params.animationMode === "string"
+      ? plan.params.animationMode
+      : "overview";
+  if (scene === "eye") {
+    return isEyeMode(raw as AnatomyAnimationMode)
+      ? (raw as AnatomyAnimationMode)
+      : "overview";
+  }
+  return isCardiopulmonaryMode(raw as AnatomyAnimationMode)
+    ? (raw as AnatomyAnimationMode)
+    : "overview";
+}
 
 export async function loadThreeScene(
   plan: ThreeScenePlan,
@@ -16,16 +39,18 @@ export async function loadThreeScene(
     const anatomy = await loadCardiopulmonaryScene(
       {
         reveal: plan.reveal,
-        animationMode:
-          typeof plan.params.animationMode === "string"
-            ? plan.params.animationMode === "cardiac-cycle" ||
-              plan.params.animationMode === "pulmonary-circulation" ||
-              plan.params.animationMode === "systemic-outflow" ||
-              plan.params.animationMode === "ventilation" ||
-              plan.params.animationMode === "gas-exchange"
-              ? plan.params.animationMode
-              : "overview"
-            : "overview",
+        animationMode: animationModeFromParams(plan, "cardiopulmonary"),
+      },
+      onProgress,
+    );
+    return { handle: anatomy, anatomy };
+  }
+
+  if (plan.id === "eye") {
+    const anatomy = await loadEyeScene(
+      {
+        reveal: plan.reveal,
+        animationMode: animationModeFromParams(plan, "eye"),
       },
       onProgress,
     );

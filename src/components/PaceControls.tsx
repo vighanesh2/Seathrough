@@ -1,6 +1,9 @@
 "use client";
 
+import { Pause, Play, SkipForward } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import type { PaceSpeed } from "@/types/lesson";
+import { cn } from "@/lib/utils";
 
 type PaceControlsProps = {
   playing: boolean;
@@ -23,29 +26,27 @@ export function PaceControls({
 }: PaceControlsProps) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button
+      <Button
         type="button"
         onClick={onTogglePlay}
         disabled={disabled}
-        className="inline-flex h-10 items-center gap-2 rounded-xl bg-accent px-4 font-sans text-sm font-semibold text-white transition hover:bg-accent-deep disabled:opacity-40"
         aria-label={playing ? "Pause lesson" : "Play lesson"}
       >
-        <span aria-hidden className="text-xs">
-          {playing ? "❚❚" : "▶"}
-        </span>
+        {playing ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
         {playing ? "Pause" : "Play"}
-      </button>
-      <button
+      </Button>
+      <Button
         type="button"
+        variant="outline"
         onClick={onSkip}
         disabled={disabled}
-        className="h-10 rounded-xl border border-board-edge bg-chalk px-4 font-sans text-sm font-medium text-ink-soft transition hover:border-accent hover:text-accent disabled:opacity-40"
         aria-label="Skip to next beat"
       >
+        <SkipForward className="size-3.5" />
         Next
-      </button>
+      </Button>
       <div
-        className="flex h-10 items-center gap-0.5 rounded-xl border border-board-edge bg-chalk p-1"
+        className="flex h-9 items-center gap-0.5 rounded-lg border border-border bg-card p-0.5"
         role="group"
         aria-label="Playback speed"
       >
@@ -55,11 +56,12 @@ export function PaceControls({
             type="button"
             disabled={disabled}
             onClick={() => onSpeedChange(s)}
-            className={`rounded-lg px-2.5 py-1.5 font-sans text-xs font-medium transition disabled:opacity-40 ${
+            className={cn(
+              "rounded-md px-2.5 py-1 text-xs font-medium transition disabled:opacity-40",
               speed === s
                 ? "bg-accent-soft text-accent-deep"
-                : "text-muted hover:text-ink"
-            }`}
+                : "text-muted hover:text-ink",
+            )}
           >
             {s}×
           </button>

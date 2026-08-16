@@ -5,7 +5,10 @@ import {
   visualAnalysisSchema,
   type BoardScript,
 } from "@/lib/schemas/boardScript";
-import { makeTopicKey } from "@/lib/visuals/library/topicKey";
+import {
+  hasConcreteProblem,
+  makeTopicKey,
+} from "@/lib/visuals/library/topicKey";
 import type { VisualPlan } from "@/lib/visuals/types";
 
 /** In-flight / recent LLM scripts so concurrent beats share one analysis */
@@ -385,7 +388,8 @@ Return ONLY JSON matching:
 Rules:
 - Write COMPLETE sentences (or full short equations) — never keyword fragments like "Big Bang" alone.
 - Prefer: "The universe began from a hot, dense singularity." over "singularity".
-- ALWAYS invent a concrete mini-example on the board when teaching math; for science, narrate the process in full sentences.
+- If the question already contains a concrete problem (an equation or arithmetic), work THAT EXACT problem on the board — same numbers, same variables. Never substitute your own example.
+- Only invent a concrete mini-example when the question is abstract and has no numbers of its own; for science, narrate the process in full sentences.
 - 4–8 steps. Progressive pen writing. One idea per step.
 - Tag each step with "beat": 1, 2, 3... matching the teaching order (beat 1 = intro, later beats deepen).
 - Use arrows ONLY between two write steps for math transforms or process flow (write → arrow → write).
@@ -393,6 +397,8 @@ Rules:
 - For definitions (e.g. inertia): use write + note + write + box — do NOT insert decorative arrows.
 - No pixel coordinates. No SVG/JS code.
 - write text max 100 chars (complete sentence). note max 140 chars.
+- MATH ON THE BOARD: use plain readable fractions and operators only — "1/2 x + 3/2 (x+1) = 5", "×", "÷". NEVER put LaTeX in write/note text (no \\frac, no $, no \\times).
+- Put display LaTeX only in example.expression if needed; board write steps stay plain.
 - For definitions: full-sentence definition → why it matters → tiny concrete example → boxed takeaway.
 - For compare questions: side A → side B → difference note.
 - Address the misconception if one exists.`,
@@ -404,6 +410,7 @@ Rules:
           conceptKey: input.conceptKey,
           cognitiveType: input.cognitiveType,
           highlight: input.highlight,
+          workThisExactProblem: hasConcreteProblem(input.prompt),
         }),
       },
     ],

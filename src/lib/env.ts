@@ -37,6 +37,30 @@ export function getLlmConfig() {
   };
 }
 
+/**
+ * Multimodal / vision model for screenshot extraction.
+ * Prefers OpenAI when configured; otherwise Groq vision (Qwen 3.6).
+ * Note: meta-llama/llama-4-scout-17b-16e-instruct was shut down on Groq 2026-07-17.
+ */
+export function getVisionLlmConfig() {
+  const openaiKey = optional("OPENAI_API_KEY");
+  if (openaiKey) {
+    return {
+      provider: "openai" as const,
+      apiKey: openaiKey,
+      model: optional("OPENAI_VISION_MODEL") ?? optional("OPENAI_MODEL") ?? "gpt-4.1",
+      baseURL: undefined as string | undefined,
+    };
+  }
+
+  return {
+    provider: "groq" as const,
+    apiKey: required("GROQ_API_KEY"),
+    model: optional("GROQ_VISION_MODEL") ?? "qwen/qwen3.6-27b",
+    baseURL: "https://api.groq.com/openai/v1",
+  };
+}
+
 export function getDeepgramConfig() {
   return {
     apiKey: required("DEEPGRAM_API_KEY"),

@@ -6,13 +6,32 @@ export function makeTopicKey(input: {
   prompt: string;
   conceptKey?: string;
 }): string {
+  const fromPrompt = stripQuestionLead(input.prompt);
+
+  // "Solve 4x + 8 = 24" and "solve 2x + 5 = 17" are the same concept but not
+  // the same lesson — keying them together replays the wrong worked example.
+  if (hasConcreteProblem(fromPrompt)) {
+    return clampKey(slugify(fromPrompt));
+  }
+
   const concept = cleanFragment(input.conceptKey ?? "");
   if (concept && concept.length >= 3 && !isNoisePhrase(concept)) {
     return clampKey(slugify(concept));
   }
 
-  const fromPrompt = stripQuestionLead(input.prompt);
   return clampKey(slugify(fromPrompt || "topic"));
+}
+
+/** An equation or arithmetic the student expects worked on the board. */
+export function hasConcreteProblem(prompt: string): boolean {
+  const text = prompt.toLowerCase();
+  // 4x + 8 = 24, y = mx + b
+  if (/[0-9a-z)\]]\s*=\s*[-+(]?\s*[0-9a-z(]/.test(text)) return true;
+  // 12 × 7, 3 + 4, 2^8
+  if (/\d\s*[+\-×÷*/^]\s*\d/.test(text)) return true;
+  // 4x, 2y — a coefficient bound to a single variable
+  if (/\d\s?[a-z](?![a-z])/.test(text)) return true;
+  return false;
 }
 
 export function displayLabelFromKey(topicKey: string): string {
