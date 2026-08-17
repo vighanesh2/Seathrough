@@ -72,7 +72,7 @@ Voice is Deepgram TTS. You plan beats only.
 CRITICAL visual rules (the server will REJECT unrelated assets):
 1. ALWAYS include a drawable figure. Formulas alone are not enough — put equations in "formula" beside a figure.
 2. NEVER invent quirky metaphors (e.g. SDLC ≠ green loop doodle unless they asked for a programming loop).
-3. For math: prefer board teaching with a formula beside a figure (rough or mafs). Do NOT use katex-only. Do NOT force a fixed Pythagoras triangle template.
+3. For math: prefer board teaching with a formula beside a figure (rough or mafs). Do NOT use katex-only. Do NOT force a fixed Pythagoras triangle template. For integrals / area under a curve, narrate that same idea — axes, y = f(x), slices of area, then the integral from a to b. For limits as x approaches a number, narrate the graph: curve, hole at x = a, approaching from both sides, lim = L. Do not switch to an unrelated algebra example.
 4. For OOP class: use assetId "class-blueprint" (template → instances). NEVER classroom.
 5. Templates are allowed ONLY when the prompt is clearly about that object / approved metaphor.
 6. mermaid ONLY when the user asked for a flowchart / process / life-cycle diagram.

@@ -9,6 +9,7 @@ import {
   hasConcreteProblem,
   makeTopicKey,
 } from "@/lib/visuals/library/topicKey";
+import { isIntegralAreaTopic, isLimitGraphTopic } from "@/lib/visuals/library/topicMatch";
 import type { VisualPlan } from "@/lib/visuals/types";
 
 /** In-flight / recent LLM scripts so concurrent beats share one analysis */
@@ -148,6 +149,141 @@ function heuristicBoardScript(
           {
             type: "note",
             text: "Area = space inside · Perimeter = distance around",
+          },
+        ],
+      },
+      actions: [],
+    };
+  }
+
+  if (isIntegralAreaTopic(prompt, conceptKey)) {
+    return {
+      renderer: "board_script",
+      formula: "\\int_a^b f(x) dx",
+      boardScript: {
+        title: "Area under the curve",
+        misconception: "An integral is only a formula to memorize",
+        steps: [
+          {
+            type: "write",
+            id: "e1",
+            text: "An integral measures the area under a curve.",
+            style: "plain",
+            beat: 1,
+          },
+          {
+            type: "note",
+            text: "Look at the region from x = a to x = b.",
+            beat: 1,
+          },
+          {
+            type: "write",
+            id: "e2",
+            text: "The curve is y = f(x).",
+            style: "equation",
+            beat: 2,
+          },
+          {
+            type: "note",
+            text: "Height at each x is the value of the function.",
+            beat: 2,
+          },
+          {
+            type: "write",
+            id: "e3",
+            text: "Slice that region into thin rectangles.",
+            style: "plain",
+            beat: 3,
+          },
+          {
+            type: "note",
+            text: "Each slice has area f(x) times a little dx.",
+            beat: 3,
+          },
+          {
+            type: "write",
+            id: "e4",
+            text: "Add the slices to get the total area.",
+            style: "plain",
+            beat: 4,
+          },
+          {
+            type: "note",
+            text: "Thinner slices get closer to the true area.",
+            beat: 4,
+          },
+          {
+            type: "write",
+            id: "e5",
+            text: "integral from a to b of f(x) dx = that area",
+            style: "emphasis",
+            beat: 5,
+          },
+          { type: "box", targetId: "e5", beat: 5 },
+        ],
+      },
+      actions: [],
+    };
+  }
+
+  if (isLimitGraphTopic(prompt, conceptKey)) {
+    return {
+      renderer: "board_script",
+      formula: "\\lim_{x \\to a} f(x) = L",
+      boardScript: {
+        title: "Limits on a graph",
+        misconception: "The limit is just plugging in x = a",
+        steps: [
+          {
+            type: "write",
+            id: "e1",
+            text: "A limit asks what y does as x gets close to a.",
+            style: "plain",
+            beat: 1,
+          },
+          {
+            type: "note",
+            text: "Watch the graph — not a plug-in formula.",
+            beat: 1,
+          },
+          {
+            type: "write",
+            id: "e2",
+            text: "Draw y = f(x). There can be a hole at x = a.",
+            style: "equation",
+            beat: 2,
+          },
+          {
+            type: "note",
+            text: "f(a) might be missing or a different height.",
+            beat: 2,
+          },
+          {
+            type: "write",
+            id: "e3",
+            text: "From the left, the curve heads toward height L.",
+            style: "plain",
+            beat: 3,
+          },
+          {
+            type: "write",
+            id: "e4",
+            text: "From the right, it heads toward the same L.",
+            style: "plain",
+            beat: 4,
+          },
+          {
+            type: "write",
+            id: "e5",
+            text: "lim x→a of f(x) = L",
+            style: "emphasis",
+            beat: 5,
+          },
+          { type: "box", targetId: "e5", beat: 5 },
+          {
+            type: "note",
+            text: "The limit is the height we approach, not the plugged-in point.",
+            beat: 5,
           },
         ],
       },
@@ -400,6 +536,8 @@ Rules:
 - MATH ON THE BOARD: use plain readable fractions and operators only — "1/2 x + 3/2 (x+1) = 5", "×", "÷". NEVER put LaTeX in write/note text (no \\frac, no $, no \\times).
 - Put display LaTeX only in example.expression if needed; board write steps stay plain.
 - For definitions: full-sentence definition → why it matters → tiny concrete example → boxed takeaway.
+- For integrals / area under a curve: write that same story (curve, slices, sum, integral). Do not switch to a different example.
+- For limits as x approaches a number: write the graph story (curve, hole at a, left/right approach, lim = L).
 - For compare questions: side A → side B → difference note.
 - Address the misconception if one exists.`,
       },

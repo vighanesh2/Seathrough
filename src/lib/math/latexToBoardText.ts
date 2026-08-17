@@ -4,6 +4,8 @@
  */
 
 const SIMPLE_MACROS: Record<string, string> = {
+  lim: "lim",
+  int: "∫",
   times: "×",
   div: "÷",
   cdot: "·",

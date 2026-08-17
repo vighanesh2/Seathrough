@@ -8,10 +8,17 @@ import {
   classifyVisualPlan,
   clearVisualLibraryMemory,
   displayLabelFromKey,
+  isIntegralAreaTopic,
+  isLimitGraphTopic,
   makeTopicKey,
+  narrationMatchingBoard,
+  peekHeuristicBoardScript,
   rememberVisualLibrary,
   lookupVisualLibrary,
 } from "../src/lib/visuals/library/index";
+import { decideBoardVisualStrategy } from "../src/lib/draw-engine/decideBoardVisual";
+import { commandsForBeat } from "../src/lib/draw-engine/fromVisualPlan";
+import { createBoardLayout } from "../src/lib/draw-engine/boardLayout";
 
 async function main() {
   clearVisualLibraryMemory();
@@ -109,6 +116,183 @@ async function main() {
     plan: { renderer: "nope" } as never,
   });
   assert.equal(bad.stored, false);
+
+  // --- integral / area under the curve ---------------------------------
+  const integralPrompt = "what is an integral using area under the curve";
+  assert.equal(isIntegralAreaTopic(integralPrompt), true);
+  assert.equal(isIntegralAreaTopic(""), false);
+  assert.equal(isIntegralAreaTopic("integrate 3x^2 dx"), false);
+  assert.equal(
+    decideBoardVisualStrategy({ prompt: integralPrompt, hasBoardScript: true }),
+    "sketch",
+  );
+
+  const integralPlan = peekHeuristicBoardScript(integralPrompt, "integral");
+  assert.ok(integralPlan?.boardScript?.steps?.length, "integral heuristic exists");
+  assert.ok(
+    integralPlan!.boardScript!.steps.some(
+      (s) => s.type === "write" && /area under a curve/i.test(s.text),
+    ),
+    "board talks about area under the curve",
+  );
+
+  const spokenBeat1 = narrationMatchingBoard({
+    steps: integralPlan!.boardScript!.steps,
+    beatOrder: 1,
+    totalBeats: 5,
+    fallback: "unrelated algebra about 2x + 6 = 14",
+  });
+  assert.ok(
+    spokenBeat1.includes("area under a curve"),
+    `right-side text should match the board, got: ${spokenBeat1}`,
+  );
+  assert.ok(
+    !spokenBeat1.includes("2x + 6"),
+    "planner narration must not leak onto an integral beat",
+  );
+
+  const layout = createBoardLayout();
+  const beat1 = commandsForBeat({
+    plan: integralPlan,
+    beatOrder: 1,
+    totalBeats: 5,
+    beatId: "int1",
+    t0Base: 0,
+    includeChrome: true,
+    progressive: true,
+    narration: spokenBeat1,
+    prompt: integralPrompt,
+    layout,
+  });
+  assert.ok(
+    beat1.some((c) => c.type === "line"),
+    "beat 1 draws axes",
+  );
+  const boardText = beat1
+    .filter((c): c is Extract<typeof c, { type: "text" }> => c.type === "text")
+    .map((c) => c.text)
+    .join(" ");
+  assert.ok(
+    /area under a curve/i.test(boardText),
+    `beat 1 writes the same sentence the right rail says, got: ${boardText}`,
+  );
+
+  const beat2 = commandsForBeat({
+    plan: integralPlan,
+    beatOrder: 2,
+    totalBeats: 5,
+    beatId: "int2",
+    t0Base: 1000,
+    includeChrome: false,
+    progressive: true,
+    narration: narrationMatchingBoard({
+      steps: integralPlan!.boardScript!.steps,
+      beatOrder: 2,
+      totalBeats: 5,
+      fallback: "",
+    }),
+    prompt: integralPrompt,
+    layout,
+  });
+  assert.ok(
+    beat2.some((c) => c.type === "stroke"),
+    "beat 2 draws the curve",
+  );
+
+  const beat3 = commandsForBeat({
+    plan: integralPlan,
+    beatOrder: 3,
+    totalBeats: 5,
+    beatId: "int3",
+    t0Base: 2000,
+    includeChrome: false,
+    progressive: true,
+    prompt: integralPrompt,
+    layout,
+  });
+  assert.ok(
+    beat3.some((c) => c.type === "rect" && "fill" in c && c.fill),
+    "beat 3 shades area with rectangles",
+  );
+
+  // --- limits as x approaches a number ---------------------------------
+  const limitPrompt = "explain limits as x approaches a number";
+  assert.equal(isLimitGraphTopic(limitPrompt), true);
+  assert.equal(isLimitGraphTopic(""), false);
+  assert.equal(isLimitGraphTopic("what is a derivative"), false);
+  assert.equal(isLimitGraphTopic("speed limit on the highway"), false);
+  assert.equal(
+    decideBoardVisualStrategy({ prompt: limitPrompt, hasBoardScript: true }),
+    "sketch",
+  );
+
+  const limitPlan = peekHeuristicBoardScript(limitPrompt, "limit");
+  assert.ok(limitPlan?.boardScript?.steps?.length, "limit heuristic exists");
+  const limitTalk = narrationMatchingBoard({
+    steps: limitPlan!.boardScript!.steps,
+    beatOrder: 1,
+    totalBeats: 5,
+    fallback: "unrelated: solve 2x + 6 = 14",
+  });
+  assert.ok(
+    /close to a|approaches/i.test(limitTalk),
+    `right-side text should match the limit board, got: ${limitTalk}`,
+  );
+  assert.ok(!limitTalk.includes("2x + 6"), "algebra narration must not leak");
+
+  const derivPlan = peekHeuristicBoardScript("what is a derivative", "derivative");
+  assert.ok(
+    derivPlan?.boardScript?.title?.toLowerCase().includes("derivative"),
+    "derivative questions still use the derivative board",
+  );
+
+  const limLayout = createBoardLayout();
+  const lim1 = commandsForBeat({
+    plan: limitPlan,
+    beatOrder: 1,
+    totalBeats: 5,
+    beatId: "lim1",
+    t0Base: 0,
+    includeChrome: true,
+    progressive: true,
+    narration: limitTalk,
+    prompt: limitPrompt,
+    layout: limLayout,
+  });
+  assert.ok(lim1.some((c) => c.type === "line"), "beat 1 draws axes");
+
+  const lim2 = commandsForBeat({
+    plan: limitPlan,
+    beatOrder: 2,
+    totalBeats: 5,
+    beatId: "lim2",
+    t0Base: 1000,
+    includeChrome: false,
+    progressive: true,
+    prompt: limitPrompt,
+    layout: limLayout,
+  });
+  assert.ok(lim2.some((c) => c.type === "stroke"), "beat 2 draws the curve");
+  assert.ok(
+    lim2.some((c) => c.type === "circle"),
+    "beat 2 marks the hole at x = a",
+  );
+
+  const lim3 = commandsForBeat({
+    plan: limitPlan,
+    beatOrder: 3,
+    totalBeats: 5,
+    beatId: "lim3",
+    t0Base: 2000,
+    includeChrome: false,
+    progressive: true,
+    prompt: limitPrompt,
+    layout: limLayout,
+  });
+  assert.ok(
+    lim3.some((c) => c.type === "circle") && lim3.some((c) => c.type === "arrow"),
+    "beat 3 approaches from the left",
+  );
 
   console.log("visual-library smoke ok", {
     topicKey,

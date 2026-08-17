@@ -44,8 +44,57 @@ export function revealThroughStepIndex(input: {
 export function stepsForBeat<T extends { beat?: number }>(
   steps: T[],
   beatOrder: number,
+  totalBeats?: number,
 ): T[] {
-  const through = revealThroughStepIndex({ steps, beatOrder });
-  const prev = revealThroughStepIndex({ steps, beatOrder: beatOrder - 1 });
+  const through = revealThroughStepIndex({ steps, beatOrder, totalBeats });
+  const prev = revealThroughStepIndex({
+    steps,
+    beatOrder: beatOrder - 1,
+    totalBeats,
+  });
   return steps.slice(prev, through);
+}
+
+type SpokenStep = {
+  type?: string;
+  text?: string;
+  beat?: number;
+};
+
+/** Board sentences revealed on this beat — the voice and right rail should say these. */
+export function spokenLinesForBeat(input: {
+  steps: SpokenStep[];
+  beatOrder: number;
+  totalBeats?: number;
+}): string {
+  const slice = stepsForBeat(input.steps, input.beatOrder, input.totalBeats);
+  const lines: string[] = [];
+  for (const step of slice) {
+    if (
+      (step.type === "write" || step.type === "note") &&
+      step.text?.trim()
+    ) {
+      lines.push(step.text.trim());
+    }
+  }
+  return lines.join(" ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Prefer the pen's new sentences over a separately planned narration so the
+ * left board and right-side explanation stay on the same idea.
+ */
+export function narrationMatchingBoard(input: {
+  steps?: SpokenStep[];
+  beatOrder: number;
+  totalBeats?: number;
+  fallback: string;
+}): string {
+  if (!input.steps?.length) return input.fallback;
+  const fromBoard = spokenLinesForBeat({
+    steps: input.steps,
+    beatOrder: input.beatOrder,
+    totalBeats: input.totalBeats,
+  });
+  return fromBoard || input.fallback;
 }

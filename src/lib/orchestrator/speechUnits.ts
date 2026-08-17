@@ -1,4 +1,5 @@
 import type { DrawCommand } from "@/lib/draw-engine/commands";
+import { mathToSpeech } from "@/lib/math/mathToSpeech";
 
 /** One short thing the tutor says while a specific bit gets written. */
 export type SpeechUnit = {
@@ -62,7 +63,7 @@ const MAX_BEAT_SPAN_MS = 22_000;
 
 /** Roughly how long the tutor will be speaking this line. */
 export function estimateSpeechMs(text: string): number {
-  const chars = text.trim().length;
+  const chars = mathToSpeech(text).trim().length;
   if (!chars) return 0;
   return Math.round((chars / CHARS_PER_SECOND) * 1000) + 300;
 }

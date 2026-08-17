@@ -1,3 +1,5 @@
+import { isGraphBoardTopic } from "@/lib/visuals/library/topicMatch";
+
 export type BoardVisualStrategy =
   | "uml"
   | "board_script"
@@ -21,6 +23,11 @@ export function decideBoardVisualStrategy(input: {
     return "uml";
   }
 
+  // Local sketches (curve + shaded area, Big Bang, …) beat generic math text.
+  if (hasLocalSketch(p)) {
+    return "sketch";
+  }
+
   // Math / formula lessons → pen board script.
   if (isMathHeavy(p)) {
     return input.hasBoardScript ? "board_script" : "narration";
@@ -28,11 +35,6 @@ export function decideBoardVisualStrategy(input: {
 
   if (input.hasBoardScript) {
     return "board_script";
-  }
-
-  // Known local sketch topics (Big Bang etc.).
-  if (hasLocalSketch(p)) {
-    return "sketch";
   }
 
   // Always fall through to writing the tutor’s sentences on the board.
@@ -50,7 +52,9 @@ function isMathHeavy(p: string): boolean {
 }
 
 function hasLocalSketch(p: string): boolean {
-  return /\bbig\s*bang\b|\bphotosynthesis\b|\bwater\s+cycle\b|\bsingularit/.test(
-    p,
+  return (
+    /\bbig\s*bang\b|\bphotosynthesis\b|\bwater\s+cycle\b|\bsingularit/.test(
+      p,
+    ) || isGraphBoardTopic(p)
   );
 }

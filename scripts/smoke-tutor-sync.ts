@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import type { DrawCommand } from "../src/lib/draw-engine/commands";
 import { PenCueTracker } from "../src/lib/board/penCues";
 import { penPositionAt, resolveDrawablesAt } from "../src/lib/draw-engine/resolve";
+import { mathToSpeech } from "../src/lib/math/mathToSpeech";
 import {
   buildSpeechUnits,
   estimateSpeechMs,
@@ -182,6 +183,53 @@ function text(id: string, t0: number, body: string): DrawCommand {
   );
   assert.equal(revealThroughStepIndex({ steps: untagged, beatOrder: 0 }), 0);
   assert.equal(revealThroughStepIndex({ steps: [], beatOrder: 3 }), 0);
+}
+
+// --- spoken math for TTS -----------------------------------------------
+{
+  assert.equal(mathToSpeech(""), "");
+  assert.equal(mathToSpeech("   "), "");
+  assert.equal(
+    mathToSpeech("First we subtract 6 from both sides."),
+    "First we subtract 6 from both sides.",
+  );
+  assert.equal(mathToSpeech("1/2"), "1 over 2");
+  assert.equal(mathToSpeech("½"), "1 over 2");
+  assert.equal(mathToSpeech("\\frac{1}{2}"), "1 over 2");
+  assert.equal(mathToSpeech("$\\frac{3}{4}$"), "3 over 4");
+  assert.equal(mathToSpeech("3x^2"), "3 x squared");
+  assert.equal(mathToSpeech("3x²"), "3 x squared");
+  assert.equal(mathToSpeech("x^3"), "x cubed");
+  assert.equal(mathToSpeech("x^{n}"), "x to the n");
+  assert.equal(mathToSpeech("2x + 6 = 14"), "2 x plus 6 equals 14");
+  assert.equal(mathToSpeech("x = 1/2"), "x equals 1 over 2");
+  assert.equal(mathToSpeech("x = -5"), "x equals negative 5");
+  assert.equal(mathToSpeech("2x - 5 = 16"), "2 x minus 5 equals 16");
+  assert.equal(mathToSpeech("x-y"), "x minus y");
+  assert.ok(
+    mathToSpeech("the left-hand side").includes("left-hand"),
+    "word hyphens stay put",
+  );
+  assert.equal(mathToSpeech("and/or"), "and/or");
+  assert.equal(
+    mathToSpeech("\\sqrt{x+1}"),
+    "the square root of x plus 1",
+  );
+  assert.ok(mathToSpeech("πr^2").includes("pi"));
+  assert.ok(mathToSpeech("πr^2").includes("squared"));
+  assert.equal(mathToSpeech("3(x+1) = 12"), "3 times x plus 1 equals 12");
+  assert.ok(
+    !mathToSpeech("(x+1)/2").toLowerCase().includes("parenthesis"),
+    "grouping is not spoken as parentheses",
+  );
+  assert.ok(
+    estimateSpeechMs("x = 1/2") > estimateSpeechMs("hello"),
+    "spoken math is paced by how long it takes to say",
+  );
+  assert.ok(
+    mathToSpeech("∫_a^b f(x) dx").includes("integral"),
+    "integrals are spoken",
+  );
 }
 
 console.log("tutor sync smoke checks passed");

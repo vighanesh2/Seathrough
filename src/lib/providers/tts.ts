@@ -1,4 +1,5 @@
 import { getDeepgramConfig } from "@/lib/env";
+import { mathToSpeech } from "@/lib/math/mathToSpeech";
 
 export type TtsResult = {
   mimeType: string;
@@ -9,8 +10,8 @@ export type TtsResult = {
  * Deepgram Aura-2 TTS. Returns audio as base64 for SSE delivery.
  */
 export async function synthesizeSpeech(text: string): Promise<TtsResult> {
-  const trimmed = text.trim();
-  if (!trimmed) {
+  const spoken = mathToSpeech(text);
+  if (!spoken) {
     throw new Error("TTS text is empty");
   }
 
@@ -25,7 +26,7 @@ export async function synthesizeSpeech(text: string): Promise<TtsResult> {
       Authorization: `Token ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ text: trimmed }),
+    body: JSON.stringify({ text: spoken }),
   });
 
   if (!response.ok) {

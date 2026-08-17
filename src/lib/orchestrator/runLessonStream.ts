@@ -35,6 +35,7 @@ import {
   type UmlDiagramPlan,
 } from "@/lib/draw-engine/umlSchema";
 import { toUserFacingError } from "@/lib/errors/userFacing";
+import { narrationMatchingBoard } from "@/lib/visuals/library/scriptReveal";
 import {
   saveBoardSnapshot,
   type LessonBoardSnapshot,
@@ -392,6 +393,13 @@ export async function* runLessonStream(
         activePlan = decision.plan;
       }
 
+      const alignedNarration = narrationMatchingBoard({
+        steps: threePlan ? undefined : activePlan?.boardScript?.steps,
+        beatOrder: beat.order,
+        totalBeats: plan.beats.length,
+        fallback: beat.narration,
+      });
+
       if (!threePlan) {
         // Every 2D beat draws something — 3D lessons update their live scene.
         if (!drawSessionStarted) {
@@ -441,7 +449,7 @@ export async function* runLessonStream(
           t0Base: drawClockMs,
           includeChrome: decision.action === "generate" || beat.order <= 1,
           progressive: true,
-          narration: beat.narration,
+          narration: alignedNarration,
           highlight: beat.highlight,
           prompt: umlPrompt,
           umlPlan,
@@ -451,7 +459,7 @@ export async function* runLessonStream(
         });
 
         // Let the writing breathe across the narration instead of racing it.
-        beatDrawCmds = paceCommandsToNarration(beatDrawCmds, beat.narration);
+        beatDrawCmds = paceCommandsToNarration(beatDrawCmds, alignedNarration);
 
         if (beatDrawCmds.length) {
           snapshotCommands.push(...beatDrawCmds);
@@ -477,12 +485,12 @@ export async function* runLessonStream(
 
       yield {
         type: "narration",
-        text: beat.narration,
+        text: alignedNarration,
         beatId: beat.id,
       };
 
       const speechUnits = buildSpeechUnits(
-        beat.narration,
+        alignedNarration,
         beatDrawCmds,
         Math.max(0, drawClockMs - 200),
       );
@@ -494,7 +502,7 @@ export async function* runLessonStream(
         text:
           withAudio && speechUnits.length
             ? speechUnits[0]!.text
-            : beat.narration,
+            : alignedNarration,
         t0: speechUnits[0]?.cueT0 ?? Math.max(0, drawClockMs - 200),
         beatId: beat.id,
       };
@@ -504,7 +512,7 @@ export async function* runLessonStream(
           conversationId,
           lessonId,
           role: "tutor",
-          content: beat.narration,
+          content: alignedNarration,
           meta: { beatId: beat.id, kind: beat.kind },
         });
       }

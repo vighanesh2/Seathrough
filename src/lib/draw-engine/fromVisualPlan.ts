@@ -132,7 +132,7 @@ export function commandsForBeat(input: BeatDrawInput): DrawCommand[] {
     hasBoardScript: Boolean(plan?.boardScript?.steps?.length),
   });
 
-  if (strategy !== "uml" && strategy !== "narration") {
+  if (strategy !== "uml" && strategy !== "narration" && strategy !== "sketch") {
     const topicCmds = topicDiagramCommands({
       prompt,
       beatOrder,

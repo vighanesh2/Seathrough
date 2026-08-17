@@ -20,4 +20,7 @@ export { resolveVisualWithLibrary } from "@/lib/visuals/library/resolve";
 export {
   revealThroughStepIndex,
   stepsForBeat,
+  spokenLinesForBeat,
+  narrationMatchingBoard,
 } from "@/lib/visuals/library/scriptReveal";
+export { isIntegralAreaTopic, isLimitGraphTopic, isGraphBoardTopic } from "@/lib/visuals/library/topicMatch";
