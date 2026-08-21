@@ -46,7 +46,17 @@ function extractJson(text: string): unknown {
   throw new Error("Model did not return JSON");
 }
 
-function buildSystemPrompt(): string {
+function buildSystemPrompt(packs?: string[]): string {
+  let catalog = libraryCatalogForPrompt(260, packs ? { packs } : undefined);
+  const catalogEmpty = catalog.includes("Shapes (use itemIndex):\n") && catalog.trim().endsWith("Shapes (use itemIndex):");
+  const usedPacks = catalogEmpty ? undefined : packs;
+  if (catalogEmpty) {
+    catalog = libraryCatalogForPrompt();
+  }
+  const focus = usedPacks?.length
+    ? `This is a SYSTEM DESIGN diagram. Prefer clients on the left, services in the middle, data stores on the right. Show the request path. Label every box. Use 4–10 placements.`
+    : `Pick shapes from packs that match the user's topic (architecture, biology, math, UML, cards, stick figures, etc.).`;
+
   return `You design simple whiteboard diagrams using ONLY shapes from a fixed Excalidraw library collection.
 
 Return ONLY valid JSON:
@@ -58,17 +68,26 @@ Return ONLY valid JSON:
 }
 
 Canvas is roughly 1100×700. Keep shapes inside margins (40–1000 x, 40–620 y).
-Space items so they do not heavily overlap. Prefer 3–10 placements.
-Pick shapes from packs that match the user's topic (architecture, biology, math, UML, cards, stick figures, etc.).
+Space items so they do not heavily overlap.
+${focus}
 Use short labels when helpful.
 
-${libraryCatalogForPrompt()}
+${catalog}
 
 Do not invent shapes outside this catalog. itemIndex must match the list above.`;
 }
 
+export const SYSTEM_DESIGN_PACKS = [
+  "software-architecture",
+  "system-design",
+  "decision-flow-control",
+  "uml-library-activity-diagram",
+  "data-viz",
+] as const;
+
 export async function generateExcalidrawScene(
   description: string,
+  options?: { packs?: string[] },
 ): Promise<MaterializedScene> {
   const trimmed = description.trim();
   if (!trimmed) throw new Error("Description is required");
@@ -87,7 +106,7 @@ export async function generateExcalidrawScene(
     temperature: 0.35,
     response_format: { type: "json_object" },
     messages: [
-      { role: "system", content: buildSystemPrompt() },
+      { role: "system", content: buildSystemPrompt(options?.packs) },
       { role: "user", content: `Diagram this:\n${trimmed}` },
     ],
   });

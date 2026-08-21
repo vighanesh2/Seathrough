@@ -25,7 +25,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "SeeThrough",
   description:
-    "Stuck on homework? Ask a question or upload a photo — we’ll draw it out on a whiteboard.",
+    "Type a question. SeeThrough draws it while it explains — on a board, as a system map, or in 3D.",
   icons: {
     icon: [{ url: "/SeeThrough_logo.png", type: "image/png" }],
     apple: [{ url: "/SeeThrough_logo.png", type: "image/png" }],

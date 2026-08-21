@@ -1,4 +1,5 @@
 import { generateWhiteboardDrawing } from "@/lib/automatic-drawing/generateWhiteboardPlan";
+import { getUserFromRequest } from "@/lib/auth/requestUser";
 import { envPresence } from "@/lib/env";
 import { toUserFacingError } from "@/lib/errors/userFacing";
 
@@ -6,6 +7,11 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
+  const user = await getUserFromRequest(request);
+  if (!user) {
+    return Response.json({ error: "Sign in required" }, { status: 401 });
+  }
+
   try {
     const presence = envPresence();
     if (!presence.OPENAI_API_KEY && !presence.GROQ_API_KEY) {

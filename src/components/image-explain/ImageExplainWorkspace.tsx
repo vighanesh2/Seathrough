@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
 import type { BoardNarrationLine } from "@/components/board/BoardNarration";
+import { AccountMenu } from "@/components/lms/AccountMenu";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
 import { VisualStage } from "@/components/VisualStage";
@@ -26,7 +27,7 @@ type Preference = "auto" | "vision" | "ocr";
 type Phase = "idle" | "extracting" | "teaching" | "done" | "error";
 
 export function ImageExplainWorkspace() {
-  const { user, accessToken, loading: authLoading } = useAuth();
+  const { user, accessToken, logout } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -344,11 +345,13 @@ export function ImageExplainWorkspace() {
         eyebrow="From a photo"
         title={title ?? "Drop homework — we’ll teach it on the board"}
         account={
-          !authLoading && !user ? (
-            <Button variant="outline" size="sm" onClick={() => setAuthOpen(true)}>
-              Sign in
-            </Button>
-          ) : null
+          <AccountMenu
+            onLogin={() => setAuthOpen(true)}
+            onSignup={() => setAuthOpen(true)}
+            onLogout={() => {
+              void logout();
+            }}
+          />
         }
       />
 
@@ -375,7 +378,7 @@ export function ImageExplainWorkspace() {
             className={`flex shrink-0 flex-wrap items-center gap-3 rounded-2xl border-2 border-dashed px-4 py-3 transition ${
               dragging
                 ? "border-accent bg-accent-soft/40"
-                : "border-board-edge bg-white/80"
+                : "border-board-edge bg-card/80"
             }`}
           >
             {previewUrl ? (
@@ -401,7 +404,7 @@ export function ImageExplainWorkspace() {
                 <button
                   type="button"
                   onClick={() => inputRef.current?.click()}
-                  className="rounded-lg border border-board-edge bg-white px-3 py-1.5 font-sans text-xs font-semibold text-accent-deep hover:border-accent"
+                  className="rounded-lg border border-board-edge bg-card px-3 py-1.5 font-sans text-xs font-semibold text-accent-deep hover:border-accent"
                 >
                   {file ? "Replace" : "Choose image"}
                 </button>
@@ -425,7 +428,7 @@ export function ImageExplainWorkspace() {
             />
           </div>
 
-          <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-board-edge bg-white/85 shadow-(--shadow-shell)">
+          <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-board-edge bg-card/85 shadow-(--shadow-shell)">
             <div className="flex items-center justify-between border-b border-board-edge px-4 py-2">
               <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
                 Whiteboard
@@ -464,7 +467,7 @@ export function ImageExplainWorkspace() {
           </div>
         </main>
 
-        <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto border-t border-board-edge bg-white/75 p-4 lg:border-l lg:border-t-0 lg:p-5">
+        <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto border-t border-board-edge bg-card/80 p-4 lg:border-l lg:border-t-0 lg:p-5">
           <button
             type="button"
             disabled={busy || !file}
@@ -502,7 +505,7 @@ export function ImageExplainWorkspace() {
             <summary className="cursor-pointer font-sans text-xs font-medium text-muted">
               Advanced · how we read the photo
             </summary>
-            <div className="mt-2 flex flex-wrap gap-1 rounded-lg border border-board-edge bg-white p-0.5">
+            <div className="mt-2 flex flex-wrap gap-1 rounded-lg border border-board-edge bg-card p-0.5">
               {(
                 [
                   ["auto", "Auto"],

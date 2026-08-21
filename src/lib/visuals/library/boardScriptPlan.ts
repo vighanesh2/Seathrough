@@ -9,7 +9,11 @@ import {
   hasConcreteProblem,
   makeTopicKey,
 } from "@/lib/visuals/library/topicKey";
-import { isIntegralAreaTopic, isLimitGraphTopic } from "@/lib/visuals/library/topicMatch";
+import {
+  isIntegralAreaTopic,
+  isLimitGraphTopic,
+  isMatrixMultiplyTopic,
+} from "@/lib/visuals/library/topicMatch";
 import type { VisualPlan } from "@/lib/visuals/types";
 
 /** In-flight / recent LLM scripts so concurrent beats share one analysis */
@@ -220,6 +224,76 @@ function heuristicBoardScript(
             beat: 5,
           },
           { type: "box", targetId: "e5", beat: 5 },
+        ],
+      },
+      actions: [],
+    };
+  }
+
+  if (isMatrixMultiplyTopic(prompt, conceptKey)) {
+    return {
+      renderer: "board_script",
+      formula: "(AB)_{ij} = row_i \\cdot col_j",
+      boardScript: {
+        title: "Matrix multiplication",
+        misconception: "You multiply matching cells, like 1×5, 2×6, 3×7, 4×8",
+        steps: [
+          {
+            type: "write",
+            id: "m1",
+            text: "Two matrices. A on the left, B on the right.",
+            style: "plain",
+            beat: 1,
+          },
+          {
+            type: "note",
+            text: "Inner sizes match (2 and 2), so they can multiply.",
+            beat: 1,
+          },
+          {
+            type: "write",
+            id: "m2",
+            text: "Each entry of C is one row of A dotted with one column of B.",
+            style: "plain",
+            beat: 2,
+          },
+          {
+            type: "note",
+            text: "C has A's rows and B's columns.",
+            beat: 2,
+          },
+          {
+            type: "write",
+            id: "m3",
+            text: "Top-left: 1×5 + 2×7 = 19",
+            style: "equation",
+            beat: 3,
+          },
+          {
+            type: "note",
+            text: "Row 1 of A against column 1 of B.",
+            beat: 3,
+          },
+          {
+            type: "write",
+            id: "m4",
+            text: "Top-right: 1×6 + 2×8 = 22",
+            style: "equation",
+            beat: 4,
+          },
+          {
+            type: "write",
+            id: "m5",
+            text: "Bottom row the same way: 43 and 50.",
+            style: "emphasis",
+            beat: 5,
+          },
+          { type: "box", targetId: "m5", beat: 5 },
+          {
+            type: "note",
+            text: "Never multiply cell-by-cell. It's always row · column.",
+            beat: 5,
+          },
         ],
       },
       actions: [],

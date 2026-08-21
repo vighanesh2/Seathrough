@@ -1,10 +1,12 @@
 import type { LucideIcon } from "lucide-react";
 import {
+  Atom,
   Box,
   Camera,
   Code2,
   HeartPulse,
   MessageCircleQuestion,
+  Network,
   PenLine,
   WandSparkles,
 } from "lucide-react";
@@ -14,33 +16,58 @@ export type ModeUi = {
   icon: LucideIcon;
   /** One line a tired student can parse in a second. */
   hint: string;
+  /** Studio accent: blue topic, copper systems, teal scenes. */
+  tone: "blue" | "copper" | "teal" | "ink";
 };
 
 export const MODE_UI: Record<ModeId, ModeUi> = {
   lessons: {
     icon: MessageCircleQuestion,
     hint: "Type what you’re stuck on. We’ll draw it step by step.",
+    tone: "blue",
+  },
+  "system-design": {
+    icon: Network,
+    hint: "Describe an architecture. Watch boxes and traffic assemble.",
+    tone: "copper",
+  },
+  "scene-explain": {
+    icon: Atom,
+    hint: "Ask for osmosis, orbits, anything — a 3D scene builds and explains it.",
+    tone: "teal",
   },
   "screenshot-explain": {
     icon: Camera,
-    hint: "Snap homework or notes. We’ll read it and teach it.",
+    hint: "Upload homework or notes. We read it and draw the explanation.",
+    tone: "blue",
   },
   leetcode: {
     icon: Code2,
-    hint: "Paste a coding problem and walk through the algorithm.",
+    hint: "Paste a coding problem. Watch the steps on the board.",
+    tone: "ink",
   },
   "figures-3d": {
     icon: HeartPulse,
-    hint: "Spin a 3D heart, lung, or eye, then ask what a part does.",
+    hint: "Turn a heart, lung, or eye. Then ask what a part does.",
+    tone: "teal",
   },
   "automatic-drawing": {
     icon: PenLine,
-    hint: "Lab: prompt a drawing and watch the board execute it.",
+    hint: "Type a drawing. Watch the board make it.",
+    tone: "ink",
   },
   "draw-engine": {
     icon: WandSparkles,
-    hint: "Lab: timed board commands for engine experiments.",
+    hint: "Timed board commands — for trying the draw engine.",
+    tone: "ink",
   },
 };
 
 export const MORE_ICON = Box;
+
+export const TONE_CLASS: Record<ModeUi["tone"], string> = {
+  blue: "bg-accent-soft text-accent-deep",
+  copper: "bg-copper-soft text-copper-deep",
+  teal: "bg-success-soft text-success",
+  ink: "bg-secondary text-ink-soft",
+};

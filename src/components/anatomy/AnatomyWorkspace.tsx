@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
+import { AccountMenu } from "@/components/lms/AccountMenu";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
 import { Button } from "@/components/ui/button";
@@ -62,19 +63,19 @@ const LEGENDS: Record<
   Array<{ color: string; label: string }>
 > = {
   cardiopulmonary: [
-    { color: "bg-blue-600", label: "oxygen-poor blood" },
-    { color: "bg-red-500", label: "oxygen-rich blood" },
-    { color: "bg-cyan-400", label: "airflow / oxygen" },
+    { color: "bg-accent", label: "oxygen-poor blood" },
+    { color: "bg-error", label: "oxygen-rich blood" },
+    { color: "bg-success", label: "airflow / oxygen" },
   ],
   eye: [
-    { color: "bg-amber-400", label: "light rays" },
-    { color: "bg-rose-500", label: "inverted retinal image" },
-    { color: "bg-sky-400", label: "neural signal" },
+    { color: "bg-copper", label: "light rays" },
+    { color: "bg-error", label: "inverted retinal image" },
+    { color: "bg-accent", label: "neural signal" },
   ],
 };
 
 export function AnatomyWorkspace() {
-  const { user, accessToken, loading: authLoading } = useAuth();
+  const { user, accessToken, logout } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
   const [sceneId, setSceneId] = useState<AnatomySceneId>("eye");
   const [selected, setSelected] = useState<AnatomyStructureId | null>(null);
@@ -243,16 +244,18 @@ export function AnatomyWorkspace() {
           </div>
         }
         account={
-          !authLoading && !user ? (
-            <Button variant="outline" size="sm" onClick={() => setAuthOpen(true)}>
-              Sign in to ask
-            </Button>
-          ) : null
+          <AccountMenu
+            onLogin={() => setAuthOpen(true)}
+            onSignup={() => setAuthOpen(true)}
+            onLogout={() => {
+              void logout();
+            }}
+          />
         }
       />
 
       <div className="grid min-h-0 flex-1 grid-cols-1 md:grid-cols-[minmax(0,1fr)_320px] xl:grid-cols-[250px_minmax(0,1fr)_360px]">
-        <aside className="hidden min-h-0 overflow-y-auto border-r border-board-edge bg-white/75 p-3 xl:block">
+        <aside className="hidden min-h-0 overflow-y-auto border-r border-board-edge bg-card/80 p-3 xl:block">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="font-sans text-xs font-semibold uppercase tracking-[0.14em] text-muted">
               Structures
@@ -292,7 +295,7 @@ export function AnatomyWorkspace() {
           </div>
         </aside>
 
-        <section className="flex min-h-0 min-w-0 flex-col bg-[radial-gradient(circle_at_50%_15%,#ffffff_0%,#f3f0e9_75%)] p-2 md:p-4">
+        <section className="flex min-h-0 min-w-0 flex-col bg-paper p-2 md:p-4">
           <div className="relative min-h-90 flex-1">
             <ThreeBoard
               plan={scenePlan}
@@ -303,16 +306,16 @@ export function AnatomyWorkspace() {
               animationMode={mode}
               onSelectStructure={selectStructure}
               showStructureControls
-              className="h-full min-h-90 w-full overflow-hidden rounded-2xl border border-board-edge bg-[#f4f1eb] shadow-(--shadow-shell)"
+              className="h-full min-h-90 w-full overflow-hidden rounded-2xl border border-board-edge bg-board shadow-(--shadow-shell)"
             />
           </div>
 
-          <div className="mt-2 grid shrink-0 gap-2 rounded-xl border border-board-edge bg-white/90 p-2.5 shadow-sm md:grid-cols-[auto_1fr_auto] md:items-center">
+          <div className="mt-2 grid shrink-0 gap-2 rounded-xl border border-board-edge bg-card/90 p-2.5 shadow-sm md:grid-cols-[auto_1fr_auto] md:items-center">
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => setPlaying((value) => !value)}
-                className="h-9 rounded-lg bg-accent px-3 font-sans text-xs font-semibold text-white hover:bg-accent-deep"
+                className="h-9 rounded-lg bg-accent px-3 font-sans text-xs font-semibold text-primary-foreground hover:bg-accent-deep"
                 aria-label={playing ? "Pause physiology" : "Play physiology"}
               >
                 {playing ? "Pause" : "Play"}
@@ -340,7 +343,7 @@ export function AnatomyWorkspace() {
                 onChange={(event) =>
                   setMode(event.target.value as AnatomyAnimationMode)
                 }
-                className="min-w-0 flex-1 rounded-lg border border-board-edge bg-white px-2.5 py-2 text-xs font-semibold text-ink outline-none focus:border-accent"
+                className="min-w-0 flex-1 rounded-lg border border-board-edge bg-card px-2.5 py-2 text-xs font-semibold text-ink outline-none focus:border-accent"
               >
                 {availableModes.map((id) => (
                   <option key={id} value={id}>
@@ -375,7 +378,7 @@ export function AnatomyWorkspace() {
           </div>
         </section>
 
-        <aside className="flex min-h-0 flex-col border-t border-board-edge bg-white md:border-l md:border-t-0">
+        <aside className="flex min-h-0 flex-col border-t border-board-edge bg-card md:border-l md:border-t-0">
           <div className="shrink-0 border-b border-board-edge p-4">
             <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
               {selectedInfo ? selectedInfo.system : "Interactive guide"}

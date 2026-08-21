@@ -204,7 +204,7 @@ export function KonvaDrawStage({
       ref={viewportRef}
       className={
         className ??
-        "h-full min-h-[420px] w-full overflow-auto rounded-2xl border border-board-edge bg-white"
+        "h-full min-h-[420px] w-full overflow-auto rounded-2xl border border-board-edge bg-chalk"
       }
     >
       <div style={{ width: "100%", height: stageHeight, position: "relative" }}>

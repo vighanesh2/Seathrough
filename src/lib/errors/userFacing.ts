@@ -8,7 +8,10 @@ export const BUSY_USER_MESSAGE =
 const GENERIC_USER_MESSAGE =
   "Something went wrong while starting the lesson. Please try again in a moment.";
 
-export function toUserFacingError(error: unknown): string {
+export function toUserFacingError(
+  error: unknown,
+  fallback = GENERIC_USER_MESSAGE,
+): string {
   const raw =
     typeof error === "string"
       ? error
@@ -16,7 +19,7 @@ export function toUserFacingError(error: unknown): string {
         ? error.message
         : "";
 
-  if (!raw.trim()) return GENERIC_USER_MESSAGE;
+  if (!raw.trim()) return fallback;
 
   if (isCapacityOrRateLimitError(raw)) {
     return BUSY_USER_MESSAGE;
@@ -24,7 +27,7 @@ export function toUserFacingError(error: unknown): string {
 
   // Known safe / intentional product messages — keep as-is
   if (
-    /^(Prompt is required|Description is required|Description is too long|Conversation not found|Lesson stream returned an empty body|Add OPENAI_API_KEY)/i.test(
+    /^(Prompt is required|Description is required|Description is too long|Conversation not found|Lesson stream returned an empty body|Add OPENAI_API_KEY|Enter a topic|Crash details are required|Sign in required|Prompt is too long|The scene planner|The scene agent|Couldn't get a stable 3D scene|Voice is not configured|Nothing to speak)/i.test(
       raw,
     )
   ) {
@@ -37,7 +40,7 @@ export function toUserFacingError(error: unknown): string {
       raw,
     )
   ) {
-    return GENERIC_USER_MESSAGE;
+    return fallback;
   }
 
   // Hide HTTP / stack-ish dumps
@@ -45,12 +48,12 @@ export function toUserFacingError(error: unknown): string {
     if (/\b429\b|rate limit|quota|capacity/i.test(raw)) {
       return BUSY_USER_MESSAGE;
     }
-    return GENERIC_USER_MESSAGE;
+    return fallback;
   }
 
   // If it looks like an internal dump, sanitize
   if (raw.length > 180 || /at\s+\S+\s+\(/.test(raw) || /stack/i.test(raw)) {
-    return GENERIC_USER_MESSAGE;
+    return fallback;
   }
 
   return raw;

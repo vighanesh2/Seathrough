@@ -62,6 +62,40 @@ export function isLimitGraphTopic(
   return false;
 }
 
+/**
+ * Matrix multiplication — draw real grids with brackets, not a flattened
+ * "[1 2; 3 4]" line or a generic metaphor sticker.
+ */
+export function isMatrixMultiplyTopic(
+  prompt: string,
+  conceptKey?: string,
+): boolean {
+  const blob = `${prompt} ${conceptKey ?? ""}`.toLowerCase();
+  if (!blob.trim()) return false;
+
+  if (
+    /\b(movie|reloaded|revolutions|keanu|morpheus|neo|welfare matrix|matrix isolation)\b/.test(
+      blob,
+    )
+  ) {
+    return false;
+  }
+
+  if (/\bmatrix\s+multipl/.test(blob)) return true;
+  if (/\bmultipl\w*\s+(two\s+|2\s+)?matrices\b/.test(blob)) return true;
+  if (/\bproduct of (two\s+)?matrices\b/.test(blob)) return true;
+  if (/\bmatrices\b/.test(blob) && /\b(multipl|product|times|dot)\b/.test(blob)) {
+    return true;
+  }
+  if (/\b\d+\s*[x×]\s*\d+\b/.test(blob) && /\bmatrices?\b/.test(blob)) {
+    return true;
+  }
+  if (/\bmatrix\b/.test(blob) && /\b(multipl|times|product)\b/.test(blob)) {
+    return true;
+  }
+  return false;
+}
+
 export function isGraphBoardTopic(
   prompt: string,
   conceptKey?: string,

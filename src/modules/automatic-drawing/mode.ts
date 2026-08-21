@@ -8,6 +8,7 @@ export const automaticDrawingMode: ModeDefinition = {
   title: "Automatic Drawing",
   description: "Prompt the whiteboard and watch a drawing plan execute.",
   kind: "tool",
+  group: "lab",
   order: 100,
   enabled: true,
   badge: "lab",

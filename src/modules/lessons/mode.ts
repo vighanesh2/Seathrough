@@ -4,14 +4,16 @@ import type { ModeDefinition } from "@/modes/types";
 export const lessonsMode: ModeDefinition = {
   id: "lessons",
   href: "/lessons",
-  navLabel: "Lesson",
-  title: "Ask a question",
-  description: "Type what you’re stuck on. We’ll draw and explain it step by step.",
+  navLabel: "Topics",
+  title: "Topic explanation",
+  description:
+    "Ask what you’re stuck on. A tutor draws it on the board and talks you through it.",
   kind: "learning",
+  group: "studio",
   order: 10,
   enabled: true,
   usesWhiteboard: true,
-  metaTitle: "Ask a question | SeeThrough",
+  metaTitle: "Topic explanation | SeeThrough",
   metaDescription:
-    "Ask anything — watch it drawn on a whiteboard with a clear spoken explanation.",
+    "Ask any topic — watch it drawn on a whiteboard with a clear spoken explanation.",
 };

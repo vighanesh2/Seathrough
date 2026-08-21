@@ -4,14 +4,28 @@ import { cn } from "@/lib/utils";
 type BrandMarkProps = {
   className?: string;
   compact?: boolean;
+  size?: "sm" | "md";
+  onDark?: boolean;
 };
 
-export function BrandMark({ className, compact = false }: BrandMarkProps) {
+export function BrandMark({
+  className,
+  compact = false,
+  size = "sm",
+  onDark = false,
+}: BrandMarkProps) {
+  const mark = size === "md" ? "h-10 w-10" : "h-8 w-8";
+  const word = cn(
+    "truncate font-medium tracking-tight",
+    size === "md" ? "text-lg md:text-xl" : "text-base md:text-lg",
+    onDark ? "text-white" : "text-ink",
+  );
+
   return (
     <Link
       href="/"
       className={cn(
-        "flex min-w-0 items-center gap-2 rounded-lg outline-none transition hover:opacity-90 focus-visible:ring-3 focus-visible:ring-ring/50",
+        "flex min-w-0 items-center gap-2.5 rounded-lg outline-none transition hover:opacity-90 focus-visible:ring-3 focus-visible:ring-ring/50",
         className,
       )}
     >
@@ -19,14 +33,12 @@ export function BrandMark({ className, compact = false }: BrandMarkProps) {
       <img
         src="/SeeThrough_logo.png"
         alt=""
-        className="h-8 w-8 shrink-0 object-contain"
+        className={cn("shrink-0 object-contain", mark)}
       />
       {compact ? (
         <span className="sr-only">SeeThrough home</span>
       ) : (
-        <span className="truncate font-display text-lg font-semibold tracking-tight text-ink md:text-xl">
-          SeeThrough
-        </span>
+        <span className={word}>SeeThrough</span>
       )}
     </Link>
   );

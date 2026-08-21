@@ -1,8 +1,13 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { AuthModal } from "@/components/AuthModal";
+import { useAuth } from "@/components/AuthProvider";
+import { AccountMenu } from "@/components/lms/AccountMenu";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Whiteboard,
   type WhiteboardHandle,
@@ -24,6 +29,8 @@ const WIDTHS = [2, 4, 8] as const;
 type Status = "idle" | "expanding" | "planning" | "drawing" | "ready" | "error";
 
 export function WhiteboardShell() {
+  const { user, accessToken, logout } = useAuth();
+  const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
   const boardRef = useRef<WhiteboardHandle | null>(null);
   const [tool, setTool] = useState<WhiteboardTool>("pen");
   const [color, setColor] = useState<string>(COLORS[0].value);
@@ -53,6 +60,11 @@ export function WhiteboardShell() {
       return;
     }
 
+    if (!user || !accessToken) {
+      setAuthModal("login");
+      return;
+    }
+
     setError(null);
     setTitle(null);
     setExpandedPrompt(null);
@@ -62,7 +74,10 @@ export function WhiteboardShell() {
     try {
       const res = await fetch("/api/automatic-drawing", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ description: trimmed }),
       });
       const body = (await res.json()) as {
@@ -107,10 +122,26 @@ export function WhiteboardShell() {
 
   return (
     <AppShell className="flex-col">
+      <AuthModal
+        key={authModal ?? "closed"}
+        open={authModal != null}
+        initialMode={authModal ?? "login"}
+        onClose={() => setAuthModal(null)}
+      />
+
       <AppHeader
         current="automatic-drawing"
         eyebrow="Lab"
         title="Automatic whiteboard"
+        account={
+          <AccountMenu
+            onLogin={() => setAuthModal("login")}
+            onSignup={() => setAuthModal("signup")}
+            onLogout={() => {
+              void logout();
+            }}
+          />
+        }
       />
 
       <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-3 overflow-hidden p-4 md:p-5">
@@ -124,19 +155,20 @@ export function WhiteboardShell() {
           <label className="sr-only" htmlFor="auto-draw-prompt">
             Drawing prompt
           </label>
-          <input
+          <Input
             id="auto-draw-prompt"
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             disabled={busy}
             maxLength={800}
             placeholder="Describe what to draw…"
-            className="h-11 min-w-0 flex-1 rounded-xl border border-board-edge bg-chalk px-4 font-sans text-sm text-ink outline-none placeholder:text-muted focus:border-accent focus:ring-3 focus:ring-accent-soft disabled:opacity-60"
+            className="h-11 min-w-0 flex-1 bg-card px-4"
           />
-          <button
+          <Button
             type="submit"
+            size="lg"
             disabled={busy || !prompt.trim()}
-            className="h-11 shrink-0 rounded-xl bg-accent px-5 font-sans text-sm font-semibold text-white transition hover:bg-accent-deep disabled:cursor-not-allowed disabled:opacity-40"
+            className="shrink-0"
           >
             {status === "expanding"
               ? "Expanding…"
@@ -145,7 +177,7 @@ export function WhiteboardShell() {
                 : status === "drawing"
                   ? "Drawing…"
                   : "Draw"}
-          </button>
+          </Button>
         </form>
 
         {expandedPrompt ? (

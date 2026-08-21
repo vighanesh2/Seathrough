@@ -3,8 +3,10 @@ import { drawEngineMode } from "@/modules/draw-engine/mode";
 import { figures3dMode } from "@/modules/figures-3d/mode";
 import { leetcodeMode } from "@/modules/leetcode/mode";
 import { lessonsMode } from "@/modules/lessons/mode";
+import { sceneExplainMode } from "@/modules/scene-explain/mode";
 import { screenshotExplainMode } from "@/modules/screenshot-explain/mode";
-import type { ModeDefinition, ModeId, ModeKind } from "@/modes/types";
+import { systemDesignMode } from "@/modules/system-design/mode";
+import type { ModeDefinition, ModeGroup, ModeId, ModeKind } from "@/modes/types";
 
 /**
  * Master catalog. To plug a mode out: set `enabled: false` on its mode.ts
@@ -12,6 +14,8 @@ import type { ModeDefinition, ModeId, ModeKind } from "@/modes/types";
  */
 const ALL_MODES: ModeDefinition[] = [
   lessonsMode,
+  systemDesignMode,
+  sceneExplainMode,
   screenshotExplainMode,
   leetcodeMode,
   figures3dMode,
@@ -33,6 +37,10 @@ export function listEnabledModes(kind?: ModeKind): ModeDefinition[] {
   return ALL_MODES.filter((m) => m.enabled && (kind ? m.kind === kind : true)).sort(
     byOrder,
   );
+}
+
+export function listModesByGroup(group: ModeGroup): ModeDefinition[] {
+  return ALL_MODES.filter((m) => m.enabled && m.group === group).sort(byOrder);
 }
 
 export function getMode(id: ModeId): ModeDefinition | undefined {

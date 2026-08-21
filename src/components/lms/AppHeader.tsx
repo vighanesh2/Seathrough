@@ -34,7 +34,7 @@ export function AppHeader({
         className,
       )}
     >
-      <div className="flex flex-wrap items-center gap-2 px-3 py-2.5 md:gap-3 md:px-4">
+      <div className="flex flex-wrap items-center gap-2 px-4 py-3 md:gap-3 md:px-5">
         {leading}
         <div className="flex min-w-0 items-center gap-3">
           <BrandMark />
@@ -65,7 +65,7 @@ export function AppHeader({
         </div>
       </div>
       {children ? (
-        <div className="border-t border-border/80 px-3 py-2.5 md:px-4">
+        <div className="border-t border-border/80 px-4 py-3 md:px-5">
           {children}
         </div>
       ) : null}

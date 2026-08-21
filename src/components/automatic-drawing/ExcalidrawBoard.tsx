@@ -330,7 +330,7 @@ export function ExcalidrawBoard({
         width="100%"
         height="100%"
         viewBox={`${bounds.minX} ${bounds.minY} ${bounds.width} ${bounds.height}`}
-        className="h-full w-full touch-none bg-white"
+        className="h-full w-full touch-none bg-chalk"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
         onPointerUp={onPointerUp}

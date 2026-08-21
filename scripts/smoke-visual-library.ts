@@ -10,6 +10,7 @@ import {
   displayLabelFromKey,
   isIntegralAreaTopic,
   isLimitGraphTopic,
+  isMatrixMultiplyTopic,
   makeTopicKey,
   narrationMatchingBoard,
   peekHeuristicBoardScript,
@@ -292,6 +293,79 @@ async function main() {
   assert.ok(
     lim3.some((c) => c.type === "circle") && lim3.some((c) => c.type === "arrow"),
     "beat 3 approaches from the left",
+  );
+
+  // --- matrix multiplication: real grids, not a flattened line ----------
+  const mxPrompt = "explain matrix multiplication";
+  assert.equal(isMatrixMultiplyTopic(mxPrompt), true);
+  assert.equal(isMatrixMultiplyTopic("multiply two matrices"), true);
+  assert.equal(isMatrixMultiplyTopic(""), false);
+  assert.equal(isMatrixMultiplyTopic("the matrix movie"), false);
+  assert.equal(
+    decideBoardVisualStrategy({ prompt: mxPrompt, hasBoardScript: true }),
+    "sketch",
+  );
+
+  const mxPlan = peekHeuristicBoardScript(mxPrompt, "matrix");
+  assert.ok(mxPlan?.boardScript?.steps?.length, "matrix heuristic exists");
+  const mxTalk = narrationMatchingBoard({
+    steps: mxPlan!.boardScript!.steps,
+    beatOrder: 1,
+    totalBeats: 5,
+    fallback: "unrelated: solve 2x + 6 = 14",
+  });
+  assert.ok(
+    /two matrices/i.test(mxTalk),
+    `right-side text should match the matrix board, got: ${mxTalk}`,
+  );
+  assert.ok(!mxTalk.includes("2x + 6"), "algebra narration must not leak");
+
+  const mxLayout = createBoardLayout();
+  const mx1 = commandsForBeat({
+    plan: mxPlan,
+    beatOrder: 1,
+    totalBeats: 5,
+    beatId: "mx1",
+    t0Base: 0,
+    includeChrome: true,
+    progressive: true,
+    narration: mxTalk,
+    prompt: mxPrompt,
+    layout: mxLayout,
+  });
+  const mxText = mx1
+    .filter((c): c is Extract<typeof c, { type: "text" }> => c.type === "text")
+    .map((c) => c.text)
+    .join(" ");
+  assert.ok(
+    mx1.filter((c) => c.type === "line").length >= 12,
+    "beat 1 draws brackets for A and B",
+  );
+  assert.ok(
+    /\b1\b/.test(mxText) && /\b8\b/.test(mxText),
+    `beat 1 writes the matrix entries, got: ${mxText}`,
+  );
+  assert.ok(!/begin\{bmatrix\}/i.test(mxText), "must not dump LaTeX bmatrix");
+
+  const mx3 = commandsForBeat({
+    plan: mxPlan,
+    beatOrder: 3,
+    totalBeats: 5,
+    beatId: "mx3",
+    t0Base: 2000,
+    includeChrome: false,
+    progressive: true,
+    prompt: mxPrompt,
+    layout: mxLayout,
+  });
+  const mx3Text = mx3
+    .filter((c): c is Extract<typeof c, { type: "text" }> => c.type === "text")
+    .map((c) => c.text)
+    .join(" ");
+  assert.ok(/19/.test(mx3Text), `beat 3 fills C's top-left, got: ${mx3Text}`);
+  assert.ok(
+    mx3.some((c) => c.type === "highlight"),
+    "beat 3 highlights the row and column being multiplied",
   );
 
   console.log("visual-library smoke ok", {

@@ -2,6 +2,7 @@
 
 import { LogOut, UserRound } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
+import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,31 +18,61 @@ type AccountMenuProps = {
   onLogin: () => void;
   onSignup?: () => void;
   onLogout?: () => void;
+  variant?: "default" | "marketing";
 };
 
-export function AccountMenu({ onLogin, onSignup, onLogout }: AccountMenuProps) {
+export function AccountMenu({
+  onLogin,
+  onSignup,
+  onLogout,
+  variant = "default",
+}: AccountMenuProps) {
   const { user, loading, logout } = useAuth();
+  const marketing = variant === "marketing";
 
   if (loading) {
     return (
       <div
-        className="size-8 animate-pulse rounded-full bg-secondary"
+        className={cn(
+          "size-9 animate-pulse rounded-full",
+          marketing ? "bg-white/10" : "bg-secondary",
+        )}
         aria-hidden
       />
     );
   }
 
   if (!user) {
+    if (marketing) {
+      return (
+        <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            onClick={onLogin}
+            className="h-8 px-3 text-[13.5px] font-medium text-[#3d5166] hover:bg-[#f2f4f7] hover:text-[#1a2b3c]"
+          >
+            Log in
+          </Button>
+          {onSignup ? (
+            <Button
+              onClick={onSignup}
+              className="h-8 rounded-full bg-[#1b6ca8] px-3.5 text-[13.5px] font-medium text-white shadow-none hover:bg-[#0f4f7c]"
+            >
+              Get started
+            </Button>
+          ) : null}
+        </div>
+      );
+    }
+
     return (
       <div className="flex items-center gap-1.5">
         {onSignup ? (
-          <Button variant="ghost" size="sm" onClick={onSignup}>
+          <Button variant="ghost" onClick={onSignup}>
             Sign up
           </Button>
         ) : null}
-        <Button size="sm" onClick={onLogin}>
-          Log in
-        </Button>
+        <Button onClick={onLogin}>Log in</Button>
       </div>
     );
   }
@@ -53,11 +84,11 @@ export function AccountMenu({ onLogin, onSignup, onLogout }: AccountMenuProps) {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          size="icon"
+          size="icon-lg"
           className="rounded-full"
           aria-label="Account"
         >
-          <Avatar size="sm">
+          <Avatar>
             <AvatarFallback>{initial}</AvatarFallback>
           </Avatar>
         </Button>

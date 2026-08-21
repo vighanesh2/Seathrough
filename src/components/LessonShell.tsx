@@ -7,6 +7,7 @@ import type { BoardNarrationLine } from "@/components/board/BoardNarration";
 import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
 import { ChatSidebar } from "@/components/ChatSidebar";
+import { AccountMenu } from "@/components/lms/AccountMenu";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
 import { PaceControls } from "@/components/PaceControls";
@@ -168,6 +169,18 @@ export function LessonShell() {
   const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
   const [prompt, setPrompt] = useState("");
   const [status, setStatus] = useState<LessonStatus>("idle");
+
+  useEffect(() => {
+    try {
+      const pending = sessionStorage.getItem("seethrough.pendingPrompt");
+      if (pending) {
+        sessionStorage.removeItem("seethrough.pendingPrompt");
+        setPrompt(pending);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, []);
   const [speed, setSpeed] = useState<PaceSpeed>(1);
   const [title, setTitle] = useState<string | undefined>();
   const [visualPlan, setVisualPlan] = useState<VisualPlan | null>(null);
@@ -872,8 +885,8 @@ export function LessonShell() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <AppHeader
           current="lessons"
-          eyebrow="Lesson"
-          title={title ?? "Ask a question"}
+          eyebrow="Topic explanation"
+          title={title ?? "Ask what you’re stuck on"}
           leading={
             sidebarCollapsed ? (
               <Button
@@ -898,15 +911,28 @@ export function LessonShell() {
               disabled={status === "idle" && !prompt.trim()}
             />
           }
+          account={
+            <AccountMenu
+              onLogin={() => setAuthModal("login")}
+              onSignup={() => setAuthModal("signup")}
+              onLogout={() => {
+                void logout();
+                resetLesson();
+                setConversations([]);
+              }}
+            />
+          }
         >
           <PromptBar
             value={prompt}
             onChange={setPrompt}
             onSubmit={onPromptSubmit}
             disabled={busy}
+            inputId="topic-prompt"
+            inputLabel="Topic prompt"
             placeholder={
               canFollowUp
-                ? "Ask a follow-up about this lesson…"
+                ? "Ask a follow-up about this topic…"
                 : "What should we learn today?"
             }
             submitLabel={canFollowUp ? "Ask" : "Start"}

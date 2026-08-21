@@ -341,12 +341,12 @@ export function ThreeBoard({
     <div
       className={
         className ??
-        "relative h-full min-h-70 w-full overflow-hidden rounded-xl border border-board-edge bg-[#f7fafc]"
+        "relative h-full min-h-70 w-full overflow-hidden rounded-xl border border-board-edge bg-board"
       }
       aria-label={`${plan.title} — interactive 3D`}
     >
       <div ref={mountRef} className="absolute inset-0" />
-      <div className="pointer-events-none absolute left-3 top-3 hidden max-w-[46%] truncate rounded-lg border border-white/70 bg-white/85 px-2.5 py-1.5 font-sans text-[11px] text-ink shadow-sm backdrop-blur sm:block">
+      <div className="pointer-events-none absolute left-3 top-3 hidden max-w-[46%] truncate rounded-lg border border-border bg-card/85 px-2.5 py-1.5 font-sans text-[11px] text-ink shadow-sm backdrop-blur sm:block">
         <span className="font-semibold text-accent-deep">{plan.title}</span>
         <span className="text-muted">
           {" "}
@@ -354,7 +354,7 @@ export function ThreeBoard({
         </span>
       </div>
       {showStructureControls && availableStructures.length ? (
-        <label className="absolute right-3 top-3 flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-lg border border-white/70 bg-white/90 px-2.5 py-1.5 font-sans text-[11px] text-muted shadow-sm backdrop-blur">
+        <label className="absolute right-3 top-3 flex max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-lg border border-border bg-card/90 px-2.5 py-1.5 font-sans text-[11px] text-muted shadow-sm backdrop-blur">
           Structure
           <select
             value={selectedStructure ?? ""}
@@ -376,7 +376,7 @@ export function ThreeBoard({
       ) : null}
       {loadProgress < 1 && !loadError ? (
         <div
-          className="absolute inset-x-4 bottom-4 rounded-lg border border-board-edge bg-white/90 p-3 font-sans text-xs text-ink shadow-sm"
+          className="absolute inset-x-4 bottom-4 rounded-lg border border-board-edge bg-card/90 p-3 font-sans text-xs text-ink shadow-sm"
           role="status"
         >
           <div className="mb-1.5 flex justify-between">
@@ -393,22 +393,22 @@ export function ThreeBoard({
       ) : null}
       {loadError ? (
         <div
-          className="absolute inset-4 grid place-items-center rounded-xl border border-red-200 bg-white/95 p-6 text-center font-sans text-sm text-red-800"
+          className="absolute inset-4 grid place-items-center rounded-xl border border-error/30 bg-card/95 p-6 text-center font-sans text-sm text-error"
           role="alert"
         >
           <div>
             <p className="font-semibold">3D view unavailable</p>
-            <p className="mt-1 max-w-md text-xs text-red-700">{loadError}</p>
+            <p className="mt-1 max-w-md text-xs text-error/80">{loadError}</p>
           </div>
         </div>
       ) : null}
       {reducedMotion ? (
-        <p className="pointer-events-none absolute bottom-3 left-3 rounded-md bg-white/85 px-2 py-1 font-sans text-[10px] text-muted">
+        <p className="pointer-events-none absolute bottom-3 left-3 rounded-md bg-card/85 px-2 py-1 font-sans text-[10px] text-muted">
           Reduced motion: animation held on a representative frame
         </p>
       ) : null}
       {selectedStructure && STRUCTURE_BY_ID[selectedStructure] ? (
-        <p className="pointer-events-none absolute bottom-3 right-3 max-w-[min(320px,70%)] rounded-lg border border-white/70 bg-white/90 px-3 py-2 font-sans text-xs text-ink shadow-sm backdrop-blur">
+        <p className="pointer-events-none absolute bottom-3 right-3 max-w-[min(320px,70%)] rounded-lg border border-border bg-card/90 px-3 py-2 font-sans text-xs text-ink shadow-sm backdrop-blur">
           <span className="font-semibold text-accent-deep">
             {STRUCTURE_BY_ID[selectedStructure].label}
           </span>

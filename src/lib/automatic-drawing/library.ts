@@ -106,7 +106,16 @@ const PACK_TOPICS: Record<string, string> = {
 };
 
 function drawingsDir(): string {
-  return path.join(process.cwd(), "assets", "drawings");
+  const publicLibs = path.join(process.cwd(), "public", "libraries");
+  const assetsDir = path.join(process.cwd(), "assets", "drawings");
+  try {
+    if (readdirSync(publicLibs).some((f) => f.toLowerCase().endsWith(".excalidrawlib"))) {
+      return publicLibs;
+    }
+  } catch {
+    // fall through
+  }
+  return assetsDir;
 }
 
 function boundsOf(elements: LibraryElement[]) {
@@ -253,9 +262,20 @@ export function loadArchitectureLibrary(): DrawingLibraryItem[] {
 
 export type ArchitectureLibraryItem = DrawingLibraryItem;
 
-export function libraryCatalogForPrompt(maxItems = 260): string {
-  const items = loadAllDrawingLibraries().slice(0, maxItems);
-  const packs = listDrawingPacks();
+export function libraryCatalogForPrompt(
+  maxItems = 260,
+  options?: { packs?: string[] },
+): string {
+  const packFilter = options?.packs?.length
+    ? new Set(options.packs)
+    : null;
+  const all = loadAllDrawingLibraries();
+  const items = (
+    packFilter ? all.filter((item) => packFilter.has(item.pack)) : all
+  ).slice(0, maxItems);
+  const packs = listDrawingPacks().filter((p) =>
+    packFilter ? packFilter.has(p.pack) : true,
+  );
   const packLines = packs
     .map((p) => `- ${p.pack} (${p.itemCount}): ${p.topics}`)
     .join("\n");

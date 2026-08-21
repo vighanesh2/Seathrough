@@ -53,10 +53,7 @@ export function BoardNarration({
             Teacher explains
           </p>
           {streaming ? (
-            <span
-              className="h-2 w-2 rounded-full bg-success"
-              style={{ animation: "soft-pulse 1.4s ease-in-out infinite" }}
-            />
+            <span className="h-2 w-2 animate-soft-pulse rounded-full bg-success" />
           ) : null}
         </div>
         {title ? (

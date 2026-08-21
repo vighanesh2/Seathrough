@@ -11,6 +11,8 @@ type PromptBarProps = {
   disabled?: boolean;
   placeholder?: string;
   submitLabel?: string;
+  inputId?: string;
+  inputLabel?: string;
 };
 
 type BrowserSpeechRecognition = SpeechRecognition;
@@ -40,6 +42,8 @@ export function PromptBar({
   disabled,
   placeholder = "What should we learn today?",
   submitLabel = "Start",
+  inputId = "studio-prompt",
+  inputLabel = "Prompt",
 }: PromptBarProps) {
   const [listening, setListening] = useState(false);
   const [speechSupported, setSpeechSupported] = useState(false);
@@ -210,11 +214,11 @@ export function PromptBar({
     >
       <div className="flex w-full items-stretch gap-2">
         <div className="relative min-w-0 flex-1">
-          <label className="sr-only" htmlFor="lesson-prompt">
-            Lesson prompt
+          <label className="sr-only" htmlFor={inputId}>
+            {inputLabel}
           </label>
           <Input
-            id="lesson-prompt"
+            id={inputId}
             value={value}
             onChange={(e) => {
               const next = e.target.value;

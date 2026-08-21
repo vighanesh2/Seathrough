@@ -166,6 +166,25 @@ function convertSegment(input: string): string {
   return out;
 }
 
+function convertMatrixEnvironments(input: string): string {
+  const re =
+    /\\begin\{((?:b|p|B|v|V)?matrix\*?|smallmatrix)\}([\s\S]*?)\\end\{\1\}/g;
+  return input.replace(re, (_whole, _kind: string, body: string) => {
+    const rows = String(body)
+      .split(/\\\\/)
+      .map((row) =>
+        row
+          .split("&")
+          .map((cell) => convertSegment(cell.replace(/\\hline/gi, "").trim()))
+          .filter((cell) => cell.length > 0),
+      )
+      .filter((row) => row.length > 0);
+    if (!rows.length) return "";
+    if (rows.length === 1) return `[ ${rows[0]!.join("  ")} ]`;
+    return `[${rows.map((row) => row.join("  ")).join("; ")}]`;
+  });
+}
+
 /**
  * True when the string still looks like TeX that Konva would show badly.
  */
@@ -187,6 +206,9 @@ export function latexToBoardText(input: string): string {
   s = s.replace(/\$([^$]+?)\$/g, "$1");
   s = s.replace(/\\\(([\s\S]*?)\\\)/g, "$1");
   s = s.replace(/\\\[([\s\S]*?)\\\]/g, "$1");
+
+  // Turn bmatrix/pmatrix into [a  b;  c  d] before \\ collapse eats row breaks.
+  s = convertMatrixEnvironments(s);
 
   // Normalize double-escaped backslashes from JSON ("\\\\frac" → "\\frac")
   while (s.includes("\\\\")) {

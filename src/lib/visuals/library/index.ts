@@ -23,4 +23,9 @@ export {
   spokenLinesForBeat,
   narrationMatchingBoard,
 } from "@/lib/visuals/library/scriptReveal";
-export { isIntegralAreaTopic, isLimitGraphTopic, isGraphBoardTopic } from "@/lib/visuals/library/topicMatch";
+export {
+  isIntegralAreaTopic,
+  isLimitGraphTopic,
+  isGraphBoardTopic,
+  isMatrixMultiplyTopic,
+} from "@/lib/visuals/library/topicMatch";

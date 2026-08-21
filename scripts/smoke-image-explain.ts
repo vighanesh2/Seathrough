@@ -78,6 +78,16 @@ assert.equal(
   "(1/2)x + (3/2)(x + 1) - 1/4 = 5",
 );
 assert.equal(latexToBoardText("$\\frac{15}{8}$"), "15/8");
+assert.equal(
+  latexToBoardText("\\begin{bmatrix} 1 & 2 \\\\ 3 & 4 \\end{bmatrix}"),
+  "[1 2; 3 4]",
+);
+assert.equal(
+  latexToBoardText(
+    "\\begin{pmatrix} a & b \\\\ c & d \\end{pmatrix} \\times \\begin{pmatrix} e & f \\\\ g & h \\end{pmatrix}",
+  ),
+  "[a  b;  c  d] × [e  f;  g  h]".replace(/\s{2,}/g, " "),
+);
 assert.ok(looksLikeLatex("\\frac{1}{2}"));
 assert.ok(!looksLikeLatex("(1/2)x = 5"));
 

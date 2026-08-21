@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
+import { AccountMenu } from "@/components/lms/AccountMenu";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
 import { Button } from "@/components/ui/button";
@@ -26,21 +27,21 @@ const EXAMPLES = [
 ];
 
 const CELL_FILL: Record<CellState, string> = {
-  default: "#f7f3ea",
-  active: "#fde68a",
-  pointer: "#bfdbfe",
-  matched: "#bbf7d0",
-  discarded: "#e5e7eb",
-  window: "#c4b5fd",
+  default: "#f4f7fb",
+  active: "#f8e4d0",
+  pointer: "#d4e8f6",
+  matched: "#d5efe4",
+  discarded: "#e8eef5",
+  window: "#c5d9ea",
 };
 
 const CELL_STROKE: Record<CellState, string> = {
-  default: "#94a3b8",
-  active: "#d97706",
-  pointer: "#2563eb",
-  matched: "#16a34a",
-  discarded: "#9ca3af",
-  window: "#7c3aed",
+  default: "#c8d6e4",
+  active: "#c45e1a",
+  pointer: "#1b6ca8",
+  matched: "#2a7a5c",
+  discarded: "#6a7d90",
+  window: "#0f4f7c",
 };
 
 type VisualizeResponse = AlgoVisualizeResult & {
@@ -49,7 +50,7 @@ type VisualizeResponse = AlgoVisualizeResult & {
 };
 
 export function LeetcodeWorkspace() {
-  const { user, accessToken, loading: authLoading } = useAuth();
+  const { user, accessToken, logout } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
   const [prompt, setPrompt] = useState(EXAMPLES[0]!);
   const [loading, setLoading] = useState(false);
@@ -166,17 +167,19 @@ export function LeetcodeWorkspace() {
         eyebrow="Coding practice"
         title={spec?.title ?? "Paste a problem to step through it"}
         account={
-          !authLoading && !user ? (
-            <Button variant="outline" size="sm" onClick={() => setAuthOpen(true)}>
-              Sign in
-            </Button>
-          ) : null
+          <AccountMenu
+            onLogin={() => setAuthOpen(true)}
+            onSignup={() => setAuthOpen(true)}
+            onLogout={() => {
+              void logout();
+            }}
+          />
         }
       />
 
       <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px]">
         <main className="flex min-h-0 flex-col gap-3 p-4 md:p-6">
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-board-edge bg-white/80 shadow-(--shadow-shell)">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-board-edge bg-card/80 shadow-(--shadow-shell)">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-board-edge px-4 py-3">
               <div className="min-w-0">
                 {spec ? (
@@ -222,7 +225,7 @@ export function LeetcodeWorkspace() {
                   setPlaying(false);
                   setFrameIndex((i) => Math.max(0, i - 1));
                 }}
-                className="rounded-lg border border-board-edge bg-white px-3 py-2 font-sans text-xs font-semibold disabled:opacity-40"
+                className="rounded-lg border border-board-edge bg-card px-3 py-2 font-sans text-xs font-semibold disabled:opacity-40"
               >
                 Prev
               </button>
@@ -241,7 +244,7 @@ export function LeetcodeWorkspace() {
                   setPlaying(false);
                   setFrameIndex((i) => Math.min(maxIndex, i + 1));
                 }}
-                className="rounded-lg border border-board-edge bg-white px-3 py-2 font-sans text-xs font-semibold disabled:opacity-40"
+                className="rounded-lg border border-board-edge bg-card px-3 py-2 font-sans text-xs font-semibold disabled:opacity-40"
               >
                 Next
               </button>
@@ -258,7 +261,7 @@ export function LeetcodeWorkspace() {
                 className="mx-2 min-w-40 flex-1"
                 aria-label="Step scrubber"
               />
-              <div className="flex items-center gap-1 rounded-lg border border-board-edge bg-white p-0.5">
+              <div className="flex items-center gap-1 rounded-lg border border-board-edge bg-card p-0.5">
                 {SPEEDS.map((s) => (
                   <button
                     key={s}
@@ -278,7 +281,7 @@ export function LeetcodeWorkspace() {
           </div>
 
           {frame ? (
-            <div className="rounded-2xl border border-board-edge bg-white/85 px-4 py-3 shadow-(--shadow-shell)">
+            <div className="rounded-2xl border border-board-edge bg-card/85 px-4 py-3 shadow-(--shadow-shell)">
               <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
                 {frame.title}
               </p>
@@ -289,7 +292,7 @@ export function LeetcodeWorkspace() {
           ) : null}
         </main>
 
-        <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto border-t border-board-edge bg-white/75 p-4 lg:border-l lg:border-t-0 lg:p-5">
+        <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto border-t border-board-edge bg-card/80 p-4 lg:border-l lg:border-t-0 lg:p-5">
           <div>
             <label
               htmlFor="leetcode-prompt"
@@ -440,11 +443,11 @@ function AlgoBoard({ frame }: { frame: AlgoFrame }) {
         aria-label={frame.title}
       >
         {frame.truncated ? (
-          <text x={padX} y={24} fill="#64748b" fontSize={12} fontFamily="sans-serif">
+          <text x={padX} y={24} fill="#6a7d90" fontSize={12} fontFamily="sans-serif">
             Showing first cells (input truncated)
           </text>
         ) : (
-          <text x={padX} y={24} fill="#64748b" fontSize={12} fontFamily="sans-serif">
+          <text x={padX} y={24} fill="#6a7d90" fontSize={12} fontFamily="sans-serif">
             {frame.title}
           </text>
         )}
@@ -469,7 +472,7 @@ function AlgoBoard({ frame }: { frame: AlgoFrame }) {
                 x={x + cellW / 2}
                 y={y + cellH / 2 + 5}
                 textAnchor="middle"
-                fill="#0f172a"
+                fill="#1a2b3c"
                 fontSize={18}
                 fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
                 fontWeight={600}
@@ -480,7 +483,7 @@ function AlgoBoard({ frame }: { frame: AlgoFrame }) {
                 x={x + cellW / 2}
                 y={y + cellH + 18}
                 textAnchor="middle"
-                fill="#64748b"
+                fill="#6a7d90"
                 fontSize={11}
                 fontFamily="sans-serif"
               >
@@ -497,7 +500,7 @@ function AlgoBoard({ frame }: { frame: AlgoFrame }) {
                     x={x + cellW / 2 + (li > 0 ? li * 14 : 0)}
                     y={y - 28}
                     textAnchor="middle"
-                    fill="#1d4ed8"
+                    fill="#0f4f7c"
                     fontSize={11}
                     fontFamily="sans-serif"
                     fontWeight={700}
@@ -514,7 +517,7 @@ function AlgoBoard({ frame }: { frame: AlgoFrame }) {
           <text
             x={padX}
             y={padY + cellH + 48}
-            fill="#334155"
+            fill="#3d5166"
             fontSize={12}
             fontFamily="ui-monospace, SFMono-Regular, Menlo, monospace"
           >

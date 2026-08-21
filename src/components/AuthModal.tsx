@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type AuthModalProps = {
   open: boolean;
@@ -19,6 +20,7 @@ type AuthModalProps = {
   initialMode?: "login" | "signup";
   /** When true, modal cannot be dismissed without signing in */
   required?: boolean;
+  onSuccess?: () => void;
 };
 
 export function AuthModal({
@@ -26,6 +28,7 @@ export function AuthModal({
   onClose,
   initialMode = "login",
   required = false,
+  onSuccess,
 }: AuthModalProps) {
   const { login, signup } = useAuth();
   const [mode, setMode] = useState<"login" | "signup">(initialMode);
@@ -49,6 +52,7 @@ export function AuthModal({
     }
     setUsername("");
     setPassword("");
+    onSuccess?.();
     onClose();
   }
 
@@ -74,99 +78,84 @@ export function AuthModal({
           <img
             src="/SeeThrough_logo.png"
             alt=""
-            className="mb-1 h-16 w-auto object-contain"
+            className="mb-1 h-14 w-auto object-contain"
           />
           <DialogTitle className="font-display text-2xl">
-            {mode === "login" ? "Log in" : "Create an account"}
+            {required ? "Sign in to open a studio" : "Your studio account"}
           </DialogTitle>
           <DialogDescription>
             {required
-              ? "Sign in to open your whiteboard and private lesson chats."
-              : "Save lessons to this device’s account."}
+              ? "Lessons, diagrams, and 3D scenes stay on this account."
+              : "Same account across topics, systems, and 3D scenes."}
           </DialogDescription>
         </DialogHeader>
 
-        <form className="flex flex-col gap-3" onSubmit={(e) => void onSubmit(e)}>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="auth-username">Username</Label>
-            <Input
-              id="auth-username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              autoComplete="username"
-              disabled={busy}
-              placeholder="e.g. alex"
-              className="h-11"
-            />
-          </div>
+        <Tabs
+          value={mode}
+          onValueChange={(value) => {
+            setMode(value as "login" | "signup");
+            setError(null);
+          }}
+        >
+          <TabsList>
+            <TabsTrigger value="login">Log in</TabsTrigger>
+            <TabsTrigger value="signup">Create account</TabsTrigger>
+          </TabsList>
+          <TabsContent value={mode}>
+            <form
+              className="flex flex-col gap-3"
+              onSubmit={(e) => void onSubmit(e)}
+            >
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="auth-username">Username</Label>
+                <Input
+                  id="auth-username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  autoComplete="username"
+                  disabled={busy}
+                  placeholder="e.g. alex"
+                  className="h-11"
+                />
+              </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="auth-password">Password</Label>
-            <Input
-              id="auth-password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete={
-                mode === "login" ? "current-password" : "new-password"
-              }
-              disabled={busy}
-              placeholder="At least 6 characters"
-              className="h-11"
-            />
-          </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="auth-password">Password</Label>
+                <Input
+                  id="auth-password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete={
+                    mode === "login" ? "current-password" : "new-password"
+                  }
+                  disabled={busy}
+                  placeholder="At least 6 characters"
+                  className="h-11"
+                />
+              </div>
 
-          {error ? (
-            <p className="rounded-lg bg-warn-soft px-3 py-2 text-sm text-warn">
-              {error}
-            </p>
-          ) : null}
+              {error ? (
+                <p className="rounded-lg bg-warn-soft px-3 py-2 text-sm text-warn">
+                  {error}
+                </p>
+              ) : null}
 
-          <Button
-            type="submit"
-            size="lg"
-            disabled={busy || !username.trim() || !password}
-            className="mt-1 w-full"
-          >
-            {busy
-              ? "Please wait…"
-              : mode === "login"
-                ? "Log in"
-                : "Create account"}
-          </Button>
-        </form>
-
-        <p className="text-center text-sm text-muted">
-          {mode === "login" ? (
-            <>
-              New here?{" "}
-              <button
-                type="button"
-                className="font-semibold text-accent hover:underline"
-                onClick={() => {
-                  setMode("signup");
-                  setError(null);
-                }}
+              <Button
+                type="submit"
+                size="lg"
+                disabled={busy || !username.trim() || !password}
+                className="mt-1 w-full"
               >
-                Sign up
-              </button>
-            </>
-          ) : (
-            <>
-              Already have an account?{" "}
-              <button
-                type="button"
-                className="font-semibold text-accent hover:underline"
-                onClick={() => {
-                  setMode("login");
-                  setError(null);
-                }}
-              >
-                Log in
-              </button>
-            </>
-          )}
-        </p>
+                {busy
+                  ? "Please wait…"
+                  : mode === "login"
+                    ? "Log in"
+                    : "Create account"}
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

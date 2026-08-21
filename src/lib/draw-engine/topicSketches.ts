@@ -3,7 +3,7 @@ import {
   reserve,
   type BoardLayout,
 } from "@/lib/draw-engine/boardLayout";
-import { isGraphBoardTopic, isIntegralAreaTopic, isLimitGraphTopic } from "@/lib/visuals/library/topicMatch";
+import { isGraphBoardTopic, isIntegralAreaTopic, isLimitGraphTopic, isMatrixMultiplyTopic } from "@/lib/visuals/library/topicMatch";
 
 export type TopicSketchInput = {
   prompt: string;
@@ -26,6 +26,9 @@ export function topicSketchCommands(
   }
   if (isLimitGraphTopic(input.prompt)) {
     return limitGraphSketch(input);
+  }
+  if (isMatrixMultiplyTopic(input.prompt)) {
+    return matrixMultiplySketch(input);
   }
   if (/\bbig\s*bang\b|\bsingularit(?:y|ies)\b|\borigin of the universe\b/.test(blob)) {
     return bigBangSketch(input);
@@ -463,6 +466,361 @@ function limitGraphSketch(input: TopicSketchInput): DrawCommand[] {
   return cmds;
 }
 
+const MX_CELL_W = 36;
+const MX_CELL_H = 32;
+const MX_GAP = 10;
+const MX_PAD = 14;
+const MX_TICK = 10;
+
+function matrixInnerSize(cols: number, rows: number): { w: number; h: number } {
+  return {
+    w: cols * MX_CELL_W + (cols - 1) * MX_GAP,
+    h: rows * MX_CELL_H + (rows - 1) * MX_GAP,
+  };
+}
+
+function matrixOuterSize(cols: number, rows: number): { w: number; h: number } {
+  const inner = matrixInnerSize(cols, rows);
+  return { w: inner.w + MX_PAD * 2, h: inner.h + MX_PAD * 2 };
+}
+
+function cellCenter(
+  originX: number,
+  originY: number,
+  row: number,
+  col: number,
+): { x: number; y: number } {
+  return {
+    x: originX + MX_PAD + col * (MX_CELL_W + MX_GAP) + MX_CELL_W / 2,
+    y: originY + MX_PAD + row * (MX_CELL_H + MX_GAP) + MX_CELL_H / 2,
+  };
+}
+
+function bracketCommands(
+  id: string,
+  t0: number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  color: string,
+): DrawCommand[] {
+  return [
+    {
+      id: `${id}-l`,
+      type: "line",
+      t0,
+      durationMs: 420,
+      x1: x,
+      y1: y,
+      x2: x,
+      y2: y + h,
+      color,
+      width: 2.5,
+    },
+    {
+      id: `${id}-lt`,
+      type: "line",
+      t0: t0 + 40,
+      durationMs: 280,
+      x1: x,
+      y1: y,
+      x2: x + MX_TICK,
+      y2: y,
+      color,
+      width: 2.5,
+    },
+    {
+      id: `${id}-lb`,
+      type: "line",
+      t0: t0 + 40,
+      durationMs: 280,
+      x1: x,
+      y1: y + h,
+      x2: x + MX_TICK,
+      y2: y + h,
+      color,
+      width: 2.5,
+    },
+    {
+      id: `${id}-r`,
+      type: "line",
+      t0: t0 + 80,
+      durationMs: 420,
+      x1: x + w,
+      y1: y,
+      x2: x + w,
+      y2: y + h,
+      color,
+      width: 2.5,
+    },
+    {
+      id: `${id}-rt`,
+      type: "line",
+      t0: t0 + 120,
+      durationMs: 280,
+      x1: x + w - MX_TICK,
+      y1: y,
+      x2: x + w,
+      y2: y,
+      color,
+      width: 2.5,
+    },
+    {
+      id: `${id}-rb`,
+      type: "line",
+      t0: t0 + 120,
+      durationMs: 280,
+      x1: x + w - MX_TICK,
+      y1: y + h,
+      x2: x + w,
+      y2: y + h,
+      color,
+      width: 2.5,
+    },
+  ];
+}
+
+function matrixNumber(
+  id: string,
+  t0: number,
+  originX: number,
+  originY: number,
+  row: number,
+  col: number,
+  value: string,
+  color: string,
+): DrawCommand {
+  const c = cellCenter(originX, originY, row, col);
+  const digitW = value.length > 1 ? 7 * value.length : 6;
+  return {
+    id,
+    type: "text",
+    t0,
+    durationMs: 360,
+    text: value,
+    x: c.x - digitW,
+    y: c.y - 9,
+    color,
+    fontSize: 20,
+  };
+}
+
+/**
+ * 2×2 product drawn as real grids:
+ *   [ 1  2 ]   [ 5  6 ]   [ 19  22 ]
+ *   [ 3  4 ] × [ 7  8 ] = [ 43  50 ]
+ */
+function matrixMultiplySketch(input: TopicSketchInput): DrawCommand[] {
+  const { beatOrder, beatId, t0Base: t, layout } = input;
+  const A = { x: 498, y: 108 };
+  const B = { x: 638, y: 108 };
+  const C = { x: 778, y: 108 };
+  const size = matrixOuterSize(2, 2);
+  const cmds: DrawCommand[] = [];
+
+  if (layout && beatOrder <= 1) {
+    reserve(layout, {
+      id: "sketch-matrix",
+      x: 488,
+      y: 72,
+      w: 400,
+      h: 280,
+      kind: "content",
+    });
+  }
+
+  if (beatOrder <= 1) {
+    cmds.push(
+      {
+        id: `${beatId}-mx-A-lab`,
+        type: "text",
+        t0: t,
+        durationMs: 280,
+        text: "A",
+        x: A.x + size.w / 2 - 6,
+        y: A.y - 22,
+        color: "#1b6ca8",
+        fontSize: 16,
+      },
+      ...bracketCommands(`${beatId}-mx-A`, t + 40, A.x, A.y, size.w, size.h, "#1b6ca8"),
+      matrixNumber(`${beatId}-mx-A00`, t + 180, A.x, A.y, 0, 0, "1", "#1a2b3c"),
+      matrixNumber(`${beatId}-mx-A01`, t + 220, A.x, A.y, 0, 1, "2", "#1a2b3c"),
+      matrixNumber(`${beatId}-mx-A10`, t + 260, A.x, A.y, 1, 0, "3", "#1a2b3c"),
+      matrixNumber(`${beatId}-mx-A11`, t + 300, A.x, A.y, 1, 1, "4", "#1a2b3c"),
+      {
+        id: `${beatId}-mx-B-lab`,
+        type: "text",
+        t0: t + 80,
+        durationMs: 280,
+        text: "B",
+        x: B.x + size.w / 2 - 6,
+        y: B.y - 22,
+        color: "#b86a1e",
+        fontSize: 16,
+      },
+      ...bracketCommands(`${beatId}-mx-B`, t + 120, B.x, B.y, size.w, size.h, "#b86a1e"),
+      matrixNumber(`${beatId}-mx-B00`, t + 260, B.x, B.y, 0, 0, "5", "#1a2b3c"),
+      matrixNumber(`${beatId}-mx-B01`, t + 300, B.x, B.y, 0, 1, "6", "#1a2b3c"),
+      matrixNumber(`${beatId}-mx-B10`, t + 340, B.x, B.y, 1, 0, "7", "#1a2b3c"),
+      matrixNumber(`${beatId}-mx-B11`, t + 380, B.x, B.y, 1, 1, "8", "#1a2b3c"),
+    );
+  }
+
+  if (beatOrder === 2) {
+    cmds.push(
+      {
+        id: `${beatId}-mx-times`,
+        type: "text",
+        t0: t,
+        durationMs: 280,
+        text: "×",
+        x: 618,
+        y: A.y + size.h / 2 - 12,
+        color: "#1a2b3c",
+        fontSize: 22,
+      },
+      {
+        id: `${beatId}-mx-eq`,
+        type: "text",
+        t0: t + 80,
+        durationMs: 280,
+        text: "=",
+        x: 758,
+        y: A.y + size.h / 2 - 12,
+        color: "#1a2b3c",
+        fontSize: 22,
+      },
+      {
+        id: `${beatId}-mx-C-lab`,
+        type: "text",
+        t0: t + 120,
+        durationMs: 280,
+        text: "C",
+        x: C.x + size.w / 2 - 6,
+        y: C.y - 22,
+        color: "#2a7a5c",
+        fontSize: 16,
+      },
+      ...bracketCommands(`${beatId}-mx-C`, t + 160, C.x, C.y, size.w, size.h, "#2a7a5c"),
+    );
+  }
+
+  if (beatOrder === 3) {
+    const aRow = cellCenter(A.x, A.y, 0, 0);
+    const bCol = cellCenter(B.x, B.y, 0, 0);
+    cmds.push(
+      {
+        id: `${beatId}-mx-hl-a`,
+        type: "highlight",
+        t0: t,
+        durationMs: 420,
+        x: A.x + MX_PAD - 4,
+        y: aRow.y - MX_CELL_H / 2 - 2,
+        w: matrixInnerSize(2, 2).w + 8,
+        h: MX_CELL_H + 4,
+        color: "rgba(27,108,168,0.22)",
+      },
+      {
+        id: `${beatId}-mx-hl-b`,
+        type: "highlight",
+        t0: t + 80,
+        durationMs: 420,
+        x: bCol.x - MX_CELL_W / 2 - 2,
+        y: B.y + MX_PAD - 4,
+        w: MX_CELL_W + 4,
+        h: matrixInnerSize(2, 2).h + 8,
+        color: "rgba(184,106,30,0.22)",
+      },
+      matrixNumber(`${beatId}-mx-C00`, t + 280, C.x, C.y, 0, 0, "19", "#2a7a5c"),
+      {
+        id: `${beatId}-mx-dot1`,
+        type: "text",
+        t0: t + 320,
+        durationMs: 400,
+        text: "1×5 + 2×7 = 19",
+        x: 508,
+        y: A.y + size.h + 18,
+        color: "#2a7a5c",
+        fontSize: 16,
+      },
+    );
+  }
+
+  if (beatOrder === 4) {
+    const aRow = cellCenter(A.x, A.y, 0, 0);
+    const bCol = cellCenter(B.x, B.y, 0, 1);
+    cmds.push(
+      {
+        id: `${beatId}-mx-hl-a2`,
+        type: "highlight",
+        t0: t,
+        durationMs: 420,
+        x: A.x + MX_PAD - 4,
+        y: aRow.y - MX_CELL_H / 2 - 2,
+        w: matrixInnerSize(2, 2).w + 8,
+        h: MX_CELL_H + 4,
+        color: "rgba(27,108,168,0.16)",
+      },
+      {
+        id: `${beatId}-mx-hl-b2`,
+        type: "highlight",
+        t0: t + 80,
+        durationMs: 420,
+        x: bCol.x - MX_CELL_W / 2 - 2,
+        y: B.y + MX_PAD - 4,
+        w: MX_CELL_W + 4,
+        h: matrixInnerSize(2, 2).h + 8,
+        color: "rgba(184,106,30,0.16)",
+      },
+      matrixNumber(`${beatId}-mx-C01`, t + 280, C.x, C.y, 0, 1, "22", "#2a7a5c"),
+      {
+        id: `${beatId}-mx-dot2`,
+        type: "text",
+        t0: t + 320,
+        durationMs: 400,
+        text: "1×6 + 2×8 = 22",
+        x: 508,
+        y: A.y + size.h + 40,
+        color: "#2a7a5c",
+        fontSize: 16,
+      },
+    );
+  }
+
+  if (beatOrder === 5) {
+    cmds.push(
+      matrixNumber(`${beatId}-mx-C10`, t, C.x, C.y, 1, 0, "43", "#2a7a5c"),
+      matrixNumber(`${beatId}-mx-C11`, t + 80, C.x, C.y, 1, 1, "50", "#2a7a5c"),
+      {
+        id: `${beatId}-mx-box`,
+        type: "rect",
+        t0: t + 160,
+        durationMs: 480,
+        x: C.x - 6,
+        y: C.y - 6,
+        w: size.w + 12,
+        h: size.h + 12,
+        color: "#2a7a5c",
+        width: 2,
+      },
+      {
+        id: `${beatId}-mx-dot3`,
+        type: "text",
+        t0: t + 200,
+        durationMs: 400,
+        text: "3×5 + 4×7 = 43   3×6 + 4×8 = 50",
+        x: 508,
+        y: A.y + size.h + 62,
+        color: "#2a7a5c",
+        fontSize: 15,
+      },
+    );
+  }
+
+  return cmds;
+}
+
 function dashedLine(
   id: string,
   t0: number,
@@ -780,7 +1138,9 @@ export function preferLeftColumnForSketch(prompt: string): boolean {
   return (
     /\bbig\s*bang\b|\bphotosynthesis\b|\bwater\s+cycle\b|\bsingularit/.test(
       blob,
-    ) || isGraphBoardTopic(prompt)
+    ) ||
+    isGraphBoardTopic(prompt) ||
+    isMatrixMultiplyTopic(prompt)
   );
 }
 

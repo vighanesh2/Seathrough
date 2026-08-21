@@ -8,10 +8,15 @@ export type ModeId =
   | "screenshot-explain"
   | "leetcode"
   | "figures-3d"
+  | "scene-explain"
+  | "system-design"
   | "automatic-drawing"
   | "draw-engine";
 
 export type ModeKind = "learning" | "tool";
+
+/** How the product surfaces this mode in nav and home. */
+export type ModeGroup = "studio" | "more" | "lab";
 
 export type ModeDefinition = {
   /** Stable id — used in registry lookups and analytics. */
@@ -26,6 +31,8 @@ export type ModeDefinition = {
   description: string;
   /** learning = primary product; tool = lower-priority / demo. */
   kind: ModeKind;
+  /** studio = flagship; more = extra study tools; lab = experiments. */
+  group: ModeGroup;
   /** Sort order on home (lower first). */
   order: number;
   /** Plug-out switch: false hides from home and ModeNav. */

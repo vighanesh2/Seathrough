@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ChevronDown, House } from "lucide-react";
-import { getMode, listEnabledModes } from "@/modes/registry";
+import { getMode, listModesByGroup } from "@/modes/registry";
 import type { ModeId } from "@/modes/types";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,12 +46,11 @@ function ModeItem({
   );
 }
 
-/**
- * One control to switch study modes — Canvas/Quizlet style, not a chip row.
- */
+/** Switch between studios — compact control for workspace chrome. */
 export function StudyMenu({ current, className = "" }: StudyMenuProps) {
-  const learning = listEnabledModes("learning");
-  const tools = listEnabledModes("tool");
+  const studios = listModesByGroup("studio");
+  const more = listModesByGroup("more");
+  const labs = listModesByGroup("lab");
   const active = current ? getMode(current) : undefined;
 
   return (
@@ -60,9 +59,9 @@ export function StudyMenu({ current, className = "" }: StudyMenuProps) {
         <Button
           variant="outline"
           className={cn("gap-1.5 font-medium", className)}
-          aria-label="Switch study tool"
+          aria-label="Switch studio"
         >
-          <span className="text-muted">Study</span>
+          <span className="text-muted">Studio</span>
           <span className="text-ink">{active?.navLabel ?? "Home"}</span>
           <ChevronDown className="size-3.5 text-muted" />
         </Button>
@@ -70,8 +69,8 @@ export function StudyMenu({ current, className = "" }: StudyMenuProps) {
       <DropdownMenuContent align="end" className="min-w-64">
         <ModeItem href="/" icon={House} label="Home" />
         <DropdownMenuSeparator />
-        <DropdownMenuLabel>Study</DropdownMenuLabel>
-        {learning.map((mode) => (
+        <DropdownMenuLabel>Studios</DropdownMenuLabel>
+        {studios.map((mode) => (
           <ModeItem
             key={mode.id}
             href={mode.href}
@@ -80,11 +79,26 @@ export function StudyMenu({ current, className = "" }: StudyMenuProps) {
             current={mode.id === current}
           />
         ))}
-        {tools.length > 0 ? (
+        {more.length > 0 ? (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel>More</DropdownMenuLabel>
+            {more.map((mode) => (
+              <ModeItem
+                key={mode.id}
+                href={mode.href}
+                icon={MODE_UI[mode.id].icon}
+                label={mode.title}
+                current={mode.id === current}
+              />
+            ))}
+          </>
+        ) : null}
+        {labs.length > 0 ? (
           <>
             <DropdownMenuSeparator />
             <DropdownMenuLabel>Labs</DropdownMenuLabel>
-            {tools.map((mode) => (
+            {labs.map((mode) => (
               <ModeItem
                 key={mode.id}
                 href={mode.href}

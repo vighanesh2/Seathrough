@@ -2,6 +2,9 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { AuthModal } from "@/components/AuthModal";
+import { useAuth } from "@/components/AuthProvider";
+import { AccountMenu } from "@/components/lms/AccountMenu";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
 import { consumeDrawStream } from "@/lib/draw-engine/consumeDrawStream";
@@ -26,6 +29,8 @@ const KonvaDrawStage = dynamic(
 type Status = "idle" | "streaming" | "playing" | "done" | "error";
 
 export function DrawEngineShell() {
+  const { logout } = useAuth();
+  const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
   const queue = useMemo(() => new DrawCommandQueue(), []);
   const abortRef = useRef<AbortController | null>(null);
   const sessionOriginRef = useRef<number | null>(null);
@@ -118,10 +123,26 @@ export function DrawEngineShell() {
 
   return (
     <AppShell className="flex-col">
+      <AuthModal
+        key={authModal ?? "closed"}
+        open={authModal != null}
+        initialMode={authModal ?? "login"}
+        onClose={() => setAuthModal(null)}
+      />
+
       <AppHeader
         current="draw-engine"
         eyebrow="Lab"
         title="Draw engine"
+        account={
+          <AccountMenu
+            onLogin={() => setAuthModal("login")}
+            onSignup={() => setAuthModal("signup")}
+            onLogout={() => {
+              void logout();
+            }}
+          />
+        }
       />
 
       <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-3 overflow-hidden p-4 md:p-5">

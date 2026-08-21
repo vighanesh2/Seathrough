@@ -17,6 +17,26 @@ function optional(name: string): string | undefined {
 
 export type LlmProviderName = "groq" | "openai";
 
+/** Groq retired these ids; keep old .env values working. */
+const GROQ_MODEL_REPLACEMENTS: Record<string, string> = {
+  "llama-3.3-70b-versatile": "openai/gpt-oss-120b",
+  "llama-3.1-8b-instant": "openai/gpt-oss-20b",
+  "llama-3.1-70b-versatile": "openai/gpt-oss-120b",
+  "meta-llama/llama-4-scout-17b-16e-instruct": "qwen/qwen3.6-27b",
+};
+
+const DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b";
+
+function resolveGroqModel(requested?: string): string {
+  const id = requested?.trim() || DEFAULT_GROQ_MODEL;
+  return GROQ_MODEL_REPLACEMENTS[id] ?? id;
+}
+
+/** Exported for smokes — maps retired Groq ids onto a live model. */
+export function groqModelOrReplacement(requested?: string): string {
+  return resolveGroqModel(requested);
+}
+
 export function getLlmConfig() {
   const provider = (optional("LLM_PROVIDER") ?? "groq").toLowerCase() as LlmProviderName;
 
@@ -32,7 +52,7 @@ export function getLlmConfig() {
   return {
     provider: "groq" as const,
     apiKey: required("GROQ_API_KEY"),
-    model: optional("GROQ_MODEL") ?? "llama-3.3-70b-versatile",
+    model: resolveGroqModel(optional("GROQ_MODEL")),
     baseURL: "https://api.groq.com/openai/v1",
   };
 }

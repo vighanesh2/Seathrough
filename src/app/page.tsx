@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
-import { ModeHome } from "@/components/modes/ModeHome";
+import { MarketingHome } from "@/components/site/MarketingHome";
 
 export const metadata: Metadata = {
   title: "SeeThrough",
   description:
-    "Stuck on homework? Ask a question or upload a photo — we’ll draw it out on a whiteboard.",
+    "Type a question. Watch a board, a system map, or a 3D scene form as it is explained.",
 };
 
 export default function HomePage() {
-  return <ModeHome />;
+  return <MarketingHome />;
 }

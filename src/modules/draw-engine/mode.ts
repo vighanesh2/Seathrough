@@ -8,6 +8,7 @@ export const drawEngineMode: ModeDefinition = {
   title: "Draw Engine",
   description: "Timed Konva command stream for board-engine experiments.",
   kind: "tool",
+  group: "lab",
   order: 110,
   enabled: true,
   badge: "lab",

@@ -1,4 +1,7 @@
-import { isGraphBoardTopic } from "@/lib/visuals/library/topicMatch";
+import {
+  isGraphBoardTopic,
+  isMatrixMultiplyTopic,
+} from "@/lib/visuals/library/topicMatch";
 
 export type BoardVisualStrategy =
   | "uml"
@@ -55,6 +58,8 @@ function hasLocalSketch(p: string): boolean {
   return (
     /\bbig\s*bang\b|\bphotosynthesis\b|\bwater\s+cycle\b|\bsingularit/.test(
       p,
-    ) || isGraphBoardTopic(p)
+    ) ||
+    isGraphBoardTopic(p) ||
+    isMatrixMultiplyTopic(p)
   );
 }

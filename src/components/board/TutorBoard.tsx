@@ -26,7 +26,7 @@ const KonvaDrawStage = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full min-h-[320px] items-center justify-center bg-white font-sans text-sm text-muted">
+      <div className="flex h-full min-h-[320px] items-center justify-center bg-chalk font-sans text-sm text-muted">
         Loading draw engine…
       </div>
     ),
@@ -138,7 +138,7 @@ export function TutorBoard({
     >
       <div className="relative min-h-0 min-w-0 flex-1">
         {showThree && threeScene ? (
-          <div className="absolute inset-0 flex flex-col bg-white">
+          <div className="absolute inset-0 flex flex-col bg-chalk">
             {drawSpeech ? (
               <p className="shrink-0 border-b border-board-edge/60 bg-accent-soft/30 px-4 py-2 font-sans text-sm text-ink">
                 <span className="font-semibold text-accent-deep">Tutor: </span>
@@ -159,12 +159,12 @@ export function TutorBoard({
                   threeScene.id === "cardiopulmonary" ||
                   threeScene.id === "eye"
                 }
-                className="h-full min-h-[280px] w-full overflow-hidden rounded-xl border border-board-edge bg-[#f7fafc]"
+                className="h-full min-h-[280px] w-full overflow-hidden rounded-xl border border-board-edge bg-board"
               />
             </div>
           </div>
         ) : useDrawEngine && drawQueue ? (
-          <div className="absolute inset-0 flex flex-col bg-white">
+          <div className="absolute inset-0 flex flex-col bg-chalk">
             {drawSpeech ? (
               <p className="shrink-0 border-b border-board-edge/60 bg-accent-soft/30 px-4 py-2 font-sans text-sm text-ink">
                 <span className="font-semibold text-accent-deep">Tutor: </span>
@@ -186,7 +186,7 @@ export function TutorBoard({
                 onComplete={onDrawComplete}
                 canvasHeight={canvasHeight}
                 scrollToY={scrollToY}
-                className="h-full min-h-[280px] w-full overflow-auto rounded-xl border border-board-edge bg-white"
+                className="h-full min-h-[280px] w-full overflow-auto rounded-xl border border-board-edge bg-chalk"
               />
             </div>
           </div>

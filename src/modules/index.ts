@@ -1,4 +1,6 @@
 export { lessonsMode } from "@/modules/lessons/mode";
+export { systemDesignMode } from "@/modules/system-design/mode";
+export { sceneExplainMode } from "@/modules/scene-explain/mode";
 export { screenshotExplainMode } from "@/modules/screenshot-explain/mode";
 export { leetcodeMode } from "@/modules/leetcode/mode";
 export { figures3dMode } from "@/modules/figures-3d/mode";
