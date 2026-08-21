@@ -50,6 +50,21 @@ export function MarketingHero() {
   return (
     <section className="relative px-5 pt-16 pb-16 md:px-6 md:pt-24 md:pb-20">
       <div className="mx-auto max-w-2xl text-center">
+        <a
+          href="https://www.producthunt.com/products/seethrough-2?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-seethrough-2"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mb-6 inline-flex transition opacity-90 hover:opacity-100"
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            alt="SeeThrough - Visibility is a possibility | Product Hunt"
+            width={250}
+            height={54}
+            src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1208390&theme=light&t=1787293641189"
+            className="h-[54px] w-[250px]"
+          />
+        </a>
         <h1 className="text-[2.4rem] leading-[1.1] font-medium tracking-[-0.04em] text-[#1a2b3c] sm:text-5xl md:text-[3.25rem]">
           Ask anything.
           <br />
