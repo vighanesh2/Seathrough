@@ -54,7 +54,7 @@ export function MarketingHero() {
           href="https://www.producthunt.com/products/seethrough-2?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-seethrough-2"
           target="_blank"
           rel="noopener noreferrer"
-          className="mb-6 inline-flex transition opacity-90 hover:opacity-100"
+          className="mb-6 inline-flex flex-col items-center gap-2 transition opacity-90 hover:opacity-100"
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -64,6 +64,10 @@ export function MarketingHero() {
             src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1208390&theme=light&t=1787293641189"
             className="h-[54px] w-[250px]"
           />
+          <span className="text-[13px] font-medium tracking-[-0.01em] text-[#6a7d90]">
+            Ranked{" "}
+            <span className="text-[#1b6ca8]">#59</span> on Product Hunt
+          </span>
         </a>
         <h1 className="text-[2.4rem] leading-[1.1] font-medium tracking-[-0.04em] text-[#1a2b3c] sm:text-5xl md:text-[3.25rem]">
           Ask anything.
