@@ -10,7 +10,7 @@ export const leetcodeMode: ModeDefinition = {
   kind: "learning",
   group: "more",
   order: 50,
-  enabled: true,
+  enabled: false,
   usesWhiteboard: false,
   metaTitle: "Coding practice | SeeThrough",
   metaDescription:

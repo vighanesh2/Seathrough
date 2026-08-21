@@ -2,6 +2,7 @@
 
 import dynamic from "next/dynamic";
 import type { BoardNarrationLine } from "@/components/board/BoardNarration";
+import { ThinkingLoader } from "@/components/ui/ThinkingLoader";
 import type { DrawCommandQueue } from "@/lib/draw-engine/resolve";
 import type { AnatomyStructureId } from "@/lib/anatomy/types";
 import type { ThreeScenePlan } from "@/lib/three-scenes/decide";
@@ -12,8 +13,12 @@ const TutorBoard = dynamic(
   {
     ssr: false,
     loading: () => (
-      <section className="flex h-full min-h-0 items-center justify-center bg-board">
-        <p className="font-sans text-sm text-muted">Preparing the board…</p>
+      <section className="relative flex h-full min-h-0 items-center justify-center bg-board">
+        <ThinkingLoader
+          variant="panel"
+          label="Preparing the board"
+          className="border-0 bg-transparent shadow-none"
+        />
       </section>
     ),
   },

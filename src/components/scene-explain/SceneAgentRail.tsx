@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { ThinkingLoader } from "@/components/ui/ThinkingLoader";
 import type { SceneAgentLine } from "@/lib/scene-explain/types";
 
 type SceneAgentRailProps = {
@@ -32,12 +33,12 @@ export function SceneAgentRail({
       aria-label="Scene agent"
     >
       <div className="shrink-0 border-b border-board-edge px-5 py-3.5">
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2">
           <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-accent-deep">
             Scene agent
           </p>
           {streaming ? (
-            <span className="h-2 w-2 animate-soft-pulse rounded-full bg-success" />
+            <ThinkingLoader variant="inline" label="Working" className="ml-auto" />
           ) : null}
         </div>
         <h2 className="mt-1 font-display text-base font-semibold leading-snug text-ink md:text-lg">

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-type PlateId = "topics" | "systems" | "scenes";
+type PlateId = "topics" | "screenshots" | "scenes";
 
 const PLATES: Array<{
   id: PlateId;
@@ -22,9 +22,9 @@ const PLATES: Array<{
     z: "z-10",
   },
   {
-    id: "systems",
-    href: "/system-design",
-    label: "Systems",
+    id: "screenshots",
+    href: "/image-explain",
+    label: "Screenshots",
     tilt: "rotate-1",
     offset: "translate-x-[2%] -translate-y-1",
     z: "z-20",
@@ -44,7 +44,7 @@ type AcetateStageProps = {
 };
 
 export function AcetateStage({ onOpen }: AcetateStageProps) {
-  const [active, setActive] = useState<PlateId>("systems");
+  const [active, setActive] = useState<PlateId>("scenes");
 
   return (
     <div className="relative mx-auto w-full max-w-xl">
@@ -86,7 +86,7 @@ export function AcetateStage({ onOpen }: AcetateStageProps) {
                 </p>
                 <div className="mt-2 h-[calc(100%-1.5rem)]">
                   {plate.id === "topics" ? <TopicSketch /> : null}
-                  {plate.id === "systems" ? <SystemSketch /> : null}
+                  {plate.id === "screenshots" ? <ScreenshotSketch /> : null}
                   {plate.id === "scenes" ? <SceneSketch /> : null}
                 </div>
               </button>
@@ -140,7 +140,7 @@ function TopicSketch() {
   );
 }
 
-function SystemSketch() {
+function ScreenshotSketch() {
   return (
     <svg viewBox="0 0 160 120" className="h-full w-full" aria-hidden>
       <rect

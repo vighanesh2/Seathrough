@@ -5,6 +5,7 @@ import { useCallback, useRef, useState } from "react";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
 import type { ExcalidrawBoardHandle } from "@/components/automatic-drawing/ExcalidrawBoard";
+import { ThinkingLoader } from "@/components/ui/ThinkingLoader";
 import type {
   ExcalidrawScenePlan,
   RevealBatch,
@@ -19,8 +20,8 @@ const ExcalidrawBoard = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full min-h-[360px] items-center justify-center rounded-2xl border border-board-edge bg-chalk text-sm text-muted">
-        Loading Excalidraw…
+      <div className="relative flex h-full min-h-[360px] items-center justify-center rounded-2xl border border-board-edge bg-chalk">
+        <ThinkingLoader variant="panel" label="Loading the board" className="border-0 bg-transparent" />
       </div>
     ),
   },
@@ -186,13 +187,19 @@ export function AutomaticDrawingShell() {
           </p>
         ) : null}
 
-        <div className="min-h-0 flex-1" style={{ minHeight: 480 }}>
+        <div className="relative min-h-0 flex-1" style={{ minHeight: 480 }}>
           <ExcalidrawBoard
             batches={batches}
             replayKey={replayKey}
             onReady={onBoardReady}
             onRevealDone={onRevealDone}
           />
+          {status === "generating" ? (
+            <ThinkingLoader
+              variant="overlay"
+              phrases={["Planning the diagram", "Choosing shapes", "Almost ready"]}
+            />
+          ) : null}
         </div>
 
         <p className="shrink-0 font-sans text-[11px] text-muted">

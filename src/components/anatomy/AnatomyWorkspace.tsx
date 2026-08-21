@@ -2,12 +2,13 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
+import { useQuestionAccess } from "@/components/usage/QuestionAccess";
 import { AccountMenu } from "@/components/lms/AccountMenu";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
 import { Button } from "@/components/ui/button";
+import { ThinkingLoader } from "@/components/ui/ThinkingLoader";
 import {
   ANATOMY_MODE_LABELS,
   modesForScene,
@@ -22,6 +23,7 @@ import type {
   AnatomyStructureId,
 } from "@/lib/anatomy/types";
 import type { ThreeScenePlan } from "@/lib/three-scenes/decide";
+import { clearPendingPrompt, takePendingPrompt } from "@/lib/usage/pendingPrompt";
 
 const ThreeBoard = dynamic(
   () =>
@@ -44,6 +46,12 @@ type AnswerTurn = {
 };
 
 const SPEEDS = [0.5, 1, 1.5] as const;
+
+function sceneFromPrompt(text: string): AnatomySceneId {
+  const t = text.toLowerCase();
+  if (/\b(eye|retina|cornea|iris|pupil|vision|optic)\b/.test(t)) return "eye";
+  return "cardiopulmonary";
+}
 
 const EXAMPLE_QUESTIONS: Record<AnatomySceneId, string[]> = {
   cardiopulmonary: [
@@ -75,8 +83,8 @@ const LEGENDS: Record<
 };
 
 export function AnatomyWorkspace() {
-  const { user, accessToken, logout } = useAuth();
-  const [authOpen, setAuthOpen] = useState(false);
+  const { accessToken, logout } = useAuth();
+  const { beginQuestion, cancelQuestion, openAuth } = useQuestionAccess();
   const [sceneId, setSceneId] = useState<AnatomySceneId>("eye");
   const [selected, setSelected] = useState<AnatomyStructureId | null>(null);
   const [focused, setFocused] = useState<AnatomyStructureId[]>([]);
@@ -89,6 +97,7 @@ export function AnatomyWorkspace() {
   const [asking, setAsking] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const turnIdRef = useRef(0);
+  const pendingHandledRef = useRef(false);
 
   useEffect(
     () => () => {
@@ -96,6 +105,30 @@ export function AnatomyWorkspace() {
     },
     [],
   );
+
+  useEffect(() => {
+    const pending = takePendingPrompt();
+    if (!pending) return;
+    const scene = sceneFromPrompt(pending.prompt);
+    setSceneId(scene);
+    setQuestion(pending.prompt);
+    if (!pending.autoStart) {
+      clearPendingPrompt();
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      if (pendingHandledRef.current) return;
+      pendingHandledRef.current = true;
+      clearPendingPrompt();
+      void askQuestion(pending.prompt, scene);
+    }, 60);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot marketing handoff
+  }, []);
 
   function switchScene(next: AnatomySceneId) {
     if (next === sceneId) return;
@@ -140,13 +173,15 @@ export function AnatomyWorkspace() {
     setFocused(structure ? [structure] : []);
   }
 
-  async function askQuestion(text = question) {
+  async function askQuestion(
+    text = question,
+    sceneOverride?: AnatomySceneId,
+  ) {
     const trimmed = text.trim();
     if (!trimmed || asking) return;
-    if (!user || !accessToken) {
-      setAuthOpen(true);
-      return;
-    }
+    if (!beginQuestion()) return;
+
+    const activeScene = sceneOverride ?? sceneId;
 
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -162,13 +197,13 @@ export function AnatomyWorkspace() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
         body: JSON.stringify({
           question: trimmed,
           selectedStructure: selected,
           sceneMode: mode,
-          sceneId,
+          sceneId: activeScene,
         }),
         signal: controller.signal,
       });
@@ -188,6 +223,7 @@ export function AnatomyWorkspace() {
       setMode(body.animationMode);
       setReveal(body.reveal);
     } catch (error) {
+      cancelQuestion();
       const message =
         controller.signal.aborted
           ? "The answer took too long. The 3D figure is still available; try again."
@@ -210,11 +246,6 @@ export function AnatomyWorkspace() {
 
   return (
     <AppShell className="flex-col md:overflow-hidden overflow-y-auto">
-      <AuthModal
-        open={authOpen}
-        onClose={() => setAuthOpen(false)}
-        initialMode="login"
-      />
 
       <AppHeader
         current="figures-3d"
@@ -245,8 +276,8 @@ export function AnatomyWorkspace() {
         }
         account={
           <AccountMenu
-            onLogin={() => setAuthOpen(true)}
-            onSignup={() => setAuthOpen(true)}
+            onLogin={() => openAuth("login")}
+            onSignup={() => openAuth("signup")}
             onLogout={() => {
               void logout();
             }}
@@ -429,10 +460,22 @@ export function AnatomyWorkspace() {
                   disabled={!question.trim() || asking}
                   className="rounded-lg bg-accent px-3.5 py-2 font-sans text-xs font-semibold text-white hover:bg-accent-deep disabled:opacity-40"
                 >
-                  {asking ? "Checking sources…" : "Ask"}
+                  {asking ? "Asking…" : "Ask"}
                 </button>
               </div>
             </form>
+
+            {asking ? (
+              <ThinkingLoader
+                variant="panel"
+                phrases={[
+                  "Checking sources",
+                  "Focusing structures",
+                  "Almost ready",
+                ]}
+                className="mt-3"
+              />
+            ) : null}
 
             {!turns.length ? (
               <div className="mt-4 space-y-2">

@@ -5,6 +5,7 @@ import { estimateSpeechMs } from "@/lib/orchestrator/speechUnits";
 import { inspectSceneCode } from "@/lib/scene-explain/inspectCode";
 import {
   MAX_SCENE_REPAIR_ATTEMPTS,
+  SCENE_LOAD_TIMEOUT_MS,
   type SceneAgentKind,
   type SceneAgentLine,
   type SceneProgram,
@@ -18,16 +19,17 @@ type SpeakClip = { mimeType: string; base64: string };
 
 async function postJson<T>(
   url: string,
-  token: string,
+  token: string | null,
   body: unknown,
   signal: AbortSignal,
 ): Promise<T> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) headers.Authorization = `Bearer ${token}`;
   const response = await fetch(url, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers,
     body: JSON.stringify(body),
     signal,
   });
@@ -44,7 +46,7 @@ async function postJson<T>(
 }
 
 async function fetchSpeechClip(
-  token: string,
+  token: string | null,
   text: string,
   signal: AbortSignal,
 ): Promise<SpeakClip | null> {
@@ -165,10 +167,13 @@ export function useSceneSession(accessToken: string | null) {
   const reset = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
+    const waiter = loadWaiter.current;
+    loadWaiter.current = null;
     loadGen.current += 1;
-    loadWaiter.current = null;
+    if (waiter) {
+      waiter.resolve({ ok: false, message: "Scene reset." });
+    }
     stopPlayback();
-    loadWaiter.current = null;
     setStatus("idle");
     setTitle(undefined);
     setCode(null);
@@ -182,6 +187,12 @@ export function useSceneSession(accessToken: string | null) {
   useEffect(
     () => () => {
       abortRef.current?.abort();
+      const waiter = loadWaiter.current;
+      loadWaiter.current = null;
+      loadGen.current += 1;
+      if (waiter) {
+        waiter.resolve({ ok: false, message: "Scene closed." });
+      }
       stopPlayback();
     },
     [stopPlayback],
@@ -201,22 +212,59 @@ export function useSceneSession(accessToken: string | null) {
     loadWaiter.current = null;
   }, []);
 
-  const waitForFrame = useCallback((nextCode: string) => {
-    const gen = loadGen.current + 1;
-    loadGen.current = gen;
-    return new Promise<{ ok: true; maxReveal: number } | { ok: false; message: string }>(
-      (resolve) => {
-        loadWaiter.current = { gen, resolve };
+  const waitForFrame = useCallback(
+    (nextCode: string, signal: AbortSignal) => {
+      const gen = loadGen.current + 1;
+      loadGen.current = gen;
+      return new Promise<{
+        ok: true;
+        maxReveal: number;
+      } | { ok: false; message: string }>((resolve) => {
+        let settled = false;
+        const finish = (
+          result: { ok: true; maxReveal: number } | { ok: false; message: string },
+        ) => {
+          if (settled) return;
+          settled = true;
+          if (loadWaiter.current?.gen === gen) loadWaiter.current = null;
+          window.clearTimeout(timer);
+          signal.removeEventListener("abort", onAbort);
+          resolve(result);
+        };
+
+        const onAbort = () => {
+          finish({ ok: false, message: "Scene load cancelled." });
+        };
+
+        if (signal.aborted) {
+          finish({ ok: false, message: "Scene load cancelled." });
+          return;
+        }
+
+        loadWaiter.current = {
+          gen,
+          resolve: finish,
+        };
         setFrameKey(gen);
         setCode(nextCode);
-      },
-    );
-  }, []);
+
+        const timer = window.setTimeout(() => {
+          finish({
+            ok: false,
+            message: "The 3D scene did not start in time.",
+          });
+        }, SCENE_LOAD_TIMEOUT_MS);
+
+        signal.addEventListener("abort", onAbort, { once: true });
+      });
+    },
+    [],
+  );
 
   const playBeats = useCallback(
     async (
       next: SceneProgram,
-      token: string,
+      token: string | null,
       signal: AbortSignal,
       firstClip: Promise<SpeakClip | null> | null,
     ) => {
@@ -273,15 +321,19 @@ export function useSceneSession(accessToken: string | null) {
   );
 
   const run = useCallback(
-    async (prompt: string) => {
+    async (prompt: string): Promise<boolean> => {
       const trimmed = prompt.trim();
-      if (!trimmed || !accessToken) return;
+      if (!trimmed) return false;
 
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
-      loadGen.current += 1;
+      const abandoned = loadWaiter.current;
       loadWaiter.current = null;
+      loadGen.current += 1;
+      if (abandoned) {
+        abandoned.resolve({ ok: false, message: "Scene load cancelled." });
+      }
       stopPlayback();
       setError(null);
       setNarration([]);
@@ -291,6 +343,21 @@ export function useSceneSession(accessToken: string | null) {
       setStatus("building");
       voiceWarned.current = false;
       pushLog("status", "Planning a 3D scene for that process…");
+
+      const failOrAbort = (message?: string) => {
+        if (controller.signal.aborted || abortRef.current !== controller) {
+          setStatus("idle");
+          return false;
+        }
+        if (message) {
+          setStatus("error");
+          setError(message);
+          pushLog("error", message);
+        } else {
+          setStatus("idle");
+        }
+        return false;
+      };
 
       try {
         const generated = await postJson<GenerateResponse>(
@@ -304,13 +371,15 @@ export function useSceneSession(accessToken: string | null) {
           controller.signal,
         );
 
+        if (controller.signal.aborted) return failOrAbort();
+
         let current = generated;
         setProgram(current);
         setTitle(current.title);
         pushLog("status", `Built a draft of “${current.title}”. Loading it…`);
 
         for (let attempt = 1; attempt <= MAX_SCENE_REPAIR_ATTEMPTS + 1; attempt += 1) {
-          if (controller.signal.aborted) return;
+          if (controller.signal.aborted) return failOrAbort();
 
           const inspected = inspectSceneCode(current.code);
           if (!inspected.ok) {
@@ -337,16 +406,25 @@ export function useSceneSession(accessToken: string | null) {
           }
 
           const firstClip = current.beats[0]
-            ? fetchSpeechClip(accessToken, current.beats[0].narration, controller.signal)
+            ? fetchSpeechClip(
+                accessToken,
+                current.beats[0].narration,
+                controller.signal,
+              )
             : null;
-          const loaded = await waitForFrame(current.code);
+          const loaded = await waitForFrame(current.code, controller.signal);
+          if (controller.signal.aborted) return failOrAbort();
           if (loaded.ok) {
             setProgram(current);
             setTitle(current.title);
             setStatus("explaining");
-            pushLog("ready", "Scene is running. Walking through what you’re seeing.");
+            pushLog(
+              "ready",
+              "Scene is running. Walking through what you’re seeing.",
+            );
             await playBeats(current, accessToken, controller.signal, firstClip);
-            return;
+            if (controller.signal.aborted) return failOrAbort();
+            return true;
           }
 
           if (attempt > MAX_SCENE_REPAIR_ATTEMPTS) {
@@ -372,12 +450,10 @@ export function useSceneSession(accessToken: string | null) {
 
         throw new Error("Couldn't get a stable 3D scene. Try a simpler prompt.");
       } catch (err) {
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted) return failOrAbort();
         const message =
           err instanceof Error ? err.message : "The scene agent failed.";
-        setStatus("error");
-        setError(message);
-        pushLog("error", message);
+        return failOrAbort(message);
       }
     },
     [accessToken, playBeats, program, pushLog, stopPlayback, waitForFrame],

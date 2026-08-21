@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { ChevronDown, House } from "lucide-react";
 import { getMode, listModesByGroup } from "@/modes/registry";
 import type { ModeId } from "@/modes/types";
@@ -14,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MODE_UI } from "@/components/lms/modeUi";
+import { useSmoothNavigate } from "@/lib/navigation/smoothNavigate";
 import { cn } from "@/lib/utils";
 
 type StudyMenuProps = {
@@ -32,21 +32,23 @@ function ModeItem({
   label: string;
   current?: boolean;
 }) {
+  const navigate = useSmoothNavigate();
   return (
-    <DropdownMenuItem asChild>
-      <Link
-        href={href}
-        aria-current={current ? "page" : undefined}
-        className={cn("cursor-pointer", current && "font-semibold text-accent-deep")}
-      >
-        <Icon className="size-4" />
-        {label}
-      </Link>
+    <DropdownMenuItem
+      onSelect={(event) => {
+        event.preventDefault();
+        navigate(href);
+      }}
+      className={cn("cursor-pointer", current && "font-semibold text-accent-deep")}
+      aria-current={current ? "page" : undefined}
+    >
+      <Icon className="size-4" />
+      {label}
     </DropdownMenuItem>
   );
 }
 
-/** Switch between studios — compact control for workspace chrome. */
+/** Switch between tools — compact control for workspace chrome. */
 export function StudyMenu({ current, className = "" }: StudyMenuProps) {
   const studios = listModesByGroup("studio");
   const more = listModesByGroup("more");
@@ -59,9 +61,9 @@ export function StudyMenu({ current, className = "" }: StudyMenuProps) {
         <Button
           variant="outline"
           className={cn("gap-1.5 font-medium", className)}
-          aria-label="Switch studio"
+          aria-label="Switch tool"
         >
-          <span className="text-muted">Studio</span>
+          <span className="text-muted">Tools</span>
           <span className="text-ink">{active?.navLabel ?? "Home"}</span>
           <ChevronDown className="size-3.5 text-muted" />
         </Button>
@@ -69,7 +71,7 @@ export function StudyMenu({ current, className = "" }: StudyMenuProps) {
       <DropdownMenuContent align="end" className="min-w-64">
         <ModeItem href="/" icon={House} label="Home" />
         <DropdownMenuSeparator />
-        <DropdownMenuLabel>Studios</DropdownMenuLabel>
+        <DropdownMenuLabel>Tools</DropdownMenuLabel>
         {studios.map((mode) => (
           <ModeItem
             key={mode.id}

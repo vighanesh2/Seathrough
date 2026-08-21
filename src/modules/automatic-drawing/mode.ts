@@ -10,7 +10,7 @@ export const automaticDrawingMode: ModeDefinition = {
   kind: "tool",
   group: "lab",
   order: 100,
-  enabled: true,
+  enabled: false,
   badge: "lab",
   usesWhiteboard: true,
   metaTitle: "Automatic Drawing | SeeThrough",

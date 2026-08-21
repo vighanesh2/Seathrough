@@ -1,14 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
+import { useQuestionAccess } from "@/components/usage/QuestionAccess";
 import type { BoardNarrationLine } from "@/components/board/BoardNarration";
 import { AccountMenu } from "@/components/lms/AccountMenu";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
 import { VisualStage } from "@/components/VisualStage";
 import { Button } from "@/components/ui/button";
+import { ThinkingLoader } from "@/components/ui/ThinkingLoader";
 import { PenCueTracker } from "@/lib/board/penCues";
 import { consumeLessonStream } from "@/lib/client/consumeLessonStream";
 import type { DrawCommand } from "@/lib/draw-engine/commands";
@@ -27,8 +28,8 @@ type Preference = "auto" | "vision" | "ocr";
 type Phase = "idle" | "extracting" | "teaching" | "done" | "error";
 
 export function ImageExplainWorkspace() {
-  const { user, accessToken, logout } = useAuth();
-  const [authOpen, setAuthOpen] = useState(false);
+  const { accessToken, logout } = useAuth();
+  const { beginQuestion, cancelQuestion, openAuth } = useQuestionAccess();
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [question, setQuestion] = useState("");
@@ -266,10 +267,7 @@ export function ImageExplainWorkspace() {
       setError("Drop or choose a screenshot first.");
       return;
     }
-    if (!user || !accessToken) {
-      setAuthOpen(true);
-      return;
-    }
+    if (!beginQuestion()) return;
 
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -287,7 +285,9 @@ export function ImageExplainWorkspace() {
 
       const res = await fetch("/api/image-explain", {
         method: "POST",
-        headers: { Authorization: `Bearer ${accessToken}` },
+        headers: {
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
         body,
         signal: controller.signal,
       });
@@ -297,6 +297,7 @@ export function ImageExplainWorkspace() {
         error?: string;
       };
       if (!res.ok || !data.extraction || !data.lessonPrompt) {
+        cancelQuestion();
         setError(data.error ?? "Could not read this screenshot.");
         setPhase("error");
         return;
@@ -334,11 +335,6 @@ export function ImageExplainWorkspace() {
 
   return (
     <AppShell className="flex-col">
-      <AuthModal
-        open={authOpen}
-        onClose={() => setAuthOpen(false)}
-        initialMode="login"
-      />
 
       <AppHeader
         current="screenshot-explain"
@@ -346,8 +342,8 @@ export function ImageExplainWorkspace() {
         title={title ?? "Drop homework — we’ll teach it on the board"}
         account={
           <AccountMenu
-            onLogin={() => setAuthOpen(true)}
-            onSignup={() => setAuthOpen(true)}
+            onLogin={() => openAuth("login")}
+            onSignup={() => openAuth("signup")}
             onLogout={() => {
               void logout();
             }}
@@ -443,7 +439,7 @@ export function ImageExplainWorkspace() {
                       : "Waiting for a screenshot"}
               </p>
             </div>
-            <div className="h-[min(70vh,640px)] min-h-90">
+            <div className="relative h-[min(70vh,640px)] min-h-90">
               <VisualStage
                 plan={visualPlan}
                 playKey={playKey}
@@ -463,6 +459,16 @@ export function ImageExplainWorkspace() {
                   drawClockRef.current = ms;
                 }}
               />
+              {phase === "extracting" ? (
+                <ThinkingLoader
+                  variant="overlay"
+                  phrases={[
+                    "Reading the screenshot",
+                    "Finding the question",
+                    "Almost ready",
+                  ]}
+                />
+              ) : null}
             </div>
           </div>
         </main>

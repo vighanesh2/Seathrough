@@ -1,4 +1,3 @@
-import { getUserFromRequest } from "@/lib/auth/requestUser";
 import { envPresence } from "@/lib/env";
 import { toUserFacingError } from "@/lib/errors/userFacing";
 import { generateSceneProgram } from "@/lib/scene-explain/generateScene";
@@ -8,11 +7,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const user = await getUserFromRequest(request);
-  if (!user) {
-    return Response.json({ error: "Sign in required" }, { status: 401 });
-  }
-
   const presence = envPresence();
   if (!presence.GROQ_API_KEY && presence.LLM_PROVIDER === "groq") {
     return Response.json(

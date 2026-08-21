@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PanelLeft } from "lucide-react";
 import { useMachine } from "@xstate/react";
 import type { BoardNarrationLine } from "@/components/board/BoardNarration";
-import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
 import { ChatSidebar } from "@/components/ChatSidebar";
 import { AccountMenu } from "@/components/lms/AccountMenu";
@@ -12,6 +11,8 @@ import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
 import { PaceControls } from "@/components/PaceControls";
 import { PromptBar } from "@/components/PromptBar";
+import { useQuestionAccess } from "@/components/usage/QuestionAccess";
+import { ThinkingLoader } from "@/components/ui/ThinkingLoader";
 import { VisualStage } from "@/components/VisualStage";
 import { Button } from "@/components/ui/button";
 import { PenCueTracker } from "@/lib/board/penCues";
@@ -22,6 +23,7 @@ import { DrawCommandQueue } from "@/lib/draw-engine/resolve";
 import type { DrawCommand } from "@/lib/draw-engine/commands";
 import { toUserFacingError } from "@/lib/errors/userFacing";
 import { lessonMachine } from "@/lib/lesson/machine";
+import { clearPendingPrompt, takePendingPrompt } from "@/lib/usage/pendingPrompt";
 import { visualStableKey } from "@/lib/visuals/router";
 import type { VisualPlan } from "@/lib/visuals/types";
 import type { PaceSpeed, StreamEvent } from "@/types/lesson";
@@ -166,21 +168,10 @@ function commandsBottomY(commands: DrawCommand[]): number {
 
 export function LessonShell() {
   const { user, loading: authLoading, accessToken, logout } = useAuth();
-  const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
+  const { beginQuestion, cancelQuestion, openAuth } = useQuestionAccess();
   const [prompt, setPrompt] = useState("");
   const [status, setStatus] = useState<LessonStatus>("idle");
-
-  useEffect(() => {
-    try {
-      const pending = sessionStorage.getItem("seethrough.pendingPrompt");
-      if (pending) {
-        sessionStorage.removeItem("seethrough.pendingPrompt");
-        setPrompt(pending);
-      }
-    } catch {
-      /* ignore */
-    }
-  }, []);
+  const pendingHandledRef = useRef(false);
   const [speed, setSpeed] = useState<PaceSpeed>(1);
   const [title, setTitle] = useState<string | undefined>();
   const [visualPlan, setVisualPlan] = useState<VisualPlan | null>(null);
@@ -308,13 +299,10 @@ export function LessonShell() {
     queueMicrotask(() => {
       if (cancelled) return;
       if (!user?.id) {
-        abortRef.current?.abort();
         setConversations([]);
         setChatsLoading(false);
-        setAuthModal((prev) => prev ?? "login");
         return;
       }
-      setAuthModal(null);
       setConversations(readCachedChats(user.id));
       void refreshConversations();
     });
@@ -324,10 +312,20 @@ export function LessonShell() {
   }, [authLoading, refreshConversations, user?.id]);
 
   useEffect(() => {
-    if (authLoading || user) return;
-    resetLesson();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- clear board when session ends
-  }, [authLoading, user?.id]);
+    if (pendingHandledRef.current) return;
+    const pending = takePendingPrompt();
+    if (!pending) return;
+    pendingHandledRef.current = true;
+    setPrompt(pending.prompt);
+    if (pending.autoStart) {
+      void startLessonWithText(pending.prompt).finally(() => {
+        clearPendingPrompt();
+      });
+    } else {
+      clearPendingPrompt();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot marketing handoff
+  }, []);
 
   useEffect(() => {
     speedRef.current = speed;
@@ -574,10 +572,15 @@ export function LessonShell() {
     resumePauseRef.current = null;
   }
 
-  async function runStream(mode: "new" | "follow_up", text: string) {
+  async function runStream(
+    mode: "new" | "follow_up",
+    text: string,
+    options?: { onAbort?: () => void },
+  ) {
     const controller = new AbortController();
     abortRef.current = controller;
     let sawTerminal = false;
+    let sawProgress = false;
 
     try {
       await consumeLessonStream({
@@ -599,52 +602,68 @@ export function LessonShell() {
           mode === "follow_up" ? boardBottomYRef.current : undefined,
         accessToken,
         onEvent: async (event) => {
+          if (event.type !== "error") {
+            sawProgress = true;
+          }
           if (event.type === "error" || event.type === "done") {
             sawTerminal = true;
           }
           await handleEvent(event);
         },
       });
-      if (!controller.signal.aborted && !sawTerminal) {
+      if (controller.signal.aborted) {
+        if (abortRef.current === controller) {
+          abortRef.current = null;
+          setStatus("idle");
+        }
+        if (!sawProgress) options?.onAbort?.();
+        return;
+      }
+      if (!sawTerminal) {
         setStatus("done");
       }
     } catch (error) {
-      if (controller.signal.aborted) return;
+      if (controller.signal.aborted) {
+        if (abortRef.current === controller) {
+          abortRef.current = null;
+          setStatus("idle");
+        }
+        if (!sawProgress) options?.onAbort?.();
+        return;
+      }
       const message = toUserFacingError(
         error instanceof Error ? error.message : "Failed to stream lesson",
       );
       send({ type: "ERROR", message });
       pushNarration(message, "error");
       setStatus("error");
+      if (!sawProgress) options?.onAbort?.();
     }
   }
 
-  async function startLesson() {
-    const trimmed = prompt.trim();
+  async function startLessonWithText(trimmed: string) {
     if (!trimmed) return;
-    if (!user || !accessToken) {
-      setAuthModal("login");
-      return;
-    }
+    if (!beginQuestion()) return;
 
     resetLesson();
     send({ type: "START", title: trimmed });
     setStatus("running");
-    await runStream("new", trimmed);
+    await runStream("new", trimmed, { onAbort: cancelQuestion });
+  }
+
+  async function startLesson() {
+    await startLessonWithText(prompt.trim());
   }
 
   async function askFollowUp() {
     const trimmed = prompt.trim();
     if (!trimmed || !conversationIdRef.current) return;
-    if (!user || !accessToken) {
-      setAuthModal("login");
-      return;
-    }
+    if (!beginQuestion()) return;
 
     prepareSoftContinue();
     send({ type: "START", title: trimmed });
     setStatus("running");
-    await runStream("follow_up", trimmed);
+    await runStream("follow_up", trimmed, { onAbort: cancelQuestion });
   }
 
   function onPromptSubmit() {
@@ -658,7 +677,7 @@ export function LessonShell() {
   async function openConversation(id: string) {
     if (status === "running") return;
     if (!accessToken) {
-      setAuthModal("login");
+      openAuth("login");
       return;
     }
     prepareSoftContinue();
@@ -827,28 +846,6 @@ export function LessonShell() {
 
   const busy = status === "running";
 
-  if (authLoading) {
-    return (
-      <div className="flex h-dvh max-h-dvh w-full items-center justify-center bg-background">
-        <p className="text-sm text-muted">Checking your session…</p>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="relative flex h-dvh max-h-dvh w-full items-center justify-center overflow-hidden bg-background">
-        <AuthModal
-          key={authModal ?? "required"}
-          open
-          required
-          initialMode={authModal ?? "login"}
-          onClose={() => setAuthModal(null)}
-        />
-      </div>
-    );
-  }
-
   return (
     <AppShell>
       <ChatSidebar
@@ -864,22 +861,15 @@ export function LessonShell() {
           resetLesson();
           setPrompt("");
         }}
-        username={user.username}
+        username={user?.username}
         authLoading={authLoading}
-        onLogin={() => setAuthModal("login")}
-        onSignup={() => setAuthModal("signup")}
+        onLogin={() => openAuth("login")}
+        onSignup={() => openAuth("signup")}
         onLogout={() => {
           void logout();
           resetLesson();
           setConversations([]);
         }}
-      />
-
-      <AuthModal
-        key={authModal ?? "closed"}
-        open={authModal != null}
-        initialMode={authModal ?? "login"}
-        onClose={() => setAuthModal(null)}
       />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
@@ -913,8 +903,8 @@ export function LessonShell() {
           }
           account={
             <AccountMenu
-              onLogin={() => setAuthModal("login")}
-              onSignup={() => setAuthModal("signup")}
+              onLogin={() => openAuth("login")}
+              onSignup={() => openAuth("signup")}
               onLogout={() => {
                 void logout();
                 resetLesson();
@@ -967,6 +957,21 @@ export function LessonShell() {
               drawClockRef.current = ms;
             }}
           />
+          {status === "running" &&
+          !visualPlan &&
+          !threeScene &&
+          !preferDrawEngine &&
+          boardNarration.length === 0 ? (
+            <ThinkingLoader
+              variant="overlay"
+              phrases={[
+                "Thinking",
+                "Planning the explanation",
+                "Setting up the board",
+                "Almost ready",
+              ]}
+            />
+          ) : null}
         </div>
       </div>
     </AppShell>

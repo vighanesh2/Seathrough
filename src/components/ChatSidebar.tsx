@@ -4,6 +4,7 @@ import { LogOut, PanelLeftClose, Plus } from "lucide-react";
 import type { ConversationListItem } from "@/lib/conversations/types";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { ThinkingLoader } from "@/components/ui/ThinkingLoader";
 import { cn } from "@/lib/utils";
 
 type ChatSidebarProps = {
@@ -99,7 +100,9 @@ export function ChatSidebar({
           <div className="min-h-0 min-w-0 flex-1 overflow-x-hidden overflow-y-auto">
             <div className="p-2">
               {loading && !conversations.length ? (
-                <p className="px-2 py-3 text-xs text-muted">Loading…</p>
+                <div className="px-2 py-3">
+                  <ThinkingLoader variant="inline" label="Loading chats" />
+                </div>
               ) : null}
 
               {!loading && !conversations.length ? (

@@ -2,9 +2,9 @@
 
 import { ArrowRight } from "lucide-react";
 import { useStudioAccess } from "@/components/site/StudioAccess";
+import { stashPendingPrompt } from "@/lib/usage/pendingPrompt";
 import { cn } from "@/lib/utils";
 
-const PENDING_PROMPT_KEY = "seethrough.pendingPrompt";
 const EXAMPLE = "How does matrix multiplication work?";
 
 /**
@@ -16,7 +16,7 @@ export function MarketingMathSection() {
 
   function openExample() {
     try {
-      sessionStorage.setItem(PENDING_PROMPT_KEY, EXAMPLE);
+      stashPendingPrompt(EXAMPLE, true);
     } catch {
       /* ignore */
     }

@@ -2,8 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { useCallback, useMemo, useRef, useState } from "react";
-import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
+import { useQuestionAccess } from "@/components/usage/QuestionAccess";
 import { AccountMenu } from "@/components/lms/AccountMenu";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
@@ -30,7 +30,7 @@ type Status = "idle" | "streaming" | "playing" | "done" | "error";
 
 export function DrawEngineShell() {
   const { logout } = useAuth();
-  const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
+  const { beginQuestion, cancelQuestion, openAuth } = useQuestionAccess();
   const queue = useMemo(() => new DrawCommandQueue(), []);
   const abortRef = useRef<AbortController | null>(null);
   const sessionOriginRef = useRef<number | null>(null);
@@ -52,6 +52,9 @@ export function DrawEngineShell() {
   }, []);
 
   async function runDemo() {
+    if (!prompt.trim()) return;
+    if (!beginQuestion()) return;
+
     abortRef.current?.abort();
     const ac = new AbortController();
     abortRef.current = ac;
@@ -108,7 +111,11 @@ export function DrawEngineShell() {
       });
       if (!sawError) setStatus("done");
     } catch (err) {
-      if ((err as Error)?.name === "AbortError") return;
+      if ((err as Error)?.name === "AbortError") {
+        cancelQuestion();
+        return;
+      }
+      cancelQuestion();
       setError(toUserFacingError(err));
       setStatus("error");
       setPlaying(false);
@@ -123,12 +130,6 @@ export function DrawEngineShell() {
 
   return (
     <AppShell className="flex-col">
-      <AuthModal
-        key={authModal ?? "closed"}
-        open={authModal != null}
-        initialMode={authModal ?? "login"}
-        onClose={() => setAuthModal(null)}
-      />
 
       <AppHeader
         current="draw-engine"
@@ -136,8 +137,8 @@ export function DrawEngineShell() {
         title="Draw engine"
         account={
           <AccountMenu
-            onLogin={() => setAuthModal("login")}
-            onSignup={() => setAuthModal("signup")}
+            onLogin={() => openAuth("login")}
+            onSignup={() => openAuth("signup")}
             onLogout={() => {
               void logout();
             }}

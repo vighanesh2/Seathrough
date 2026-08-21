@@ -2,19 +2,21 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
 import { AccountMenu } from "@/components/lms/AccountMenu";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useQuestionAccess } from "@/components/usage/QuestionAccess";
 import type { ExcalidrawBoardHandle } from "@/components/automatic-drawing/ExcalidrawBoard";
+import { ThinkingLoader } from "@/components/ui/ThinkingLoader";
 import type {
   ExcalidrawScenePlan,
   RevealBatch,
 } from "@/lib/automatic-drawing/schema";
 import { toUserFacingError } from "@/lib/errors/userFacing";
+import { clearPendingPrompt, takePendingPrompt } from "@/lib/usage/pendingPrompt";
 
 const ExcalidrawBoard = dynamic(
   () =>
@@ -24,8 +26,8 @@ const ExcalidrawBoard = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full min-h-90 items-center justify-center rounded-2xl border border-board-edge bg-chalk text-sm text-muted">
-        Loading the architecture board…
+      <div className="relative flex h-full min-h-90 items-center justify-center rounded-2xl border border-board-edge bg-chalk">
+        <ThinkingLoader variant="panel" label="Loading the board" className="border-0 bg-transparent" />
       </div>
     ),
   },
@@ -41,8 +43,8 @@ const STARTERS = [
 type Status = "idle" | "generating" | "drawing" | "ready" | "error";
 
 export function SystemDesignShell() {
-  const { user, accessToken, loading: authLoading, logout } = useAuth();
-  const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
+  const { accessToken, loading: authLoading, logout } = useAuth();
+  const { beginQuestion, cancelQuestion, openAuth } = useQuestionAccess();
   const boardApi = useRef<ExcalidrawBoardHandle | null>(null);
   const [description, setDescription] = useState(STARTERS[0]!);
   const [plan, setPlan] = useState<ExcalidrawScenePlan | null>(null);
@@ -50,17 +52,24 @@ export function SystemDesignShell() {
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const [replayKey, setReplayKey] = useState(0);
+  const pendingHandledRef = useRef(false);
 
   useEffect(() => {
-    try {
-      const pending = sessionStorage.getItem("seethrough.pendingPrompt");
-      if (pending) {
-        sessionStorage.removeItem("seethrough.pendingPrompt");
-        setDescription(pending);
-      }
-    } catch {
-      /* ignore */
+    if (pendingHandledRef.current) return;
+    const pending = takePendingPrompt();
+    if (!pending) return;
+    pendingHandledRef.current = true;
+    setDescription(pending.prompt);
+    if (pending.autoStart) {
+      queueMicrotask(() => {
+        void generateWithText(pending.prompt).finally(() => {
+          clearPendingPrompt();
+        });
+      });
+    } else {
+      clearPendingPrompt();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot marketing handoff
   }, []);
 
   const onRevealDone = useCallback(() => {
@@ -71,17 +80,13 @@ export function SystemDesignShell() {
     boardApi.current = handle;
   }, []);
 
-  async function generate() {
-    const trimmed = description.trim();
+  async function generateWithText(trimmed: string) {
     if (!trimmed) {
       setError("Describe the architecture first.");
       setStatus("error");
       return;
     }
-    if (!user || !accessToken) {
-      setAuthModal("login");
-      return;
-    }
+    if (!beginQuestion()) return;
 
     setError(null);
     setStatus("generating");
@@ -90,12 +95,13 @@ export function SystemDesignShell() {
     boardApi.current?.clearScene();
 
     try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+      };
+      if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
       const res = await fetch("/api/system-design/generate", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers,
         body: JSON.stringify({ description: trimmed }),
       });
       const body = (await res.json()) as {
@@ -111,9 +117,14 @@ export function SystemDesignShell() {
       setReplayKey((k) => k + 1);
       setStatus("drawing");
     } catch (err) {
+      cancelQuestion();
       setStatus("error");
       setError(toUserFacingError(err));
     }
+  }
+
+  async function generate() {
+    await generateWithText(description.trim());
   }
 
   function replay() {
@@ -140,21 +151,14 @@ export function SystemDesignShell() {
 
   return (
     <AppShell className="flex-col">
-      <AuthModal
-        key={authModal ?? "closed"}
-        open={authModal != null}
-        initialMode={authModal ?? "login"}
-        onClose={() => setAuthModal(null)}
-      />
-
       <AppHeader
         current="system-design"
         eyebrow="System design"
         title={plan?.title ?? "Describe an architecture"}
         account={
           <AccountMenu
-            onLogin={() => setAuthModal("login")}
-            onSignup={() => setAuthModal("signup")}
+            onLogin={() => openAuth("login")}
+            onSignup={() => openAuth("signup")}
             onLogout={() => {
               void logout();
               boardApi.current?.clearScene();
@@ -181,7 +185,7 @@ export function SystemDesignShell() {
             id="system-design-prompt"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            disabled={busy || authLoading}
+            disabled={busy}
             maxLength={800}
             placeholder="A news feed write path with a queue, cache, and database…"
             className="h-11 min-w-0 flex-1 bg-card px-4"
@@ -189,11 +193,11 @@ export function SystemDesignShell() {
           <Button
             type="submit"
             size="lg"
-            disabled={busy || !description.trim() || authLoading}
+            disabled={busy || !description.trim()}
             className="shrink-0"
           >
             {status === "generating"
-              ? "Placing services…"
+              ? "Placing…"
               : status === "drawing"
                 ? "Drawing…"
                 : "Draw architecture"}
@@ -249,13 +253,23 @@ export function SystemDesignShell() {
           </p>
         ) : null}
 
-        <div className="min-h-0 flex-1" style={{ minHeight: 420 }}>
+        <div className="relative min-h-0 flex-1" style={{ minHeight: 420 }}>
           <ExcalidrawBoard
             batches={batches}
             replayKey={replayKey}
             onReady={onBoardReady}
             onRevealDone={onRevealDone}
           />
+          {status === "generating" ? (
+            <ThinkingLoader
+              variant="overlay"
+              phrases={[
+                "Placing services",
+                "Wiring the architecture",
+                "Almost ready",
+              ]}
+            />
+          ) : null}
         </div>
       </div>
     </AppShell>

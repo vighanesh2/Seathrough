@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Geist, IBM_Plex_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
+import { QuestionAccessProvider } from "@/components/usage/QuestionAccess";
+import { PageTransition } from "@/components/site/PageTransition";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import "./globals.css";
@@ -49,7 +51,11 @@ export default function RootLayout({
     >
       <body className="flex min-h-full flex-col font-sans text-ink">
         <AuthProvider>
-          <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+          <QuestionAccessProvider>
+            <TooltipProvider delayDuration={200}>
+              <PageTransition>{children}</PageTransition>
+            </TooltipProvider>
+          </QuestionAccessProvider>
         </AuthProvider>
       </body>
     </html>

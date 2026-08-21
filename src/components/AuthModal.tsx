@@ -20,6 +20,8 @@ type AuthModalProps = {
   initialMode?: "login" | "signup";
   /** When true, modal cannot be dismissed without signing in */
   required?: boolean;
+  /** Copy for the free daily question limit */
+  quotaExhausted?: boolean;
   onSuccess?: () => void;
 };
 
@@ -28,6 +30,7 @@ export function AuthModal({
   onClose,
   initialMode = "login",
   required = false,
+  quotaExhausted = false,
   onSuccess,
 }: AuthModalProps) {
   const { login, signup } = useAuth();
@@ -81,12 +84,18 @@ export function AuthModal({
             className="mb-1 h-14 w-auto object-contain"
           />
           <DialogTitle className="font-display text-2xl">
-            {required ? "Sign in to open a studio" : "Your studio account"}
+            {quotaExhausted
+              ? "Sign in to keep going"
+              : required
+                ? "Sign in to continue"
+                : "Your account"}
           </DialogTitle>
           <DialogDescription>
-            {required
-              ? "Lessons, diagrams, and 3D scenes stay on this account."
-              : "Same account across topics, systems, and 3D scenes."}
+            {quotaExhausted
+              ? "You've used today's 5 free questions. Sign in or create an account for unlimited access — the limit resets tomorrow if you stay signed out."
+              : required
+                ? "Create an account or log in to keep learning."
+                : "One account across topics, systems, and 3D scenes."}
           </DialogDescription>
         </DialogHeader>
 

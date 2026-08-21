@@ -3,7 +3,6 @@ import { citationsForKnowledge } from "@/lib/anatomy/knowledge/shared";
 import { retrieveCardiopulmonaryKnowledge } from "@/lib/anatomy/knowledge/cardiopulmonary";
 import { retrieveEyeKnowledge } from "@/lib/anatomy/knowledge/eye";
 import { anatomyQuestionRequestSchema } from "@/lib/anatomy/schemas";
-import { getUserFromRequest } from "@/lib/auth/requestUser";
 import type { AnatomySceneId } from "@/lib/anatomy/types";
 import { EYE_STRUCTURE_IDS } from "@/lib/anatomy/types";
 
@@ -25,11 +24,6 @@ function resolveSceneId(
 }
 
 export async function POST(request: Request) {
-  const user = await getUserFromRequest(request);
-  if (!user) {
-    return Response.json({ error: "Sign in required" }, { status: 401 });
-  }
-
   let json: unknown;
   try {
     json = await request.json();

@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
+import { useQuestionAccess } from "@/components/usage/QuestionAccess";
 import { AccountMenu } from "@/components/lms/AccountMenu";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
 import { Button } from "@/components/ui/button";
+import { ThinkingLoader } from "@/components/ui/ThinkingLoader";
 import {
   ALGO_PATTERN_LABELS,
   type AlgoFrame,
@@ -50,8 +51,8 @@ type VisualizeResponse = AlgoVisualizeResult & {
 };
 
 export function LeetcodeWorkspace() {
-  const { user, accessToken, logout } = useAuth();
-  const [authOpen, setAuthOpen] = useState(false);
+  const { accessToken, logout } = useAuth();
+  const { beginQuestion, cancelQuestion, openAuth } = useQuestionAccess();
   const [prompt, setPrompt] = useState(EXAMPLES[0]!);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -102,10 +103,7 @@ export function LeetcodeWorkspace() {
       setError("Paste a LeetCode-style problem first.");
       return;
     }
-    if (!user || !accessToken) {
-      setAuthOpen(true);
-      return;
-    }
+    if (!beginQuestion()) return;
 
     abortRef.current?.abort();
     const controller = new AbortController();
@@ -120,13 +118,14 @@ export function LeetcodeWorkspace() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
         body: JSON.stringify({ prompt: text }),
         signal: controller.signal,
       });
       const data = (await res.json()) as VisualizeResponse;
       if (!res.ok) {
+        cancelQuestion();
         setError(data.error ?? "Could not visualize this problem.");
         return;
       }
@@ -142,6 +141,7 @@ export function LeetcodeWorkspace() {
         setPlaying(!mq?.matches);
       }
     } catch (err) {
+      cancelQuestion();
       if ((err as Error).name === "AbortError") return;
       setError("Network error while visualizing. Try again.");
     } finally {
@@ -156,11 +156,6 @@ export function LeetcodeWorkspace() {
 
   return (
     <AppShell className="flex-col">
-      <AuthModal
-        open={authOpen}
-        onClose={() => setAuthOpen(false)}
-        initialMode="login"
-      />
 
       <AppHeader
         current="leetcode"
@@ -168,8 +163,8 @@ export function LeetcodeWorkspace() {
         title={spec?.title ?? "Paste a problem to step through it"}
         account={
           <AccountMenu
-            onLogin={() => setAuthOpen(true)}
-            onSignup={() => setAuthOpen(true)}
+            onLogin={() => openAuth("login")}
+            onSignup={() => openAuth("signup")}
             onLogout={() => {
               void logout();
             }}
@@ -316,6 +311,13 @@ export function LeetcodeWorkspace() {
             >
               {loading ? "Visualizing…" : "Visualize"}
             </button>
+            {loading ? (
+              <ThinkingLoader
+                variant="panel"
+                phrases={["Reading the problem", "Building steps", "Almost ready"]}
+                className="mt-3"
+              />
+            ) : null}
             {error ? (
               <p className="mt-2 font-sans text-xs text-warn">{error}</p>
             ) : null}

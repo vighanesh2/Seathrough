@@ -47,30 +47,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refresh = useCallback(async () => {
     try {
       const supabase = getBrowserSupabase();
-      const { data } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        // Keep the current session on transient auth client errors.
+        return;
+      }
       const token = data.session?.access_token ?? null;
-      setAccessToken(token);
 
       if (!token) {
+        // Only clear when Supabase reports no session (real sign-out / expired).
+        setAccessToken(null);
         setUser(null);
         return;
       }
+
+      setAccessToken(token);
 
       const res = await fetch("/api/auth/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) {
-        setUser(null);
-        setAccessToken(null);
+        // Do not wipe a working client session on a blip from /api/auth/me —
+        // that was aborting in-flight lessons.
         return;
       }
       const body = (await res.json()) as {
         user?: { id: string; username: string } | null;
       };
-      setUser(body.user ?? null);
+      if (body.user) setUser(body.user);
     } catch {
-      setUser(null);
-      setAccessToken(null);
+      // Network blip — keep whatever session we already have.
     }
   }, []);
 
@@ -87,12 +93,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let unsubscribe: (() => void) | undefined;
     try {
       const supabase = getBrowserSupabase();
-      const { data } = supabase.auth.onAuthStateChange(() => {
+      const { data } = supabase.auth.onAuthStateChange((event) => {
+        // Ignore noisy token refreshes; they were clearing UI mid-lesson.
+        if (event === "TOKEN_REFRESHED") return;
         void refresh();
       });
       unsubscribe = () => data.subscription.unsubscribe();
     } catch {
-      // env missing in some preview contexts
+      if (alive) setLoading(false);
     }
 
     return () => {

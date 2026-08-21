@@ -2,17 +2,11 @@ import { classifyAlgoPrompt } from "@/lib/leetcode/classify";
 import { leetcodeVisualizeRequestSchema } from "@/lib/leetcode/schemas";
 import { simulateAlgo } from "@/lib/leetcode/simulate";
 import { ALGO_PATTERN_LABELS } from "@/lib/leetcode/types";
-import { getUserFromRequest } from "@/lib/auth/requestUser";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const user = await getUserFromRequest(request);
-  if (!user) {
-    return Response.json({ error: "Sign in required" }, { status: 401 });
-  }
-
   let json: unknown;
   try {
     json = await request.json();

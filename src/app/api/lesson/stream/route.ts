@@ -57,15 +57,27 @@ export async function POST(request: Request) {
   const withAudio =
     body.withAudio !== false && presence.DEEPGRAM_API_KEY === true;
   const user = await getUserFromRequest(request);
-  if (!user) {
-    return Response.json({ error: "Sign in required" }, { status: 401 });
-  }
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
+      let closed = false;
+      const safeClose = () => {
+        if (closed) return;
+        closed = true;
+        try {
+          controller.close();
+        } catch {
+          /* already closed by client abort */
+        }
+      };
       const send = (event: StreamEvent) => {
-        controller.enqueue(encoder.encode(sseEncode(event)));
+        if (closed || request.signal.aborted) return;
+        try {
+          controller.enqueue(encoder.encode(sseEncode(event)));
+        } catch {
+          closed = true;
+        }
       };
 
       try {
@@ -81,7 +93,7 @@ export async function POST(request: Request) {
             Number.isFinite(body.boardBottomY)
               ? Math.max(0, body.boardBottomY)
               : undefined,
-          userId: user.id,
+          userId: user?.id ?? null,
         })) {
           send(event);
           if (event.type === "error" || event.type === "done") {
@@ -89,14 +101,16 @@ export async function POST(request: Request) {
           }
         }
       } catch (error) {
-        const message = toUserFacingError(error);
-        console.error(
-          "[lesson-stream-route]",
-          error instanceof Error ? error.message : error,
-        );
-        send({ type: "error", message });
+        if (!request.signal.aborted) {
+          const message = toUserFacingError(error);
+          console.error(
+            "[lesson-stream-route]",
+            error instanceof Error ? error.message : error,
+          );
+          send({ type: "error", message });
+        }
       } finally {
-        controller.close();
+        safeClose();
       }
     },
   });

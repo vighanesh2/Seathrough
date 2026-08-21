@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
+import { useQuestionAccess } from "@/components/usage/QuestionAccess";
 import { AccountMenu } from "@/components/lms/AccountMenu";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
@@ -29,8 +29,8 @@ const WIDTHS = [2, 4, 8] as const;
 type Status = "idle" | "expanding" | "planning" | "drawing" | "ready" | "error";
 
 export function WhiteboardShell() {
-  const { user, accessToken, logout } = useAuth();
-  const [authModal, setAuthModal] = useState<"login" | "signup" | null>(null);
+  const { accessToken, logout } = useAuth();
+  const { beginQuestion, cancelQuestion, openAuth } = useQuestionAccess();
   const boardRef = useRef<WhiteboardHandle | null>(null);
   const [tool, setTool] = useState<WhiteboardTool>("pen");
   const [color, setColor] = useState<string>(COLORS[0].value);
@@ -60,10 +60,7 @@ export function WhiteboardShell() {
       return;
     }
 
-    if (!user || !accessToken) {
-      setAuthModal("login");
-      return;
-    }
+    if (!beginQuestion()) return;
 
     setError(null);
     setTitle(null);
@@ -76,7 +73,7 @@ export function WhiteboardShell() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         },
         body: JSON.stringify({ description: trimmed }),
       });
@@ -103,6 +100,7 @@ export function WhiteboardShell() {
       setStatus("ready");
       setCanUndo(true);
     } catch (err) {
+      cancelQuestion();
       setStatus("error");
       setError(toUserFacingError(err));
     }
@@ -122,12 +120,6 @@ export function WhiteboardShell() {
 
   return (
     <AppShell className="flex-col">
-      <AuthModal
-        key={authModal ?? "closed"}
-        open={authModal != null}
-        initialMode={authModal ?? "login"}
-        onClose={() => setAuthModal(null)}
-      />
 
       <AppHeader
         current="automatic-drawing"
@@ -135,8 +127,8 @@ export function WhiteboardShell() {
         title="Automatic whiteboard"
         account={
           <AccountMenu
-            onLogin={() => setAuthModal("login")}
-            onSignup={() => setAuthModal("signup")}
+            onLogin={() => openAuth("login")}
+            onSignup={() => openAuth("signup")}
             onLogout={() => {
               void logout();
             }}

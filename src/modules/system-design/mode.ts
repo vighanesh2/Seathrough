@@ -11,7 +11,7 @@ export const systemDesignMode: ModeDefinition = {
   kind: "learning",
   group: "studio",
   order: 20,
-  enabled: true,
+  enabled: false,
   usesWhiteboard: false,
   metaTitle: "System design | SeeThrough",
   metaDescription:

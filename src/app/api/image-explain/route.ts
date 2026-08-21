@@ -1,4 +1,3 @@
-import { getUserFromRequest } from "@/lib/auth/requestUser";
 import {
   ALLOWED_IMAGE_MIME,
   MAX_IMAGE_BYTES,
@@ -10,11 +9,6 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const user = await getUserFromRequest(request);
-  if (!user) {
-    return Response.json({ error: "Sign in required" }, { status: 401 });
-  }
-
   let form: FormData;
   try {
     form = await request.formData();

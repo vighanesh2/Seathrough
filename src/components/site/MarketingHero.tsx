@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUp, Atom, MessageCircleQuestion, Network } from "lucide-react";
+import { ArrowUp, Atom, Heart, MessageCircleQuestion } from "lucide-react";
 import { useStudioAccess } from "@/components/site/StudioAccess";
+import { stashPendingPrompt } from "@/lib/usage/pendingPrompt";
 import { cn } from "@/lib/utils";
 
 const SUGGESTIONS = [
@@ -12,18 +13,16 @@ const SUGGESTIONS = [
     icon: Atom,
   },
   {
-    label: "Design a URL shortener",
-    href: "/system-design",
-    icon: Network,
-  },
-  {
-    label: "How does a hash map work?",
+    label: "What is a derivative function?",
     href: "/lessons",
     icon: MessageCircleQuestion,
   },
+  {
+    label: "How does the heart pump blood?",
+    href: "/3d-figures",
+    icon: Heart,
+  },
 ] as const;
-
-const PENDING_PROMPT_KEY = "seethrough.pendingPrompt";
 
 export function MarketingHero() {
   const { openStudio } = useStudioAccess();
@@ -33,11 +32,7 @@ export function MarketingHero() {
   function go(href: string, prompt?: string) {
     const text = (prompt ?? query).trim();
     if (text) {
-      try {
-        sessionStorage.setItem(PENDING_PROMPT_KEY, text);
-      } catch {
-        /* ignore */
-      }
+      stashPendingPrompt(text, true);
     }
     openStudio(href);
   }
@@ -62,7 +57,7 @@ export function MarketingHero() {
         </h1>
         <p className="mx-auto mt-4 max-w-md text-[16px] leading-7 text-[#6a7d90]">
           Type a question. SeeThrough draws the steps while it explains — on a
-          board, as a system map, or in 3D.
+          board, from a screenshot, or in 3D.
         </p>
       </div>
 

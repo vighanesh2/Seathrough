@@ -4,14 +4,14 @@ import { useEffect } from "react";
 import { MarketingBodySection } from "@/components/site/MarketingBodySection";
 import { MarketingHero } from "@/components/site/MarketingHero";
 import { MarketingMathSection } from "@/components/site/MarketingMathSection";
-import { MarketingSystemsSection } from "@/components/site/MarketingSystemsSection";
+import { MarketingTestimonialsSection } from "@/components/site/MarketingTestimonialsSection";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { StudioAccessProvider } from "@/components/site/StudioAccess";
 
 /**
  * Marketing shell — redesigning part by part.
- * Done: navbar, hero, body, math, systems, aurora.
+ * Done: navbar, hero, body, math, testimonials, aurora.
  */
 export function MarketingHome() {
   useEffect(() => {
@@ -36,7 +36,7 @@ export function MarketingHome() {
             <MarketingHero />
             <MarketingBodySection />
             <MarketingMathSection />
-            <MarketingSystemsSection />
+            <MarketingTestimonialsSection />
           </main>
           <SiteFooter variant="marketing" />
         </div>

@@ -10,7 +10,7 @@ export const drawEngineMode: ModeDefinition = {
   kind: "tool",
   group: "lab",
   order: 110,
-  enabled: true,
+  enabled: false,
   badge: "lab",
   usesWhiteboard: true,
   metaTitle: "Draw Engine | SeeThrough",

@@ -39,11 +39,11 @@ export function SiteFooter({ variant = "default" }: SiteFooterProps) {
           <Link href="/lessons" className="hover:text-[#1a2b3c]">
             Topics
           </Link>
-          <Link href="/system-design" className="hover:text-[#1a2b3c]">
-            Systems
-          </Link>
           <Link href="/scene-explain" className="hover:text-[#1a2b3c]">
             3D scenes
+          </Link>
+          <Link href="/image-explain" className="hover:text-[#1a2b3c]">
+            Screenshots
           </Link>
         </div>
       </div>
