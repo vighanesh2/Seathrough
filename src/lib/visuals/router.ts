@@ -323,10 +323,13 @@ export function visualStableKey(plan: VisualPlan): string {
       return s.type;
     })
     .join("|");
-  // Same topic on the same window = same board, so beats reuse it instead of
-  // remounting; a new interval changes the signature and redraws.
+  // Same topic on the same window = same board; a new interval or ODE reshapes it.
   const topicSig = plan.topicId
-    ? `${plan.topicId}@${plan.topicParams?.points.map((p) => p.join(",")).join(";") ?? ""}`
+    ? plan.topicParams?.boardKind === "ode-solution"
+      ? `${plan.topicId}:ode:${plan.topicParams.odeExpression};${plan.topicParams.initialT},${plan.topicParams.initialY};c=${plan.topicParams.parameterC};N=${plan.topicParams.timeSpan}`
+      : plan.topicParams?.boardKind === "secant-tangent"
+        ? `${plan.topicId}@${plan.topicParams.points.map((p) => p.join(",")).join(";")}`
+        : `${plan.topicId}`
     : "";
   return `${plan.renderer}:${plan.assetId ?? ""}:${plan.source ?? ""}:${plan.sceneRecipe?.kind ?? ""}:${scriptSig ?? ""}:${topicSig}`;
 }

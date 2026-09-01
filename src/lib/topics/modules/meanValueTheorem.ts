@@ -33,6 +33,7 @@ function paramsForInterval(interval: Interval | null): TopicBoardParams {
     : BASE_POINTS.map(([x, y]) => [x, y] as BoardPoint);
 
   return {
+    boardKind: "secant-tangent" as const,
     boundingBox: boundingBoxForPoints(points),
     points,
     labels: {

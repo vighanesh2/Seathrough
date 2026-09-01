@@ -8,6 +8,7 @@ import {
   matchTopic,
   parseInterval,
   solveParallelPoint,
+  parseOdeFromPrompt,
   topicBoardParamsSchema,
   topicVisualPlanById,
   topicVisualPlanFor,
@@ -32,7 +33,7 @@ assert.ok(
 
 // --- registry integrity -----------------------------------------------------
 
-assert.ok(TOPIC_MODULES.length >= 2, "library has topics");
+assert.ok(TOPIC_MODULES.length >= 3, "library has topics");
 assert.deepEqual(
   listTopicIds(),
   [...new Set(listTopicIds())],
@@ -128,6 +129,7 @@ const mvt = getTopicModule("mean-value-theorem");
 assert.ok(mvt, "mvt module resolves");
 
 const plainParams = mvt.deriveParams("explain the mean value theorem");
+assert.equal(plainParams.boardKind, "secant-tangent");
 assert.deepEqual(
   plainParams,
   mvt.defaultParams,
@@ -136,10 +138,14 @@ assert.deepEqual(
 
 const rangedParams = mvt.deriveParams("mean value theorem on [2, 8]");
 topicBoardParamsSchema.parse(rangedParams);
+assert.equal(rangedParams.boardKind, "secant-tangent");
+if (rangedParams.boardKind !== "secant-tangent") throw new Error("expected secant-tangent");
 assert.equal(rangedParams.points[0][0], 2, "point a lands on the stated start");
 assert.equal(rangedParams.points[1][0], 8, "point b lands on the stated end");
 assert.equal(rangedParams.labels.a, "a=2");
 assert.equal(rangedParams.labels.b, "b=8");
+assert.equal(plainParams.boardKind, "secant-tangent");
+if (plainParams.boardKind !== "secant-tangent") throw new Error("expected secant-tangent");
 assert.notDeepEqual(
   rangedParams.boundingBox,
   plainParams.boundingBox,
@@ -165,6 +171,8 @@ assert.ok(interiorYs.length > 0, "shape points survive the remap");
 const rolle = getTopicModule("rolles-theorem");
 assert.ok(rolle, "rolle module resolves");
 const rolleParams = rolle.deriveParams("rolle's theorem from 0 to 10");
+assert.equal(rolleParams.boardKind, "secant-tangent");
+if (rolleParams.boardKind !== "secant-tangent") throw new Error("expected secant-tangent");
 assert.equal(rolleParams.flatSecant, true, "rolle asks for a level secant");
 assert.equal(
   rolleParams.points[0][1],
@@ -182,8 +190,10 @@ const followUpPlan = topicVisualPlanFor(
   "mean value theorem",
 );
 assert.ok(followUpPlan, "follow-up with concept key still routes to the topic");
-assert.equal(followUpPlan?.topicParams?.labels.a, "a=3");
-assert.equal(followUpPlan?.topicParams?.labels.b, "b=7");
+if (followUpPlan?.topicParams?.boardKind === "secant-tangent") {
+  assert.equal(followUpPlan.topicParams.labels.a, "a=3");
+  assert.equal(followUpPlan.topicParams.labels.b, "b=7");
+}
 
 const beatPlan = topicVisualPlanFor(
   "explain the mean value theorem",
@@ -191,8 +201,42 @@ const beatPlan = topicVisualPlanFor(
   "Pick any smooth curve on the interval from 0 to 6.",
 );
 assert.ok(beatPlan, "beat narration can carry the interval");
-assert.equal(beatPlan?.topicParams?.points[0][0], 0);
-assert.equal(beatPlan?.topicParams?.points[1][0], 6);
+if (beatPlan?.topicParams?.boardKind === "secant-tangent") {
+  assert.equal(beatPlan.topicParams.points[0][0], 0);
+  assert.equal(beatPlan.topicParams.points[1][0], 6);
+}
+
+// --- ordinary differential equations ----------------------------------------
+
+assert.equal(
+  matchTopic("plot solutions of differential equations")?.id,
+  "differential-equations",
+);
+assert.equal(
+  matchTopic("solve dy/dt = (2-t)*y + c with y(0)=1")?.id,
+  "differential-equations",
+);
+assert.equal(matchTopic("partial differential equation heat")?.id, undefined);
+
+const odeParams = parseOdeFromPrompt(
+  "dy/dt = -y with y(0) = 2 and c = 3",
+);
+assert.equal(odeParams.boardKind, "ode-solution");
+assert.equal(odeParams.odeExpression, "-y");
+assert.equal(odeParams.initialT, 0);
+assert.equal(odeParams.initialY, 2);
+assert.equal(odeParams.parameterC, 3);
+
+const odePlan = topicVisualPlanFor(
+  "differential equation dy/dt = (2-t)*y + c, y(0)=1",
+);
+assert.ok(odePlan, "ode questions produce a visual plan");
+assert.equal(odePlan?.topicId, "differential-equations");
+assert.equal(odePlan?.topicParams?.boardKind, "ode-solution");
+if (odePlan?.topicParams?.boardKind === "ode-solution") {
+  assert.equal(odePlan.topicParams.odeExpression, "(2-t)*y + c");
+  assert.equal(odePlan.topicParams.initialY, 1);
+}
 
 // --- finding c, the point the theorem promises ------------------------------
 

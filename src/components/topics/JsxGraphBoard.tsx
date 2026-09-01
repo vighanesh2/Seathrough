@@ -84,7 +84,7 @@ export function JsxGraphBoard({
         board = JXG.JSXGraph.initBoard(hostRef.current, {
           boundingbox: paramsRef.current.boundingBox,
           axis: true,
-          keepaspectratio: true,
+          keepaspectratio: boardId !== "ode-solution",
           showCopyright: false,
           showNavigation: true,
           pan: { enabled: true, needTwoFingers: true },
@@ -127,7 +127,7 @@ export function JsxGraphBoard({
       }
       board = null;
     };
-  }, [draw, paramsKey]);
+  }, [boardId, draw, paramsKey]);
 
   if (!draw || loadFailed) {
     return (

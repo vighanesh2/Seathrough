@@ -10,6 +10,8 @@ import { solveParallelPoint } from "@/lib/topics";
  * Drag anything and c re-solves, which is the whole lesson.
  */
 export function drawSecantTangent({ JXG, board, params }: TopicBoardContext): void {
+  if (params.boardKind !== "secant-tangent") return;
+
   const { points, labels, flatSecant } = params;
   const numerics = JXG.Math.Numerics;
 

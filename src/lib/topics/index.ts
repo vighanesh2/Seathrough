@@ -4,6 +4,8 @@ export {
   topicIdSchema,
   type BoardPoint,
   type BoundingBox,
+  type OdeSolutionBoardParams,
+  type SecantTangentBoardParams,
   type TopicBoardId,
   type TopicBoardParams,
   type TopicId,
@@ -16,6 +18,11 @@ export {
   solveParallelPoint,
   type Interval,
 } from "@/lib/topics/geometry";
+export {
+  defaultOdeParams,
+  isSafeOdeExpression,
+  parseOdeFromPrompt,
+} from "@/lib/topics/odeParse";
 export {
   TOPIC_MODULES,
   getTopicModule,

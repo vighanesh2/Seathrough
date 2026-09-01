@@ -1,3 +1,4 @@
+import { differentialEquationsTopic } from "@/lib/topics/modules/differentialEquations";
 import { meanValueTheoremTopic } from "@/lib/topics/modules/meanValueTheorem";
 import { rollesTheoremTopic } from "@/lib/topics/modules/rollesTheorem";
 import { topicIdSchema, type TopicId } from "@/lib/topics/schema";
@@ -11,6 +12,7 @@ import type { TopicModule } from "@/lib/topics/types";
  * `@/components/topics/boards` (or reuse an existing `boardId`).
  */
 export const TOPIC_MODULES: readonly TopicModule[] = [
+  differentialEquationsTopic,
   meanValueTheoremTopic,
   rollesTheoremTopic,
 ];

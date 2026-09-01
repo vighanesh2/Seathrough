@@ -1,3 +1,4 @@
+import { drawOdeSolution } from "@/components/topics/boards/odeSolution";
 import { drawSecantTangent } from "@/components/topics/boards/secantTangent";
 import type { TopicBoardDrawer } from "@/components/topics/boards/types";
 import type { TopicBoardId } from "@/lib/topics";
@@ -9,6 +10,7 @@ import type { TopicBoardId } from "@/lib/topics";
  */
 export const TOPIC_BOARDS: Record<TopicBoardId, TopicBoardDrawer> = {
   "secant-tangent": drawSecantTangent,
+  "ode-solution": drawOdeSolution,
 };
 
 export { BOARD_COLORS } from "@/components/topics/boards/types";
