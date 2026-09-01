@@ -2,6 +2,10 @@
 
 import dynamic from "next/dynamic";
 import { useMemo } from "react";
+import {
+  activeTopicStepIndex,
+  revealedTopicSteps,
+} from "@/lib/topics/topicLesson";
 import { getTopicModule, type TopicBoardParams } from "@/lib/topics";
 import { cn } from "@/lib/utils";
 
@@ -18,36 +22,29 @@ const JsxGraphBoard = dynamic(
 );
 
 type TopicBoardProps = {
-  /** A topic library id, e.g. "mean-value-theorem". Unknown ids render nothing. */
   topicId: string;
-  /** The learner's question, used to tailor the board (an interval, say). */
   prompt?: string;
-  /** Explicit board settings, e.g. replayed from a saved visual plan. */
   params?: TopicBoardParams;
   showTitle?: boolean;
   showSteps?: boolean;
-  /** Lesson beat (1-based) — highlights the matching explanation step on the board. */
+  /** Lesson beat (1-based). Drives which explanation steps are visible. */
   beatOrder?: number;
-  /** Smaller graph for the infinite whiteboard; narration stays beside it. */
+  /** Beat 1 shows the graph; steps appear from beat 2 onward. */
+  graphFirst?: boolean;
   compact?: boolean;
   className?: string;
   boardClassName?: string;
   onReady?: () => void;
 };
 
-/**
- * Drop-in interactive for anything in the topic library.
- *
- * Any page can render `<TopicBoard topicId="mean-value-theorem" />` — the
- * browser-only graphing engine is loaded lazily behind the scenes.
- */
 export function TopicBoard({
   topicId,
   prompt,
   params,
   showTitle = true,
   showSteps = false,
-  beatOrder,
+  beatOrder = 1,
+  graphFirst = true,
   compact = false,
   className,
   boardClassName,
@@ -61,12 +58,24 @@ export function TopicBoard({
     return prompt ? topic.deriveParams(prompt) : topic.defaultParams;
   }, [params, prompt, topic]);
 
-  const activeStep = useMemo(() => {
-    if (!topic || !beatOrder || beatOrder < 1) return null;
-    return topic.steps[Math.min(beatOrder - 1, topic.steps.length - 1)] ?? null;
+  const revealedCount = useMemo(() => {
+    if (!topic) return 0;
+    if (showSteps) return topic.steps.length;
+    if (!graphFirst) return Math.min(beatOrder, topic.steps.length);
+    return revealedTopicSteps(beatOrder, topic.steps.length);
+  }, [beatOrder, graphFirst, showSteps, topic]);
+
+  const activeIndex = useMemo(() => {
+    if (!topic) return -1;
+    return activeTopicStepIndex(beatOrder, topic.steps.length);
   }, [beatOrder, topic]);
 
   if (!topic || !resolvedParams) return null;
+
+  const interactionHint =
+    topic.boardId === "ode-solution"
+      ? "Drag (t₀, y₀) or move the c and N sliders. Shift + scroll to zoom."
+      : "Drag the points to reshape the curve. Shift + scroll to zoom.";
 
   return (
     <figure
@@ -78,29 +87,11 @@ export function TopicBoard({
     >
       {showTitle ? (
         <figcaption className="shrink-0">
-          <h3
-            className={cn(
-              "font-display text-ink",
-              compact ? "text-lg" : "text-lg",
-            )}
-          >
-            {topic.title}
-          </h3>
+          <h3 className="font-display text-lg text-ink">{topic.title}</h3>
           <p className="mt-0.5 font-sans text-sm leading-5 text-muted">
             {topic.summary}
           </p>
         </figcaption>
-      ) : null}
-
-      {compact && activeStep && !showSteps ? (
-        <div className="shrink-0 rounded-lg border border-board-edge/80 bg-accent-soft/25 px-3 py-2.5">
-          <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.12em] text-accent-deep">
-            {activeStep.title}
-          </p>
-          <p className="mt-1 font-sans text-sm leading-5 text-ink-soft">
-            {activeStep.detail}
-          </p>
-        </div>
       ) : null}
 
       <div className={cn(compact ? "shrink-0" : "min-h-0 flex-1")}>
@@ -116,35 +107,55 @@ export function TopicBoard({
         />
       </div>
 
-      <p className="shrink-0 font-sans text-xs text-muted">
-        Drag the points to reshape the curve. Shift + scroll to zoom.
-      </p>
+      <p className="shrink-0 font-sans text-xs text-muted">{interactionHint}</p>
 
-      {showSteps ? (
+      {revealedCount > 0 ? (
         <ol className="shrink-0 space-y-2 border-t border-board-edge pt-3">
-          {topic.steps.map((step, index) => (
-            <li key={step.title} className="flex gap-3">
-              <span
+          {topic.steps.slice(0, revealedCount).map((step, index) => {
+            const isActive = index === activeIndex;
+            const isDone = index < activeIndex;
+            return (
+              <li
+                key={step.title}
                 className={cn(
-                  "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full font-sans text-[11px] font-semibold",
-                  beatOrder === index + 1
-                    ? "bg-accent text-chalk"
-                    : "bg-accent-soft text-accent-deep",
+                  "flex gap-3 rounded-lg px-2 py-2 transition-colors",
+                  isActive && "bg-accent-soft/40",
+                  isDone && "opacity-80",
                 )}
               >
-                {index + 1}
-              </span>
-              <span className="min-w-0">
-                <span className="font-sans text-sm font-semibold text-ink">
-                  {step.title}
+                <span
+                  className={cn(
+                    "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full font-sans text-[11px] font-semibold",
+                    isActive
+                      ? "bg-accent text-chalk"
+                      : isDone
+                        ? "bg-success-soft text-success"
+                        : "bg-accent-soft text-accent-deep",
+                  )}
+                >
+                  {index + 1}
                 </span>
-                <span className="mt-0.5 block font-sans text-sm text-muted">
-                  {step.detail}
+                <span className="min-w-0">
+                  <span className="font-sans text-sm font-semibold text-ink">
+                    {step.title}
+                  </span>
+                  <span
+                    className={cn(
+                      "mt-0.5 block font-sans text-sm leading-5",
+                      isActive ? "text-ink-soft" : "text-muted",
+                    )}
+                  >
+                    {step.detail}
+                  </span>
                 </span>
-              </span>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ol>
+      ) : compact && graphFirst && beatOrder <= 1 ? (
+        <p className="shrink-0 font-sans text-sm italic text-muted">
+          The walkthrough steps will appear here as the tutor explains.
+        </p>
       ) : null}
     </figure>
   );

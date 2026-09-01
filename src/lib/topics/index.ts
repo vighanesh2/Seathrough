@@ -37,3 +37,8 @@ export {
   topicVisualPlanFor,
   topicQuestionContext,
 } from "@/lib/topics/plan";
+export {
+  activeTopicStepIndex,
+  buildTopicLessonPlan,
+  revealedTopicSteps,
+} from "@/lib/topics/topicLesson";

@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { formatNarrationForDisplay } from "../src/lib/math/formatNarrationForDisplay";
 import {
   TOPIC_MODULES,
+  activeTopicStepIndex,
+  buildTopicLessonPlan,
   getTopicModule,
+  revealedTopicSteps,
   listTopicIds,
   listTopicSummaries,
   matchTopic,
@@ -237,6 +240,45 @@ if (odePlan?.topicParams?.boardKind === "ode-solution") {
   assert.equal(odePlan.topicParams.odeExpression, "(2-t)*y + c");
   assert.equal(odePlan.topicParams.initialY, 1);
 }
+
+// --- topic lesson walkthrough ------------------------------------------------
+
+const de = getTopicModule("differential-equations");
+assert.ok(de, "de module resolves");
+const curated = buildTopicLessonPlan(
+  {
+    title: "LLM title",
+    language: "math",
+    humanSummary: "summary",
+    beats: [
+      {
+        id: "b1",
+        order: 1,
+        kind: "intro",
+        narration: "llm intro",
+        imageAction: "generate",
+        actions: [],
+      },
+      {
+        id: "b2",
+        order: 2,
+        kind: "token",
+        narration: "llm body",
+        imageAction: "keep",
+        actions: [],
+      },
+    ],
+  },
+  de,
+);
+assert.equal(curated.beats.length, de.steps.length + 2, "intro + steps + recap");
+assert.equal(curated.beats[0]?.kind, "intro");
+assert.equal(curated.beats[1]?.narration.includes(de.steps[0]!.title), true);
+assert.equal(revealedTopicSteps(1, de.steps.length), 0, "graph first on beat 1");
+assert.equal(revealedTopicSteps(2, de.steps.length), 1);
+assert.equal(revealedTopicSteps(5, de.steps.length), de.steps.length);
+assert.equal(activeTopicStepIndex(1, de.steps.length), -1);
+assert.equal(activeTopicStepIndex(3, de.steps.length), 1);
 
 // --- finding c, the point the theorem promises ------------------------------
 

@@ -53,6 +53,8 @@ import { synthesizeSpeech } from "@/lib/providers/tts";
 import { getServiceSupabase } from "@/lib/supabase/server";
 import { resolveVisualWithLibrary } from "@/lib/visuals/library";
 import { topicVisualPlanFor } from "@/lib/topics/plan";
+import { getTopicModule } from "@/lib/topics/registry";
+import { buildTopicLessonPlan } from "@/lib/topics/topicLesson";
 import { visualStableKey } from "@/lib/visuals/router";
 import type { LessonPlanParsed } from "@/lib/schemas/lesson";
 import type { VisualPlan } from "@/lib/visuals/types";
@@ -184,6 +186,14 @@ export async function* runLessonStream(
       plan = await generateLessonPlan(prompt);
     }
 
+    const topicConceptKey =
+      plan.beats.find((b) => b.conceptKey?.trim())?.conceptKey ?? plan.title;
+    const topicPlan = topicVisualPlanFor(prompt, topicConceptKey);
+    const topicModule = topicPlan ? getTopicModule(topicPlan.topicId) : null;
+    if (topicModule && !isFollowUp) {
+      plan = buildTopicLessonPlan(plan, topicModule);
+    }
+
     const { data: lessonRow, error: insertError } = await supabase
       .from("lessons")
       .insert({
@@ -292,12 +302,8 @@ export async function* runLessonStream(
 
     // A curated interactive owns the whole board, the way a 3D scene does, so
     // this lesson skips the pen path instead of drawing under it.
-    const topicConceptKey =
-      plan.beats.find((b) => b.conceptKey?.trim())?.conceptKey ?? plan.title;
     const usesTopicBoard =
-      !umlPlan &&
-      !threePlan &&
-      topicVisualPlanFor(prompt, topicConceptKey) !== null;
+      !umlPlan && !threePlan && topicPlan !== null;
 
     const priorBottom = Math.max(0, options.boardBottomY ?? 0);
     const sectionOffsetY =
