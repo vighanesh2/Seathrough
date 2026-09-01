@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { sceneRecipeSchema } from "@/lib/schemas/sceneRecipe";
 import { boardScriptSchema } from "@/lib/schemas/boardScript";
+import { topicBoardParamsSchema, topicIdSchema } from "@/lib/topics/schema";
 
 export const visualRendererSchema = z.enum([
   "template",
@@ -10,6 +11,7 @@ export const visualRendererSchema = z.enum([
   "rough",
   "icon",
   "board_script",
+  "jsxgraph",
 ]);
 
 export type VisualRenderer = z.infer<typeof visualRendererSchema>;
@@ -61,6 +63,10 @@ export const visualPlanSchema = z.object({
   sceneRecipe: sceneRecipeSchema.optional(),
   /** Progressive pen lesson when renderer is "board_script" */
   boardScript: boardScriptSchema.optional(),
+  /** Curated interactive from the topic library when renderer is "jsxgraph" */
+  topicId: topicIdSchema.optional(),
+  /** Board settings for that topic, tailored to the question */
+  topicParams: topicBoardParamsSchema.optional(),
   actions: z.array(visualActionSchema).default([]),
 });
 

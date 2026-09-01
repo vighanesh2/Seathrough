@@ -69,6 +69,9 @@ export function peekHeuristicBoardScript(
 
 /** True when a cached/routed plan is too weak to keep (concept sticker). */
 export function isWeakVisualPlan(plan: VisualPlan): boolean {
+  if (plan.renderer === "jsxgraph") {
+    return !plan.topicId || !plan.topicParams;
+  }
   if (plan.renderer === "board_script") {
     return !plan.boardScript?.steps?.length;
   }

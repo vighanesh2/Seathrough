@@ -1,0 +1,61 @@
+/*
+ * Minimal styles for JSXGraph boards.
+ *
+ * The package's own stylesheet is not reachable — its `exports` map only
+ * publishes the module entry point, so `jsxgraph/distrib/jsxgraph.css` cannot
+ * be imported. These are the rules a board actually needs, restyled to match
+ * the app instead of JSXGraph's default blue rounded frame. The border and
+ * background come from Tailwind classes on the host element.
+ */
+
+.jxgbox {
+  position: relative;
+  overflow: hidden;
+  margin: 0;
+  -ms-touch-action: none;
+}
+
+.jxgbox svg text {
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Labels are absolutely positioned inline by JSXGraph; this is only styling. */
+.JXGtext {
+  background-color: transparent;
+  padding: 0;
+  margin: 0;
+  font-family: var(--font-sans, ui-sans-serif, system-ui, sans-serif);
+}
+
+.JXGinfobox {
+  border-style: none;
+  border-width: 0;
+}
+
+.JXG_navigation {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  z-index: 20;
+  padding: 2px;
+  font-size: 14px;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.JXG_navigation_button {
+  color: var(--muted, #6a7d90);
+}
+
+.JXG_navigation_button:hover {
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--board-edge, #c8d6e4) 60%, transparent);
+}
+
+.JXG_navigation_button svg {
+  position: relative;
+  top: 0.2em;
+  padding: 0;
+}

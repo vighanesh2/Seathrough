@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { formatNarrationForDisplay } from "@/lib/math/formatNarrationForDisplay";
 
 export type BoardNarrationLine = {
   id: string;
@@ -16,6 +17,12 @@ type BoardNarrationProps = {
   /** side = desktop rail; bottom = mobile sheet */
   placement?: "side" | "bottom";
 };
+
+function displayText(text: string): string {
+  if (!text.trim()) return text;
+  if (text.startsWith("[voice unavailable")) return text;
+  return formatNarrationForDisplay(text);
+}
 
 /**
  * Narration panel — lives beside (or under) the infinite canvas.
@@ -76,13 +83,15 @@ export function BoardNarration({
         ) : null}
 
         {lines.map((line) => {
+          const text = displayText(line.text);
+
           if (line.kind === "error") {
             return (
               <p
                 key={line.id}
-                className="animate-fade-up font-sans text-sm text-error"
+                className="animate-fade-up break-words font-sans text-sm text-error"
               >
-                {line.text}
+                {text}
               </p>
             );
           }
@@ -95,8 +104,8 @@ export function BoardNarration({
                 <p className="mb-1 font-sans text-[10px] font-semibold uppercase tracking-[0.14em] text-accent-deep">
                   You asked
                 </p>
-                <p className="font-sans text-[15px] leading-relaxed text-ink">
-                  {line.text}
+                <p className="break-words font-sans text-[15px] leading-relaxed text-ink">
+                  {text}
                 </p>
               </div>
             );
@@ -105,18 +114,18 @@ export function BoardNarration({
             return (
               <p
                 key={line.id}
-                className="animate-fade-up border-l-[3px] border-success bg-success-soft/60 py-1.5 pl-3 font-sans text-[15px] leading-relaxed text-ink"
+                className="animate-fade-up break-words border-l-[3px] border-success bg-success-soft/60 py-1.5 pl-3 font-sans text-[15px] leading-relaxed text-ink"
               >
-                {line.text}
+                {text}
               </p>
             );
           }
           return (
             <p
               key={line.id}
-              className="animate-fade-up font-display text-[16px] leading-[1.55] text-marker"
+              className="animate-fade-up break-words font-display text-[16px] leading-[1.55] text-marker"
             >
-              {line.text}
+              {text}
             </p>
           );
         })}

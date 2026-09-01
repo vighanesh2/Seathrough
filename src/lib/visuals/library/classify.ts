@@ -10,6 +10,10 @@ export type VisualRouteQuality = "curated" | "procedural" | "generic";
  * - generic: weak concept card — upgrade to board_script
  */
 export function classifyVisualPlan(plan: VisualPlan): VisualRouteQuality {
+  // Hand-built interactive for a known topic — never downgrade it.
+  if (plan.renderer === "jsxgraph" && plan.topicId) {
+    return "curated";
+  }
   if (plan.renderer === "template" && plan.assetId) {
     return "curated";
   }

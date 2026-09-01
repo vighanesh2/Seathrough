@@ -14,7 +14,8 @@
     "smoke:image-explain": "npx --yes esbuild scripts/smoke-image-explain.ts --bundle --platform=node --outfile=/tmp/smoke-image-explain.js && node /tmp/smoke-image-explain.js",
     "smoke:modes": "npx --yes esbuild scripts/smoke-modes.ts --bundle --platform=node --outfile=/tmp/smoke-modes.js && node /tmp/smoke-modes.js",
     "smoke:tutor-sync": "npx --yes esbuild scripts/smoke-tutor-sync.ts --bundle --platform=node --outfile=/tmp/smoke-tutor-sync.js && node /tmp/smoke-tutor-sync.js",
-    "smoke:scene-explain": "npx --yes esbuild scripts/smoke-scene-explain.ts --bundle --platform=node --outfile=/tmp/smoke-scene.js && node /tmp/smoke-scene.js"
+    "smoke:scene-explain": "npx --yes esbuild scripts/smoke-scene-explain.ts --bundle --platform=node --outfile=/tmp/smoke-scene.js && node /tmp/smoke-scene.js",
+    "smoke:topics": "npx --yes esbuild scripts/smoke-topics.ts --bundle --platform=node --outfile=/tmp/smoke-topics.js && node /tmp/smoke-topics.js"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "^0.18.1",
@@ -28,6 +29,7 @@
     "clsx": "^2.1.1",
     "elkjs": "^0.12.0",
     "gsap": "^3.15.0",
+    "jsxgraph": "^1.13.2",
     "katex": "^0.18.1",
     "konva": "^10.3.0",
     "lucide-react": "^1.31.0",

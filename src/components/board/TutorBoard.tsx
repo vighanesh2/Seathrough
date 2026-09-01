@@ -12,11 +12,13 @@ import { BoardScriptStage } from "@/components/board/BoardScriptStage";
 import { InfiniteCanvas } from "@/components/board/InfiniteCanvas";
 import { RoughSketch } from "@/components/RoughSketch";
 import { TemplateStage } from "@/components/board/TemplateStage";
+import { TopicBoard } from "@/components/topics/TopicBoard";
 import type { DrawCommandQueue } from "@/lib/draw-engine/resolve";
 import type { AnatomyStructureId } from "@/lib/anatomy/types";
 import type { SceneRecipe } from "@/lib/schemas/sceneRecipe";
 import type { ThreeScenePlan } from "@/lib/three-scenes/decide";
 import type { VisualPlan } from "@/lib/visuals/types";
+import { visualStableKey } from "@/lib/visuals/router";
 
 const KonvaDrawStage = dynamic(
   () =>
@@ -106,7 +108,14 @@ export function TutorBoard({
   }, [onDrawComplete]);
 
   const showThree = Boolean(threeScene);
-  const useDrawEngine = !showThree && Boolean(preferDrawEngine && drawQueue);
+  // Curated interactives own their surface — they need drag, so they must not
+  // sit inside the pan/zoom canvas, and pen strokes must not cover them.
+  const showTopicBoard =
+    !showThree &&
+    plan?.renderer === "jsxgraph" &&
+    Boolean(plan.topicId && plan.topicParams);
+  const useDrawEngine =
+    !showThree && !showTopicBoard && Boolean(preferDrawEngine && drawQueue);
   const showTemplate = !showThree && !useDrawEngine && plan?.renderer === "template";
   const showKatexOnly = !showThree && !useDrawEngine && plan?.renderer === "katex";
   const showMafs = !showThree && !useDrawEngine && plan?.renderer === "mafs";
@@ -127,9 +136,14 @@ export function TutorBoard({
       showMafs ||
       showRough ||
       showKatexOnly ||
-      showBoardScript,
+      showBoardScript ||
+      showTopicBoard,
   );
   const formula = plan?.formula ?? (showKatexOnly ? plan?.source : undefined);
+  const topicBoardKey =
+    showTopicBoard && plan?.topicId && plan.topicParams
+      ? `topic-${plan.topicId}-${visualStableKey(plan)}`
+      : "topic-idle";
 
   return (
     <section
@@ -198,8 +212,34 @@ export function TutorBoard({
           />
         ) : (
           <InfiniteCanvas resetKey={`${playKey}-${plan?.renderer ?? "idle"}`}>
+            {drawSpeech ? (
+              <p className="mb-4 max-w-[min(640px,92vw)] rounded-lg border border-board-edge/60 bg-accent-soft/30 px-4 py-2 font-sans text-sm text-ink">
+                <span className="font-semibold text-accent-deep">Tutor: </span>
+                {drawSpeech}
+              </p>
+            ) : null}
+
             {showFigure ? (
               <>
+                {formula && showTopicBoard ? (
+                  <div className="mb-4 w-full max-w-[min(640px,92vw)]">
+                    <FormulaStrip source={formula} playKey={playKey} />
+                  </div>
+                ) : null}
+
+                {showTopicBoard && plan?.topicId && plan.topicParams ? (
+                  <TopicBoard
+                    key={topicBoardKey}
+                    topicId={plan.topicId}
+                    params={plan.topicParams}
+                    beatOrder={beatOrder}
+                    compact
+                    showTitle
+                    onReady={() => onDoneRef.current?.()}
+                    className="mb-6"
+                  />
+                ) : null}
+
                 {showTemplate && plan ? (
                   <TemplateStage
                     plan={plan}
@@ -245,7 +285,7 @@ export function TutorBoard({
                   </div>
                 ) : null}
 
-                {formula ? (
+                {formula && !showTopicBoard ? (
                   <FormulaStrip source={formula} playKey={playKey} />
                 ) : null}
               </>

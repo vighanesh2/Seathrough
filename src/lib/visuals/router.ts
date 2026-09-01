@@ -323,7 +323,12 @@ export function visualStableKey(plan: VisualPlan): string {
       return s.type;
     })
     .join("|");
-  return `${plan.renderer}:${plan.assetId ?? ""}:${plan.source ?? ""}:${plan.sceneRecipe?.kind ?? ""}:${scriptSig ?? ""}`;
+  // Same topic on the same window = same board, so beats reuse it instead of
+  // remounting; a new interval changes the signature and redraws.
+  const topicSig = plan.topicId
+    ? `${plan.topicId}@${plan.topicParams?.points.map((p) => p.join(",")).join(";") ?? ""}`
+    : "";
+  return `${plan.renderer}:${plan.assetId ?? ""}:${plan.source ?? ""}:${plan.sceneRecipe?.kind ?? ""}:${scriptSig ?? ""}:${topicSig}`;
 }
 
 export function visualKey(plan: VisualPlan): string {

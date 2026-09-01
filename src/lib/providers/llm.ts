@@ -5,6 +5,7 @@ import {
   type LessonPlanParsed,
 } from "@/lib/schemas/lesson";
 import { listAssetIdsForPrompt } from "@/lib/visuals/router";
+import { formatNarrationForDisplay } from "@/lib/math/formatNarrationForDisplay";
 import { threeSceneCatalogForPrompt } from "@/lib/three-scenes/decide";
 import { retrieveCardiopulmonaryKnowledge } from "@/lib/anatomy/knowledge/cardiopulmonary";
 import { retrieveEyeKnowledge } from "@/lib/anatomy/knowledge/eye";
@@ -142,7 +143,12 @@ Other rules:
 - kind MUST be intro|token|visual_shift|recap|human_summary
 - humanSummary = learner thinking, never AI chain-of-thought
 - Prefer 5–10 short beats
-- First visual beat: imageAction generate; later same figure: keep`;
+- First visual beat: imageAction generate; later same figure: keep
+
+NARRATION (spoken aloud + shown in the side panel):
+- Plain English only. NEVER LaTeX or TeX: no \\frac, \\lim, $, or backslash commands.
+- Write math in readable ASCII: (f(7) - f(3)) / (7 - 3), f'(c), [a, b] with both brackets.
+- When naming an interval, always write the full closed interval, e.g. [3, 7] with both brackets.`;
 
 const FOLLOW_UP_SYSTEM = `You are teaching a student who asked a follow-up question in SeeThrough.
 The follow-up may be related to the prior lesson OR a completely new, unrelated topic. Always answer what they asked.
@@ -155,7 +161,8 @@ Rules:
 5. Narration should teach the asked topic clearly; do not apologize for topic changes.
 6. Return ONLY valid JSON with the same lesson plan schema (title, language, beats, humanSummary, threeScene).
 7. Title should name this question (e.g. "Follow-up: photosynthesis" or "New: binary search").
-8. Decide threeScene for THIS question the same way as a new lesson (use 3D when spatial/interactive helps).`;
+8. Decide threeScene for THIS question the same way as a new lesson (use 3D when spatial/interactive helps).
+9. Narration is spoken aloud — same rules as a new lesson: no LaTeX, no \\frac, write fractions as (f(7)-f(3))/(7-3), intervals as [3, 7] with both brackets.`;
 
 function normalizePlanInput(json: unknown): unknown {
   if (!json || typeof json !== "object") return json;
@@ -169,6 +176,8 @@ function normalizePlanInput(json: unknown): unknown {
     if (beat.order == null) beat.order = index + 1;
     if (typeof beat.narration !== "string" || !beat.narration.trim()) {
       beat.narration = "Continuing the lesson.";
+    } else {
+      beat.narration = formatNarrationForDisplay(beat.narration);
     }
     if (beat.imageAction == null || beat.imageAction === "") {
       beat.imageAction = beat.visual ? "generate" : "keep";
@@ -186,6 +195,8 @@ function normalizePlanInput(json: unknown): unknown {
   if (typeof plan.humanSummary !== "string" || !plan.humanSummary.trim()) {
     plan.humanSummary =
       "I break the idea into small pieces, picture the simple figure, then name each part.";
+  } else {
+    plan.humanSummary = formatNarrationForDisplay(plan.humanSummary);
   }
   if (plan.threeScene === undefined) {
     plan.threeScene = null;

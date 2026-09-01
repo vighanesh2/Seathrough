@@ -401,6 +401,14 @@ export function LessonShell() {
         if (stable && stable === lastVisualKeyRef.current) {
           setVisualPlan((prev) => {
             if (!prev) return event.plan;
+            if (
+              event.plan.renderer === "jsxgraph" &&
+              event.plan.topicParams &&
+              JSON.stringify(prev.topicParams) !==
+                JSON.stringify(event.plan.topicParams)
+            ) {
+              return event.plan;
+            }
             const formula = prev.formula?.trim()
               ? prev.formula
               : event.plan.formula;

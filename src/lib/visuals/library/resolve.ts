@@ -14,6 +14,7 @@ import {
   displayLabelFromKey,
   makeTopicKey,
 } from "@/lib/visuals/library/topicKey";
+import { topicVisualPlanFor } from "@/lib/topics/plan";
 import { decideVisual, type VisualTriggerResult } from "@/lib/triggers/visualTrigger";
 import { visualStableKey } from "@/lib/visuals/router";
 import { visualPlanSchema, type VisualPlan } from "@/lib/visuals/types";
@@ -36,6 +37,21 @@ export async function resolveVisualWithLibrary(
     prompt: input.prompt,
     conceptKey: input.beat.conceptKey,
   });
+
+  // A curated interactive beats everything else we could route to, and it is
+  // cheap to rebuild, so it is checked before the cache.
+  const topicPlan = topicVisualPlanFor(
+    input.prompt,
+    input.beat.conceptKey,
+    input.beat.narration,
+  );
+  if (topicPlan) {
+    return keepIfSame(
+      input.activeVisualKey,
+      topicPlan,
+      `topic:${topicPlan.topicId}`,
+    );
+  }
 
   // Pen heuristics win even when the beat says "keep" (fixes wrong mafs graphs)
   const heuristic = peekHeuristicBoardScript(

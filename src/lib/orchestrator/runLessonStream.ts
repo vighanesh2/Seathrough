@@ -36,6 +36,7 @@ import {
 } from "@/lib/draw-engine/umlSchema";
 import { toUserFacingError } from "@/lib/errors/userFacing";
 import { narrationMatchingBoard } from "@/lib/visuals/library/scriptReveal";
+import { formatNarrationForDisplay } from "@/lib/math/formatNarrationForDisplay";
 import {
   saveBoardSnapshot,
   type LessonBoardSnapshot,
@@ -51,6 +52,7 @@ import {
 import { synthesizeSpeech } from "@/lib/providers/tts";
 import { getServiceSupabase } from "@/lib/supabase/server";
 import { resolveVisualWithLibrary } from "@/lib/visuals/library";
+import { topicVisualPlanFor } from "@/lib/topics/plan";
 import { visualStableKey } from "@/lib/visuals/router";
 import type { LessonPlanParsed } from "@/lib/schemas/lesson";
 import type { VisualPlan } from "@/lib/visuals/types";
@@ -288,6 +290,15 @@ export async function* runLessonStream(
       }
     }
 
+    // A curated interactive owns the whole board, the way a 3D scene does, so
+    // this lesson skips the pen path instead of drawing under it.
+    const topicConceptKey =
+      plan.beats.find((b) => b.conceptKey?.trim())?.conceptKey ?? plan.title;
+    const usesTopicBoard =
+      !umlPlan &&
+      !threePlan &&
+      topicVisualPlanFor(prompt, topicConceptKey) !== null;
+
     const priorBottom = Math.max(0, options.boardBottomY ?? 0);
     const sectionOffsetY =
       isFollowUp && priorBottom > 40
@@ -393,14 +404,16 @@ export async function* runLessonStream(
         activePlan = decision.plan;
       }
 
-      const alignedNarration = narrationMatchingBoard({
-        steps: threePlan ? undefined : activePlan?.boardScript?.steps,
-        beatOrder: beat.order,
-        totalBeats: plan.beats.length,
-        fallback: beat.narration,
-      });
+      const alignedNarration = formatNarrationForDisplay(
+        narrationMatchingBoard({
+          steps: threePlan ? undefined : activePlan?.boardScript?.steps,
+          beatOrder: beat.order,
+          totalBeats: plan.beats.length,
+          fallback: beat.narration,
+        }),
+      );
 
-      if (!threePlan) {
+      if (!threePlan && !usesTopicBoard) {
         // Every 2D beat draws something — 3D lessons update their live scene.
         if (!drawSessionStarted) {
           drawSessionStarted = true;
