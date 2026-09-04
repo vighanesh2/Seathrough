@@ -1,0 +1,35 @@
+{
+  "id": "g-3d-function-graph-assessment",
+  "title": "3D function graph (assessment)",
+  "summary": "This example shows a 3D function graph. The JSXGraph board contains a 3D view.\n\nControls (azimuth, elevation, bank) for 3D view are visible. Trackball navigation is activated.\n\n output() generates an array which contains the slider values of azimuth, elevation, bank, a and b. The sliders a and b are part of der user's input.",
+  "formula": "",
+  "aliases": [
+    "3d function graph (assessment)",
+    "3d function graph assessment",
+    "jsxgraph 3d function graph (assessment)"
+  ],
+  "tags": [
+    "3D",
+    "Assessment",
+    "Calculus",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-function-graph-assessment",
+  "steps": [
+    {
+      "title": "3D function graph (assessment)",
+      "detail": "This example shows a 3D function graph. The JSXGraph board contains a 3D view."
+    },
+    {
+      "title": "Explore further",
+      "detail": "Controls (azimuth, elevation, bank) for 3D view are visible. Trackball navigation is activated."
+    }
+  ]
+}

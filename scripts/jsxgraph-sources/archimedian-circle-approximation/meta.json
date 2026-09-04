@@ -1,0 +1,35 @@
+{
+  "id": "archimedian-circle-approximation",
+  "title": "Archimedian circle approximation",
+  "summary": "Archimedian circle approximation — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "archimedian circle approximation",
+    "jsxgraph archimedian circle approximation"
+  ],
+  "tags": [
+    "Applied calculus",
+    "Calculus",
+    "Euclidean",
+    "Geometry",
+    "Technical"
+  ],
+  "boundingBox": [
+    -6,
+    6,
+    6,
+    -6
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/archimedian-circle-approximation",
+  "steps": [
+    {
+      "title": "Archimedian circle approximation",
+      "detail": "Interactive JSXGraph construction: Archimedian circle approximation. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

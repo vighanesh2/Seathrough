@@ -1,0 +1,33 @@
+{
+  "id": "cube-and-projection",
+  "title": "3D Cubes and Projections (assessment)",
+  "summary": "[beta version] In this example, 3-D polyhedrons and transformations are used to place small cubes on a board. At the same time, the side views are displayed. Navigation in this “small world” is done using buttons or the keyboard.\nThe user can hide various elements depending on the question to be answered.",
+  "formula": "",
+  "aliases": [
+    "3d cubes and projections (assessment)",
+    "cube and projection",
+    "jsxgraph 3d cubes and projections (assessment)"
+  ],
+  "tags": [
+    "3D",
+    "Assessment"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/cube-and-projection",
+  "steps": [
+    {
+      "title": "3D Cubes and Projections (assessment)",
+      "detail": "[beta version] In this example, 3-D polyhedrons and transformations are used to place small cubes on a board. At the same time, the side views are displayed. Navigation in this “small world” is done using buttons or the keyboard. The user can hide various elements depending on the question to be answered."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

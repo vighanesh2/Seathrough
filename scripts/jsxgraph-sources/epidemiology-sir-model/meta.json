@@ -1,0 +1,35 @@
+{
+  "id": "epidemiology-sir-model",
+  "title": "Epidemiology: SIR model",
+  "summary": "This is an example of simulation of differential equations with __turtle graphics__.\n\n### SIR model without vital dynamics\n\nThe SIR model measures the number of susceptible, infected, and recovered individuals in a host population.\nGiven a fixed population, let be the fraction that is susceptible to an infectious, but not deadly, disease at time ,\nlet be the fraction that is infected at time\nand…",
+  "formula": "",
+  "aliases": [
+    "epidemiology: sir model",
+    "epidemiology sir model",
+    "jsxgraph epidemiology: sir model"
+  ],
+  "tags": [
+    "Applications",
+    "Calculus",
+    "Differential equations",
+    "Turtle"
+  ],
+  "boundingBox": [
+    -5,
+    1.2,
+    100,
+    -1.2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/epidemiology-sir-model",
+  "steps": [
+    {
+      "title": "Epidemiology: SIR model",
+      "detail": "This is an example of simulation of differential equations with __turtle graphics__."
+    },
+    {
+      "title": "Explore further",
+      "detail": "### SIR model without vital dynamics"
+    }
+  ]
+}

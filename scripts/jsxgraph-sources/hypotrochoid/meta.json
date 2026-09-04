@@ -1,0 +1,32 @@
+{
+  "id": "hypotrochoid",
+  "title": "Hypotrochoid",
+  "summary": "This is an example how to connect JSXGraph elements:\n\nThe position of the points determine shape, length and visual properties of the curve and the text.",
+  "formula": "",
+  "aliases": [
+    "hypotrochoid",
+    "jsxgraph hypotrochoid"
+  ],
+  "tags": [
+    "Curves",
+    "Technical"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/hypotrochoid",
+  "steps": [
+    {
+      "title": "Hypotrochoid",
+      "detail": "This is an example how to connect JSXGraph elements:"
+    },
+    {
+      "title": "Explore further",
+      "detail": "The position of the points determine shape, length and visual properties of the curve and the text."
+    }
+  ]
+}

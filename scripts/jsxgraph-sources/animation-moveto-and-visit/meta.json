@@ -1,0 +1,33 @@
+{
+  "id": "animation-moveto-and-visit",
+  "title": "Animation: moveTo() and visit()",
+  "summary": "Use the point methods and for animations.",
+  "formula": "",
+  "aliases": [
+    "animation: moveto() and visit()",
+    "animation moveto and visit",
+    "jsxgraph animation: moveto() and visit()"
+  ],
+  "tags": [
+    "Animation",
+    "Technical"
+  ],
+  "boundingBox": [
+    -2,
+    2,
+    2,
+    -2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/animation-moveto-and-visit",
+  "steps": [
+    {
+      "title": "Animation: moveTo() and visit()",
+      "detail": "Use the point methods and for animations."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "update-defining-term-of-function-graph-1",
+  "title": "Update defining term of function graph",
+  "summary": "This example shows how one can change the defining term of a function graph without creating the whole construction again. The function term can be supplied in JessieCode syntax. The term is parsed with JessieCode and returned as a function. This should be quite secure.\n\nDependent elements are updated automatically.",
+  "formula": "",
+  "aliases": [
+    "update defining term of function graph",
+    "update defining term of function graph 1",
+    "jsxgraph update defining term of function graph"
+  ],
+  "tags": [
+    "Calculus",
+    "Function plotting",
+    "JessieCode",
+    "Technical"
+  ],
+  "boundingBox": [
+    -6,
+    12,
+    8,
+    -6
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/update-defining-term-of-function-graph-1",
+  "steps": [
+    {
+      "title": "Update defining term of function graph",
+      "detail": "This example shows how one can change the defining term of a function graph without creating the whole construction again. The function term can be supplied in JessieCode syntax. The term is parsed with JessieCode and returned as a function. This should be quite secure."
+    },
+    {
+      "title": "Explore further",
+      "detail": "Dependent elements are updated automatically."
+    }
+  ]
+}

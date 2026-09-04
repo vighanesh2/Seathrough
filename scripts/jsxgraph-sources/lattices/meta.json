@@ -1,0 +1,31 @@
+{
+  "id": "lattices",
+  "title": "Lattices",
+  "summary": "This code initializes two JSXGraph boards. It creates base points, then generates lattice points as linear combinations of them. On the second board, circles are drawn around these points, visualizing geometric structures defined by the chosen basis.\n\n**AI generated desctiption**",
+  "formula": "",
+  "aliases": [
+    "lattices",
+    "jsxgraph lattices"
+  ],
+  "tags": [
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/lattices",
+  "steps": [
+    {
+      "title": "Lattices",
+      "detail": "This code initializes two JSXGraph boards. It creates base points, then generates lattice points as linear combinations of them. On the second board, circles are drawn around these points, visualizing geometric structures defined by the chosen basis."
+    },
+    {
+      "title": "Explore further",
+      "detail": "**AI generated desctiption**"
+    }
+  ]
+}

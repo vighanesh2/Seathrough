@@ -1,0 +1,32 @@
+{
+  "id": "matrix-multiplication-ii",
+  "title": "Matrix multiplication II",
+  "summary": "This is a similar example as [matrix multiplication](https://jsxgraph.org/share/example/matrix-multiplication), but uses [MathJax](https://www.mathjax.org) to display the matrix. Sliders control the entries of a 2×2 transformation matrix that maps the vector to the vector .",
+  "formula": "",
+  "aliases": [
+    "matrix multiplication ii",
+    "jsxgraph matrix multiplication ii"
+  ],
+  "tags": [
+    "Mappings",
+    "Vectors"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/matrix-multiplication-ii",
+  "steps": [
+    {
+      "title": "Matrix multiplication II",
+      "detail": "This is a similar example as [matrix multiplication](https://jsxgraph.org/share/example/matrix-multiplication), but uses [MathJax](https://www.mathjax.org) to display the matrix. Sliders control the entries of a 2×2 transformation matrix that maps the vector to the vector ."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "id": "approximation-of-the-circle-area",
+  "title": "Approximation of the circle area",
+  "summary": "Approximation of the circle area — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "approximation of the circle area",
+    "jsxgraph approximation of the circle area"
+  ],
+  "tags": [
+    "Applied calculus",
+    "Calculus",
+    "Euclidean",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -1,
+    3,
+    8,
+    -1.5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/approximation-of-the-circle-area",
+  "steps": [
+    {
+      "title": "Approximation of the circle area",
+      "detail": "Interactive JSXGraph construction: Approximation of the circle area. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

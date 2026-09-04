@@ -1,0 +1,33 @@
+{
+  "id": "inequalities-half-planes",
+  "title": "Inequalities (half-planes)",
+  "summary": "To graph a *half-plane* write the separating line in the form and construct it with\n\n`` ` ` ` (x,y) ax + by + c = 0 inverse:true ` ` y = 2x + 3 2x - 1y + 3 = 0 x = 3 1x + 0y - 3 = 0 2x - y + 3 = 0` (greater than form hence do add \"inverse: true\") - red region.",
+  "formula": "",
+  "aliases": [
+    "inequalities (half-planes)",
+    "inequalities half planes",
+    "jsxgraph inequalities (half-planes)"
+  ],
+  "tags": [
+    "Analytic",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/inequalities-half-planes",
+  "steps": [
+    {
+      "title": "Inequalities (half-planes)",
+      "detail": "To graph a *half-plane* write the separating line in the form and construct it with"
+    },
+    {
+      "title": "Explore further",
+      "detail": "` (x,y) ax + by + c = 0 inverse:true y = 2x + 3 2x - 1y + 3 = 0 x = 3 1x + 0y - 3 = 0 2x - y + 3 = 0` (greater than form hence do add \"inverse: true\") - red region."
+    }
+  ]
+}

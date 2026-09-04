@@ -1,0 +1,36 @@
+{
+  "id": "approximate-pi-pi-with-monte-carlo-method",
+  "title": "Approximate π (Pi) with Monte-Carlo method",
+  "summary": "At construction time each point receives a function pair as coordinates. In each update, these functions (which call ) are called. Thus, in each update each point receives new random coordinates. The 50 points are updated on events.\n\nThis can be used to calculate using statistics. In each update we count the number of points inside the circle (with midpoint [0,0] and radius 1) and outside the cir…",
+  "formula": "",
+  "aliases": [
+    "approximate π (pi) with monte-carlo method",
+    "approximate pi pi with monte carlo method",
+    "jsxgraph approximate π (pi) with monte-carlo method"
+  ],
+  "tags": [
+    "Animation",
+    "Basic calculus",
+    "Calculus",
+    "Famous theorems",
+    "Statistics"
+  ],
+  "boundingBox": [
+    -1,
+    1,
+    1,
+    -1
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/approximate-pi-pi-with-monte-carlo-method",
+  "steps": [
+    {
+      "title": "Approximate π (Pi) with Monte-Carlo method",
+      "detail": "At construction time each point receives a function pair as coordinates. In each update, these functions (which call ) are called. Thus, in each update each point receives new random coordinates. The 50 points are updated on events."
+    },
+    {
+      "title": "Explore further",
+      "detail": "This can be used to calculate using statistics. In each update we count the number of points inside the circle (with midpoint [0,0] and radius 1) and outside the circle. The points are restricted to the square with midpoint [0,0] and edges of length 2."
+    }
+  ]
+}

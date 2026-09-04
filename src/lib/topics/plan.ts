@@ -1,3 +1,4 @@
+import { resolveTopicPresentation } from "@/lib/topics/presentation";
 import { getTopicModule, matchTopic } from "@/lib/topics/registry";
 import type { TopicModule } from "@/lib/topics/types";
 import type { VisualPlan } from "@/lib/visuals/types";
@@ -23,12 +24,17 @@ export function topicVisualPlan(
   extra?: string,
 ): VisualPlan {
   const context = topicQuestionContext(prompt, conceptKey, extra);
+  const topicParams =
+    topic.id === "function-graph"
+      ? topic.deriveParams(prompt)
+      : topic.deriveParams(context);
+  const presentation = resolveTopicPresentation(topic, topicParams, prompt);
   return {
     renderer: "jsxgraph",
     topicId: topic.id,
-    topicParams: topic.deriveParams(context),
+    topicParams,
     source: topic.id,
-    formula: topic.formula,
+    formula: presentation.formula,
     actions: [],
   };
 }

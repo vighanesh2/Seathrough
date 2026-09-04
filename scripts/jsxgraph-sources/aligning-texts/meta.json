@@ -1,0 +1,32 @@
+{
+  "id": "aligning-texts",
+  "title": "Aligning texts",
+  "summary": "Texts can be aligned with the attributes and . Possible values for are , , and . Possible values for are , , and .\n\nText can be rotated if it is declared as display: . For SVG this means, instead of an HTML div the SVG text is taken as text node.\n\nTo avoid jumping of texts when loading large MathJax applications it is recommended to use .",
+  "formula": "",
+  "aliases": [
+    "aligning texts",
+    "jsxgraph aligning texts"
+  ],
+  "tags": [
+    "Technical",
+    "Texts"
+  ],
+  "boundingBox": [
+    -1,
+    10,
+    7,
+    -1
+  ],
+  "keepAspectRatio": false,
+  "sourceUrl": "https://jsxgraph.org/share/example/aligning-texts",
+  "steps": [
+    {
+      "title": "Aligning texts",
+      "detail": "Texts can be aligned with the attributes and . Possible values for are , , and . Possible values for are , , and ."
+    },
+    {
+      "title": "Explore further",
+      "detail": "Text can be rotated if it is declared as display: . For SVG this means, instead of an HTML div the SVG text is taken as text node."
+    }
+  ]
+}

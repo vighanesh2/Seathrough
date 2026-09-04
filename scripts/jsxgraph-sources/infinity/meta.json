@@ -1,0 +1,31 @@
+{
+  "id": "infinity",
+  "title": "Infinity",
+  "summary": "Just enjoy this construction ...",
+  "formula": "",
+  "aliases": [
+    "infinity",
+    "jsxgraph infinity"
+  ],
+  "tags": [
+    "Geometry"
+  ],
+  "boundingBox": [
+    -6,
+    6,
+    10,
+    -8
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/infinity",
+  "steps": [
+    {
+      "title": "Infinity",
+      "detail": "Just enjoy this construction ..."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

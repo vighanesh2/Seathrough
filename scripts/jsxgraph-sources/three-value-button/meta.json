@@ -1,0 +1,32 @@
+{
+  "id": "three-value-button",
+  "title": "Three-value button",
+  "summary": "The JSXGraph slider element can be configured to take exactly 3 (or in general ) values. For this, the 3rd parameter and the attribute have to be set accordingly. This might be an alternative to radio buttons.",
+  "formula": "",
+  "aliases": [
+    "three-value button",
+    "three value button",
+    "jsxgraph three-value button"
+  ],
+  "tags": [
+    "Technical"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/three-value-button",
+  "steps": [
+    {
+      "title": "Three-value button",
+      "detail": "The JSXGraph slider element can be configured to take exactly 3 (or in general ) values. For this, the 3rd parameter and the attribute have to be set accordingly. This might be an alternative to radio buttons."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "waveforms-pulse-and-sawtooth",
+  "title": "Waveforms: pulse and sawtooth",
+  "summary": "Approximation of the following waveforms:\n\nReverse sawtooth wave:\n\nPulse wave:",
+  "formula": "",
+  "aliases": [
+    "waveforms: pulse and sawtooth",
+    "waveforms pulse and sawtooth",
+    "jsxgraph waveforms: pulse and sawtooth"
+  ],
+  "tags": [
+    "Applications",
+    "Applied calculus",
+    "Calculus",
+    "Function plotting",
+    "Physics"
+  ],
+  "boundingBox": [
+    -6,
+    5,
+    6,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/waveforms-pulse-and-sawtooth",
+  "steps": [
+    {
+      "title": "Waveforms: pulse and sawtooth",
+      "detail": "Approximation of the following waveforms:"
+    },
+    {
+      "title": "Explore further",
+      "detail": "Reverse sawtooth wave:"
+    }
+  ]
+}

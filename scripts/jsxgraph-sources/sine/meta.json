@@ -1,0 +1,33 @@
+{
+  "id": "sine",
+  "title": "Sine function",
+  "summary": "The sine function is a projection of the complex number (which is a point on the unit circle in the complex plane) to the imaginary axis on the complex plane.\n\nIn the following interactive figure, you can drag the point on the real axis and observe the behavior of the complex number and the varying value of . The update of the first board is sent to the second board because of .",
+  "formula": "",
+  "aliases": [
+    "sine function",
+    "jsxgraph sine function"
+  ],
+  "tags": [
+    "Calculus",
+    "Function plotting",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -10,
+    1.5,
+    10,
+    -1.5
+  ],
+  "keepAspectRatio": false,
+  "sourceUrl": "https://jsxgraph.org/share/example/sine",
+  "steps": [
+    {
+      "title": "Sine function",
+      "detail": "The sine function is a projection of the complex number (which is a point on the unit circle in the complex plane) to the imaginary axis on the complex plane."
+    },
+    {
+      "title": "Explore further",
+      "detail": "In the following interactive figure, you can drag the point on the real axis and observe the behavior of the complex number and the varying value of . The update of the first board is sent to the second board because of ."
+    }
+  ]
+}

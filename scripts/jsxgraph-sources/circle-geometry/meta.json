@@ -1,0 +1,31 @@
+{
+  "id": "circle-geometry",
+  "title": "Circle and a point on it",
+  "summary": "A circle with a draggable point on the rim, its radius, and a tangent line.",
+  "formula": "(x-h)^2 + (y-k)^2 = r^2",
+  "aliases": [
+    "circle geometry",
+    "point on a circle",
+    "tangent to a circle",
+    "draw a circle",
+    "circle and tangent"
+  ],
+  "tags": ["geometry", "circle", "tangent"],
+  "boundingBox": [-6, 6, 6, -6],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/wiki/",
+  "steps": [
+    {
+      "title": "Center and rim",
+      "detail": "O is the center. P rides on the circle — every position of P is exactly distance r from O."
+    },
+    {
+      "title": "Radius segment",
+      "detail": "The segment OP is a radius. Drag P and the length stays constant while the direction changes."
+    },
+    {
+      "title": "Tangent at P",
+      "detail": "The red line touches the circle at P and is perpendicular to the radius OP."
+    }
+  ]
+}

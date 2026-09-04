@@ -1,0 +1,32 @@
+{
+  "id": "matrix-multiplication",
+  "title": "Matrix multiplication",
+  "summary": "On the first board, two vectors are shown. Sliders control the entries of a 2×2 transformation matrix that maps the vectors and to and on the second board.",
+  "formula": "",
+  "aliases": [
+    "matrix multiplication",
+    "jsxgraph matrix multiplication"
+  ],
+  "tags": [
+    "Mappings",
+    "Vectors"
+  ],
+  "boundingBox": [
+    -7.5,
+    7.5,
+    12.5,
+    -7.5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/matrix-multiplication",
+  "steps": [
+    {
+      "title": "Matrix multiplication",
+      "detail": "On the first board, two vectors are shown. Sliders control the entries of a 2×2 transformation matrix that maps the vectors and to and on the second board."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

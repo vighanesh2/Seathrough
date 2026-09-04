@@ -1,0 +1,33 @@
+{
+  "id": "continuous-function-epsilon-delta-criterium",
+  "title": "Continuous function: ε-δ criterium",
+  "summary": "Continuous function: ε-δ criterium — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "continuous function: ε-δ criterium",
+    "continuous function epsilon delta criterium",
+    "jsxgraph continuous function: ε-δ criterium"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus"
+  ],
+  "boundingBox": [
+    -4,
+    6,
+    6,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/continuous-function-epsilon-delta-criterium",
+  "steps": [
+    {
+      "title": "Continuous function: ε-δ criterium",
+      "detail": "Interactive JSXGraph construction: Continuous function: ε-δ criterium. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

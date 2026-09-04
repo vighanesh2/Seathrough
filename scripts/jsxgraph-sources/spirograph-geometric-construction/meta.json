@@ -1,0 +1,33 @@
+{
+  "id": "spirograph-geometric-construction",
+  "title": "Spirograph - geometric construction",
+  "summary": "These three interactive boards illustrate the concept of relative motion along geometric constructions. In each board, point moves along a circle, generating points , , and through reflections and intersections.\n\n- Example 1 __Double speed:__ Point moves at twice the speed of .\n- Example 2 __Threefold speed:__ Point moves at three times the speed of .\n- Example 3 __Fourfold speed:__ Point moves a…",
+  "formula": "",
+  "aliases": [
+    "spirograph - geometric construction",
+    "spirograph geometric construction",
+    "jsxgraph spirograph - geometric construction"
+  ],
+  "tags": [
+    "Curves",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/spirograph-geometric-construction",
+  "steps": [
+    {
+      "title": "Spirograph - geometric construction",
+      "detail": "These three interactive boards illustrate the concept of relative motion along geometric constructions. In each board, point moves along a circle, generating points , , and through reflections and intersections."
+    },
+    {
+      "title": "Explore further",
+      "detail": "- Example 1 __Double speed:__ Point moves at twice the speed of . - Example 2 __Threefold speed:__ Point moves at three times the speed of . - Example 3 __Fourfold speed:__ Point moves at four times the speed of ."
+    }
+  ]
+}

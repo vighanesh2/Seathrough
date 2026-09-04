@@ -1,0 +1,33 @@
+{
+  "id": "animation-of-lines",
+  "title": "Animation of lines",
+  "summary": "The point controls the movement of the line. The coordinates of define a transformation (translation). This transformation is applied to the points and . which in turn define the line to be animated. Of course, in applications should be hidden.",
+  "formula": "",
+  "aliases": [
+    "animation of lines",
+    "jsxgraph animation of lines"
+  ],
+  "tags": [
+    "Animation",
+    "Lines and arrows",
+    "Technical"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/animation-of-lines",
+  "steps": [
+    {
+      "title": "Animation of lines",
+      "detail": "The point controls the movement of the line. The coordinates of define a transformation (translation). This transformation is applied to the points and . which in turn define the line to be animated. Of course, in applications should be hidden."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

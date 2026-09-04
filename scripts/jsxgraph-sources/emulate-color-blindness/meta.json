@@ -1,0 +1,31 @@
+{
+  "id": "emulate-color-blindness",
+  "title": "Emulate color blindness",
+  "summary": "JSXGraph can give a rough impression about how color blind people see your work. It is possible to emulate three types of color vision deficiency: **Protanopia**, **Deuteranopia**, and **Tritanopia**.\n\nConsider this geometric construction from the Euler line example.",
+  "formula": "",
+  "aliases": [
+    "emulate color blindness",
+    "jsxgraph emulate color blindness"
+  ],
+  "tags": [
+    "Technical"
+  ],
+  "boundingBox": [
+    -1.5,
+    2,
+    1.5,
+    -1
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/emulate-color-blindness",
+  "steps": [
+    {
+      "title": "Emulate color blindness",
+      "detail": "JSXGraph can give a rough impression about how color blind people see your work. It is possible to emulate three types of color vision deficiency: **Protanopia**, **Deuteranopia**, and **Tritanopia**."
+    },
+    {
+      "title": "Explore further",
+      "detail": "Consider this geometric construction from the Euler line example."
+    }
+  ]
+}

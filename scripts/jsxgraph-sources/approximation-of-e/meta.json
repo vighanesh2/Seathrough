@@ -1,0 +1,33 @@
+{
+  "id": "approximation-of-e",
+  "title": "Approximation of e",
+  "summary": "This little animation approximates (displayed by the horizontal red line) by the sequence (blue line)\n\nand by the series (black line)",
+  "formula": "",
+  "aliases": [
+    "approximation of e",
+    "jsxgraph approximation of e"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus",
+    "Sequences and series"
+  ],
+  "boundingBox": [
+    -3,
+    3,
+    50,
+    0.5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/approximation-of-e",
+  "steps": [
+    {
+      "title": "Approximation of e",
+      "detail": "This little animation approximates (displayed by the horizontal red line) by the sequence (blue line)"
+    },
+    {
+      "title": "Explore further",
+      "detail": "and by the series (black line)"
+    }
+  ]
+}

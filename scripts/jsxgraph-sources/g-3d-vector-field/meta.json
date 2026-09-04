@@ -1,0 +1,32 @@
+{
+  "id": "g-3d-vector-field",
+  "title": "3D vector field",
+  "summary": "Create a simple 3D vector field for",
+  "formula": "",
+  "aliases": [
+    "3d vector field",
+    "jsxgraph 3d vector field"
+  ],
+  "tags": [
+    "3D",
+    "Calculus"
+  ],
+  "boundingBox": [
+    -8,
+    8,
+    8,
+    -8
+  ],
+  "keepAspectRatio": false,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-vector-field",
+  "steps": [
+    {
+      "title": "3D vector field",
+      "detail": "Create a simple 3D vector field for"
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

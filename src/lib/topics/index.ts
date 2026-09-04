@@ -4,12 +4,20 @@ export {
   topicIdSchema,
   type BoardPoint,
   type BoundingBox,
+  type ConstructionBoardParams,
+  type FunctionGraphBoardParams,
   type OdeSolutionBoardParams,
   type SecantTangentBoardParams,
   type TopicBoardId,
   type TopicBoardParams,
   type TopicId,
 } from "@/lib/topics/schema";
+export {
+  CATALOG_ENTRIES,
+  getCatalogEntry,
+  listCatalogEntries,
+} from "@/lib/topics/catalog";
+export type { CatalogEntry } from "@/lib/topics/catalog/types";
 export type { TopicModule, TopicStep } from "@/lib/topics/types";
 export {
   boundingBoxForPoints,
@@ -23,6 +31,16 @@ export {
   isSafeOdeExpression,
   parseOdeFromPrompt,
 } from "@/lib/topics/odeParse";
+export {
+  cleanFunctionExpression,
+  extractFunctionExpression,
+  listNamedCurveExpressions,
+  parseFunctionGraphFromPrompt,
+} from "@/lib/topics/functionParse";
+export {
+  resolveTopicPresentation,
+  type TopicPresentation,
+} from "@/lib/topics/presentation";
 export {
   TOPIC_MODULES,
   getTopicModule,

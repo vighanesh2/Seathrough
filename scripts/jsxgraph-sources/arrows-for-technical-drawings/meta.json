@@ -1,0 +1,32 @@
+{
+  "id": "arrows-for-technical-drawings",
+  "title": "Arrows for technical drawings",
+  "summary": "Create your own arrow heads for technical drawings. The output is the data for SVG paths, i.e. the arrow head in both directions.\n\nThis is an stripped down implementation of the paper of David Salomon: *Arrows for Technical Drawings*, TUGboat, Volume 13 (1992), No.2, p. 146-149.\n\nParameters:\n\n- : length from base to tip\n- : relative position of inset 1..0\n- : opening angle at tip\n- : curvature of…",
+  "formula": "",
+  "aliases": [
+    "arrows for technical drawings",
+    "jsxgraph arrows for technical drawings"
+  ],
+  "tags": [
+    "Applications",
+    "Technical"
+  ],
+  "boundingBox": [
+    -8,
+    7,
+    4,
+    -3
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/arrows-for-technical-drawings",
+  "steps": [
+    {
+      "title": "Arrows for technical drawings",
+      "detail": "Create your own arrow heads for technical drawings. The output is the data for SVG paths, i.e. the arrow head in both directions."
+    },
+    {
+      "title": "Explore further",
+      "detail": "This is an stripped down implementation of the paper of David Salomon: *Arrows for Technical Drawings*, TUGboat, Volume 13 (1992), No.2, p. 146-149."
+    }
+  ]
+}

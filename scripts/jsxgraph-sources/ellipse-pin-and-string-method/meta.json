@@ -1,0 +1,33 @@
+{
+  "id": "ellipse-pin-and-string-method",
+  "title": "Ellipse: pin and string method",
+  "summary": "Ellipse: pin and string method — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "ellipse: pin and string method",
+    "ellipse pin and string method",
+    "jsxgraph ellipse: pin and string method"
+  ],
+  "tags": [
+    "Analytic",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/ellipse-pin-and-string-method",
+  "steps": [
+    {
+      "title": "Ellipse: pin and string method",
+      "detail": "Interactive JSXGraph construction: Ellipse: pin and string method. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

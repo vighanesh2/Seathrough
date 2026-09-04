@@ -1,0 +1,33 @@
+{
+  "id": "video-embedding",
+  "title": "Video embedding",
+  "summary": "Videos can be embedded as and placed in an arbitrary layer. That means, objects can be placed \"above\" the video, too.",
+  "formula": "",
+  "aliases": [
+    "video embedding",
+    "jsxgraph video embedding"
+  ],
+  "tags": [
+    "Physics",
+    "Technical",
+    "Video"
+  ],
+  "boundingBox": [
+    -6,
+    4,
+    6,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/video-embedding",
+  "steps": [
+    {
+      "title": "Video embedding",
+      "detail": "Videos can be embedded as and placed in an arbitrary layer. That means, objects can be placed \"above\" the video, too."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

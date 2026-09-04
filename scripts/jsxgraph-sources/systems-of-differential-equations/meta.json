@@ -1,0 +1,32 @@
+{
+  "id": "systems-of-differential-equations",
+  "title": "Systems of differential equations",
+  "summary": "Display solutions of the ordinary differential equation\n\nwith initial values , .",
+  "formula": "",
+  "aliases": [
+    "systems of differential equations",
+    "jsxgraph systems of differential equations"
+  ],
+  "tags": [
+    "Calculus",
+    "Differential equations"
+  ],
+  "boundingBox": [
+    -11,
+    11,
+    11,
+    -11
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/systems-of-differential-equations",
+  "steps": [
+    {
+      "title": "Systems of differential equations",
+      "detail": "Display solutions of the ordinary differential equation"
+    },
+    {
+      "title": "Explore further",
+      "detail": "with initial values , ."
+    }
+  ]
+}

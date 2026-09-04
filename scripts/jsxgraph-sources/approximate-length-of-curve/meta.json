@@ -1,0 +1,32 @@
+{
+  "id": "approximate-length-of-curve",
+  "title": "Approximate length of curve",
+  "summary": "Approximate the length of curve by summing up the length of secants.",
+  "formula": "",
+  "aliases": [
+    "approximate length of curve",
+    "jsxgraph approximate length of curve"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus"
+  ],
+  "boundingBox": [
+    -8,
+    6,
+    8,
+    -2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/approximate-length-of-curve",
+  "steps": [
+    {
+      "title": "Approximate length of curve",
+      "detail": "Approximate the length of curve by summing up the length of secants."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

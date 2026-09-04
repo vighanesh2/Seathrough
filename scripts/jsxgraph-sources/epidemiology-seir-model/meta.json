@@ -1,0 +1,35 @@
+{
+  "id": "epidemiology-seir-model",
+  "title": "Epidemiology: SEIR model",
+  "summary": "This is an example of simulation of differential equations with __turtle graphics__.\n\nThe SEIR model is an extension of the [SIR model](https://jsxgraph.org/share/example/epidemiology-sir-model) for an introduction. Below, also the Hong Kong flu is used as example.\n\nFor many important infections there is a significant period of time during which the individual has been infected but is not yet inf…",
+  "formula": "",
+  "aliases": [
+    "epidemiology: seir model",
+    "epidemiology seir model",
+    "jsxgraph epidemiology: seir model"
+  ],
+  "tags": [
+    "Applications",
+    "Calculus",
+    "Differential equations",
+    "Turtle"
+  ],
+  "boundingBox": [
+    -5,
+    1.2,
+    100,
+    -1.2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/epidemiology-seir-model",
+  "steps": [
+    {
+      "title": "Epidemiology: SEIR model",
+      "detail": "This is an example of simulation of differential equations with __turtle graphics__."
+    },
+    {
+      "title": "Explore further",
+      "detail": "The SEIR model is an extension of the [SIR model](https://jsxgraph.org/share/example/epidemiology-sir-model) for an introduction. Below, also the Hong Kong flu is used as example."
+    }
+  ]
+}

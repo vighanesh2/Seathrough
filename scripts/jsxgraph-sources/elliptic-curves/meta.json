@@ -1,0 +1,32 @@
+{
+  "id": "elliptic-curves",
+  "title": "Elliptic curves (with two function graphs)",
+  "summary": "An elliptic curve can be written as a plane algebraic curve defined by an equation of the form\n\nHere, simply the two branches\n\nare plotted with two function graphs.",
+  "formula": "",
+  "aliases": [
+    "elliptic curves (with two function graphs)",
+    "elliptic curves",
+    "jsxgraph elliptic curves (with two function graphs)"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -15,
+    10,
+    15,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/elliptic-curves",
+  "steps": [
+    {
+      "title": "Elliptic curves (with two function graphs)",
+      "detail": "An elliptic curve can be written as a plane algebraic curve defined by an equation of the form"
+    },
+    {
+      "title": "Explore further",
+      "detail": "Here, simply the two branches"
+    }
+  ]
+}

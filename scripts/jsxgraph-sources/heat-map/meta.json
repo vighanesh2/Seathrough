@@ -1,0 +1,32 @@
+{
+  "id": "heat-map",
+  "title": "Heat map",
+  "summary": "This heat map example relies heavily on the host element as parameter of attribute functions which was introduced in version 1.11.0:\n\n`` ` self`, there is access to the properties of that point.",
+  "formula": "",
+  "aliases": [
+    "heat map",
+    "jsxgraph heat map"
+  ],
+  "tags": [
+    "Point",
+    "Technical"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/heat-map",
+  "steps": [
+    {
+      "title": "Heat map",
+      "detail": "This heat map example relies heavily on the host element as parameter of attribute functions which was introduced in version 1.11.0:"
+    },
+    {
+      "title": "Explore further",
+      "detail": "` self`, there is access to the properties of that point."
+    }
+  ]
+}

@@ -36,7 +36,37 @@ assert.ok(
 
 // --- registry integrity -----------------------------------------------------
 
-assert.ok(TOPIC_MODULES.length >= 3, "library has topics");
+assert.ok(TOPIC_MODULES.length >= 6, "library has hand topics + function graph + catalog");
+assert.ok(TOPIC_BOARDS.construction, "generic construction board exists");
+assert.ok(TOPIC_BOARDS["function-graph"], "generic function-graph board exists");
+assert.equal(matchTopic("graph y = x^4")?.id, "function-graph");
+assert.equal(matchTopic("plot y = x^3")?.id, "function-graph");
+{
+  const p = matchTopic("graph y = x^4")!.deriveParams("graph y = x^4");
+  assert.equal(p.boardKind, "function-graph");
+  if (p.boardKind === "function-graph") {
+    assert.equal(p.expression, "x^4");
+  }
+}
+assert.equal(getTopicModule("graph-parabola"), null, "parabola is dynamic now");
+assert.equal(matchTopic("graph sine")?.id, "function-graph");
+assert.equal(matchTopic("graph parabola")?.id, "function-graph");
+assert.equal(matchTopic("plot a sine wave")?.id, "function-graph");
+{
+  const sine = matchTopic("graph sine")!.deriveParams("graph sine");
+  assert.equal(sine.boardKind, "function-graph");
+  if (sine.boardKind === "function-graph") assert.equal(sine.expression, "sin(x)");
+  const para = matchTopic("graph parabola")!.deriveParams("graph parabola");
+  assert.equal(para.boardKind, "function-graph");
+  if (para.boardKind === "function-graph") assert.equal(para.expression, "x^2");
+}
+assert.equal(matchTopic("slope of a line")?.id, "line-slope");
+assert.equal(matchTopic("tangent to a circle")?.id, "circle-geometry");
+assert.equal(
+  matchTopic("explain the mean value theorem")?.id,
+  "mean-value-theorem",
+  "hand topics still win over catalog",
+);
 assert.deepEqual(
   listTopicIds(),
   [...new Set(listTopicIds())],
@@ -366,12 +396,20 @@ assert.equal(
   "a jsxgraph plan with no topic is weak",
 );
 
-// A cached plan naming a topic we no longer ship must be rejected, not rendered.
+// Slug format is validated on the wire; existence is checked at render time.
 assert.equal(
-  visualPlanSchema.safeParse({ renderer: "jsxgraph", topicId: "gone", actions: [] })
-    .success,
+  visualPlanSchema.safeParse({
+    renderer: "jsxgraph",
+    topicId: "Not A Slug!!",
+    actions: [],
+  }).success,
   false,
-  "unknown topic ids fail validation",
+  "malformed topic ids fail validation",
+);
+assert.equal(
+  getTopicModule("gone"),
+  null,
+  "unknown catalog ids are not renderable",
 );
 
 // Same topic and window = same board, so beats reuse it instead of remounting.

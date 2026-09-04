@@ -1,0 +1,31 @@
+{
+  "id": "secant-and-tangent",
+  "title": "Secant and tangent",
+  "summary": "This example visualizes the tangent at a curve point of a curve as it is the limit of a second point of the curve, converging to point . Please, drag the slider in each example such that the distance .\n\nThe first example is the tangent of a continuous and differentiable function, the second example is not differentiable at , and he third example is not continuous at .",
+  "formula": "",
+  "aliases": [
+    "secant and tangent",
+    "jsxgraph secant and tangent"
+  ],
+  "tags": [
+    "Calculus"
+  ],
+  "boundingBox": [
+    -5,
+    10,
+    7,
+    -6
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/secant-and-tangent",
+  "steps": [
+    {
+      "title": "Secant and tangent",
+      "detail": "This example visualizes the tangent at a curve point of a curve as it is the limit of a second point of the curve, converging to point . Please, drag the slider in each example such that the distance ."
+    },
+    {
+      "title": "Explore further",
+      "detail": "The first example is the tangent of a continuous and differentiable function, the second example is not differentiable at , and he third example is not continuous at ."
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "b-splines",
+  "title": "B-splines",
+  "summary": "The points in this example are connected by a cubic B-spline curve (i.e. order=4).",
+  "formula": "",
+  "aliases": [
+    "b-splines",
+    "b splines",
+    "jsxgraph b-splines"
+  ],
+  "tags": [
+    "Calculus",
+    "Curves",
+    "Interpolation",
+    "Splines"
+  ],
+  "boundingBox": [
+    -4,
+    4,
+    4,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/b-splines",
+  "steps": [
+    {
+      "title": "B-splines",
+      "detail": "The points in this example are connected by a cubic B-spline curve (i.e. order=4)."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

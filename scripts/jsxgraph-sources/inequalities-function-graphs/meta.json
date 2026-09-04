@@ -1,0 +1,32 @@
+{
+  "id": "inequalities-function-graphs",
+  "title": "Inequalities (function graphs)",
+  "summary": "This example shows for a function the area of all points with .",
+  "formula": "",
+  "aliases": [
+    "inequalities (function graphs)",
+    "inequalities function graphs",
+    "jsxgraph inequalities (function graphs)"
+  ],
+  "tags": [
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/inequalities-function-graphs",
+  "steps": [
+    {
+      "title": "Inequalities (function graphs)",
+      "detail": "This example shows for a function the area of all points with ."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

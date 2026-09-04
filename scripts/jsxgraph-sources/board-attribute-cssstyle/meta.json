@@ -1,0 +1,31 @@
+{
+  "id": "board-attribute-cssstyle",
+  "title": "Board attribute cssStyle",
+  "summary": "Set the CSS style of the element hosting the JSXGraph construction. This is sometimes convenient if the author has no access to the surrounding HTML.",
+  "formula": "",
+  "aliases": [
+    "board attribute cssstyle",
+    "jsxgraph board attribute cssstyle"
+  ],
+  "tags": [
+    "Board options"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/board-attribute-cssstyle",
+  "steps": [
+    {
+      "title": "Board attribute cssStyle",
+      "detail": "Set the CSS style of the element hosting the JSXGraph construction. This is sometimes convenient if the author has no access to the surrounding HTML."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

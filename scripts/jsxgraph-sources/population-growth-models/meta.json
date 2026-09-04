@@ -1,0 +1,34 @@
+{
+  "id": "population-growth-models",
+  "title": "Population growth models",
+  "summary": "This is a visualization of the Malthusian growth model, also called simple exponential growth model.\n\nIn time , the population consisting of elements grows by elements:\n\nThat is\n\nWith we get for the function describing the population growth:\n , i.e. .\n\nThe initial population is .\n\nThe red line shows the analytic solution of the differential equation using\nThe black line is the simulation using a…",
+  "formula": "",
+  "aliases": [
+    "population growth models",
+    "jsxgraph population growth models"
+  ],
+  "tags": [
+    "Applied calculus",
+    "Calculus",
+    "Differential equations",
+    "Turtle"
+  ],
+  "boundingBox": [
+    -0.25,
+    12.5,
+    14.75,
+    -12.5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/population-growth-models",
+  "steps": [
+    {
+      "title": "Population growth models",
+      "detail": "This is a visualization of the Malthusian growth model, also called simple exponential growth model."
+    },
+    {
+      "title": "Explore further",
+      "detail": "In time , the population consisting of elements grows by elements:"
+    }
+  ]
+}

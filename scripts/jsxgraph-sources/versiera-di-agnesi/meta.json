@@ -1,0 +1,31 @@
+{
+  "id": "versiera-di-agnesi",
+  "title": "Versiera di Agnesi",
+  "summary": "Parameter form:",
+  "formula": "",
+  "aliases": [
+    "versiera di agnesi",
+    "jsxgraph versiera di agnesi"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    7,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/versiera-di-agnesi",
+  "steps": [
+    {
+      "title": "Versiera di Agnesi",
+      "detail": "Parameter form:"
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

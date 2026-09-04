@@ -1,0 +1,32 @@
+{
+  "id": "highlight-curve-via-slider",
+  "title": "Highlight curve via slider",
+  "summary": "Depending on the value of the slider , one of the curves is highlighted.",
+  "formula": "",
+  "aliases": [
+    "highlight curve via slider",
+    "jsxgraph highlight curve via slider"
+  ],
+  "tags": [
+    "Animation",
+    "Technical"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/highlight-curve-via-slider",
+  "steps": [
+    {
+      "title": "Highlight curve via slider",
+      "detail": "Depending on the value of the slider , one of the curves is highlighted."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

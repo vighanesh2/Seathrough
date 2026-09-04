@@ -1,0 +1,32 @@
+{
+  "id": "orthogonal-axis-affinity",
+  "title": "Orthogonal axis affinity",
+  "summary": "This example shows how to construct an ellipse as the image of a circle under an affine map, where the map is realized as an Euclidean construction.The glider rotates on the outer circle around the origin and determines the position of the point on the inner circle as the intersection of the line and the inner circle.\n\nThe vertical line through and the horizontal line through intersect in the poi…",
+  "formula": "",
+  "aliases": [
+    "orthogonal axis affinity",
+    "jsxgraph orthogonal axis affinity"
+  ],
+  "tags": [
+    "Euclidean",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/orthogonal-axis-affinity",
+  "steps": [
+    {
+      "title": "Orthogonal axis affinity",
+      "detail": "This example shows how to construct an ellipse as the image of a circle under an affine map, where the map is realized as an Euclidean construction.The glider rotates on the outer circle around the origin and determines the position of the point on the inner circle as the intersection of the line and the inner circle."
+    },
+    {
+      "title": "Explore further",
+      "detail": "The vertical line through and the horizontal line through intersect in the point whose locus is an ellipse having the inner circle's radius as semi-minor axis and the radius of the outer circle as semi-major axis."
+    }
+  ]
+}

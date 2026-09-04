@@ -1,0 +1,33 @@
+{
+  "id": "draggable-exponential-function",
+  "title": "Draggable exponential function",
+  "summary": "Plot the function\n\nwhere the parameter is determined by the Point .\nIt follows,\n\nIn other words, we want to plot an exponential function through the point .",
+  "formula": "",
+  "aliases": [
+    "draggable exponential function",
+    "jsxgraph draggable exponential function"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -5,
+    20,
+    5,
+    -2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/draggable-exponential-function",
+  "steps": [
+    {
+      "title": "Draggable exponential function",
+      "detail": "Plot the function"
+    },
+    {
+      "title": "Explore further",
+      "detail": "where the parameter is determined by the Point . It follows,"
+    }
+  ]
+}

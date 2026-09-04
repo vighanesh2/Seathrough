@@ -1,0 +1,34 @@
+{
+  "id": "bezier-curves",
+  "title": "Bezier curves",
+  "summary": "The red points are connected by a cubic Bézier curve. The blue points are the control points.",
+  "formula": "",
+  "aliases": [
+    "bezier curves",
+    "jsxgraph bezier curves"
+  ],
+  "tags": [
+    "Applied calculus",
+    "Curves",
+    "Interpolation",
+    "Splines"
+  ],
+  "boundingBox": [
+    -4,
+    4,
+    4,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/bezier-curves",
+  "steps": [
+    {
+      "title": "Bezier curves",
+      "detail": "The red points are connected by a cubic Bézier curve. The blue points are the control points."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

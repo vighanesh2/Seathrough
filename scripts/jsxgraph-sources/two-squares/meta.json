@@ -1,0 +1,31 @@
+{
+  "id": "two-squares",
+  "title": "Two squares",
+  "summary": "Consider two arbitrary squares *ABCD* and *BEFG* having the vertex *B* in common, see figure below.\nProve that the straight lines *AG* and *CE* are perpendicular for each such two squares.\n\n(Source: Maria Alessandra Mariotti: Reasoning, proof and proving in mathematics education. Proceedings of the 10th International Congress on Mathematical Education (ICME), 4-11 July, 2004. 2008. Construction b…",
+  "formula": "",
+  "aliases": [
+    "two squares",
+    "jsxgraph two squares"
+  ],
+  "tags": [
+    "Geometry"
+  ],
+  "boundingBox": [
+    -4,
+    3,
+    4,
+    -3
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/two-squares",
+  "steps": [
+    {
+      "title": "Two squares",
+      "detail": "Consider two arbitrary squares *ABCD* and *BEFG* having the vertex *B* in common, see figure below. Prove that the straight lines *AG* and *CE* are perpendicular for each such two squares."
+    },
+    {
+      "title": "Explore further",
+      "detail": "(Source: Maria Alessandra Mariotti: Reasoning, proof and proving in mathematics education. Proceedings of the 10th International Congress on Mathematical Education (ICME), 4-11 July, 2004. 2008. Construction by [Roman Hašek](//home.pf.jcu.cz/~hasek/))"
+    }
+  ]
+}

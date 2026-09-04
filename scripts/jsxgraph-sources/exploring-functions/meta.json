@@ -1,0 +1,34 @@
+{
+  "id": "exploring-functions",
+  "title": "Exploring Functions",
+  "summary": "In this example, the domain of a function can be divided into several intervals. Each interval can display three states: -1, 0, 1",
+  "formula": "",
+  "aliases": [
+    "exploring functions",
+    "jsxgraph exploring functions"
+  ],
+  "tags": [
+    "Assessment",
+    "Calculus",
+    "Function plotting",
+    "Technical"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/exploring-functions",
+  "steps": [
+    {
+      "title": "Exploring Functions",
+      "detail": "In this example, the domain of a function can be divided into several intervals. Each interval can display three states: -1, 0, 1"
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

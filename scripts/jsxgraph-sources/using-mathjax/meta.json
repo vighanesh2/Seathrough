@@ -1,0 +1,32 @@
+{
+  "id": "using-mathjax",
+  "title": "MathJax - dynamic",
+  "summary": "This is an example showing how to enable __dynamic__ MathJax syntax inside of JSXGraph: The function\n\nis plotted for various values of .\n\nFor this, set the text or label attribute to and use double backslashes instead of single backslashes (see the code).\nThe library MathJax can be loaded e.g. via .",
+  "formula": "",
+  "aliases": [
+    "mathjax - dynamic",
+    "using mathjax",
+    "jsxgraph mathjax - dynamic"
+  ],
+  "tags": [
+    "Texts"
+  ],
+  "boundingBox": [
+    -5,
+    20,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/using-mathjax",
+  "steps": [
+    {
+      "title": "MathJax - dynamic",
+      "detail": "This is an example showing how to enable __dynamic__ MathJax syntax inside of JSXGraph: The function"
+    },
+    {
+      "title": "Explore further",
+      "detail": "is plotted for various values of ."
+    }
+  ]
+}

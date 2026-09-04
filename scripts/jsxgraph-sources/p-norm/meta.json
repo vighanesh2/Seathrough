@@ -1,0 +1,32 @@
+{
+  "id": "p-norm",
+  "title": "p-norm",
+  "summary": "Display the unit circle around the point with regard to the -norm\n\nwhere can be set with the slider. The unit circle around in -norm is the set of points such that",
+  "formula": "",
+  "aliases": [
+    "p-norm",
+    "p norm",
+    "jsxgraph p-norm"
+  ],
+  "tags": [
+    "Calculus"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/p-norm",
+  "steps": [
+    {
+      "title": "p-norm",
+      "detail": "Display the unit circle around the point with regard to the -norm"
+    },
+    {
+      "title": "Explore further",
+      "detail": "where can be set with the slider. The unit circle around in -norm is the set of points such that"
+    }
+  ]
+}

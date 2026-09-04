@@ -1,0 +1,31 @@
+{
+  "id": "angles",
+  "title": "Angles",
+  "summary": "Angles — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "jsxgraph angles"
+  ],
+  "tags": [
+    "Arcs and angles",
+    "First steps"
+  ],
+  "boundingBox": [
+    -2,
+    2,
+    2,
+    -2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/angles",
+  "steps": [
+    {
+      "title": "Angles",
+      "detail": "Interactive JSXGraph construction: Angles. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

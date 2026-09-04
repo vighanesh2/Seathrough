@@ -1,0 +1,35 @@
+{
+  "id": "projectile-motion",
+  "title": "Projectile motion",
+  "summary": "This example computes and shows the trajectory of a projectile with friction. The movement of the projectile can be modelled with the following second order differential equation:\n\nJSXGraph has a Runge-Kutta solver for systems of ODEs. A well-know formulation of a second order differential equation as system of ODEs is\n\nUsing the identities for the position , and the velocities and\n one can imple…",
+  "formula": "",
+  "aliases": [
+    "projectile motion",
+    "jsxgraph projectile motion"
+  ],
+  "tags": [
+    "Applied calculus",
+    "Calculus",
+    "Differential equations",
+    "Function plotting",
+    "Physics"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/projectile-motion",
+  "steps": [
+    {
+      "title": "Projectile motion",
+      "detail": "This example computes and shows the trajectory of a projectile with friction. The movement of the projectile can be modelled with the following second order differential equation:"
+    },
+    {
+      "title": "Explore further",
+      "detail": "JSXGraph has a Runge-Kutta solver for systems of ODEs. A well-know formulation of a second order differential equation as system of ODEs is"
+    }
+  ]
+}

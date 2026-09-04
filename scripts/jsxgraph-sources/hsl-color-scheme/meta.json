@@ -1,0 +1,31 @@
+{
+  "id": "hsl-color-scheme",
+  "title": "HSL color scheme",
+  "summary": "Use the CSS color scheme to alter the color of a point depending on its position. We use the attribute to leave a trace of the point.",
+  "formula": "",
+  "aliases": [
+    "hsl color scheme",
+    "jsxgraph hsl color scheme"
+  ],
+  "tags": [
+    "Point"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/hsl-color-scheme",
+  "steps": [
+    {
+      "title": "HSL color scheme",
+      "detail": "Use the CSS color scheme to alter the color of a point depending on its position. We use the attribute to leave a trace of the point."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

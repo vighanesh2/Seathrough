@@ -1,0 +1,31 @@
+{
+  "id": "hippopede",
+  "title": "Hippopede",
+  "summary": "Also known as __oval__ or __lemniscate of Booth__.",
+  "formula": "",
+  "aliases": [
+    "hippopede",
+    "jsxgraph hippopede"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    7,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/hippopede",
+  "steps": [
+    {
+      "title": "Hippopede",
+      "detail": "Also known as __oval__ or __lemniscate of Booth__."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

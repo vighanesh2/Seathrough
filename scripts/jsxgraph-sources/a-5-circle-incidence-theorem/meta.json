@@ -1,0 +1,33 @@
+{
+  "id": "a-5-circle-incidence-theorem",
+  "title": "A 5-circle incidence theorem",
+  "summary": "This is a visualization of *A 5-Circle Incidence Theorem* by J. Chris Fisher, Larry Hoehn and Eberhard. M. Schröder, [Mathematics Magazine, Volume 87, 2014 - Issue 1](https://www.tandfonline.com/doi/abs/10.4169/math.mag.87.1.44?journalCode=umma20).",
+  "formula": "",
+  "aliases": [
+    "a 5-circle incidence theorem",
+    "a 5 circle incidence theorem",
+    "jsxgraph a 5-circle incidence theorem"
+  ],
+  "tags": [
+    "Euclidean",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/a-5-circle-incidence-theorem",
+  "steps": [
+    {
+      "title": "A 5-circle incidence theorem",
+      "detail": "This is a visualization of *A 5-Circle Incidence Theorem* by J. Chris Fisher, Larry Hoehn and Eberhard. M. Schröder, [Mathematics Magazine, Volume 87, 2014 - Issue 1](https://www.tandfonline.com/doi/abs/10.4169/math.mag.87.1.44?journalCode=umma20)."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

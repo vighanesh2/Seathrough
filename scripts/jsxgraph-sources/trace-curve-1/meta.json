@@ -1,0 +1,32 @@
+{
+  "id": "trace-curve-1",
+  "title": "Trace curve: parabola from triangle",
+  "summary": "This code constructs a triangle with a movable vertex on a parallel to the line and dynamically draws its altitudes (i.e. the lines from a vertex that are perpendicular to the opposite side). Their intersection, the *orthocenter* , is tracked while dragging .\n\nA blue trace curve visualizes the orthocenter’s path as the position of the point changes. In general, the element is a curve displaying t…",
+  "formula": "",
+  "aliases": [
+    "trace curve: parabola from triangle",
+    "trace curve 1",
+    "jsxgraph trace curve: parabola from triangle"
+  ],
+  "tags": [
+    "Geometry"
+  ],
+  "boundingBox": [
+    -2,
+    2,
+    2,
+    -2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/trace-curve-1",
+  "steps": [
+    {
+      "title": "Trace curve: parabola from triangle",
+      "detail": "This code constructs a triangle with a movable vertex on a parallel to the line and dynamically draws its altitudes (i.e. the lines from a vertex that are perpendicular to the opposite side). Their intersection, the *orthocenter* , is tracked while dragging ."
+    },
+    {
+      "title": "Explore further",
+      "detail": "A blue trace curve visualizes the orthocenter’s path as the position of the point changes. In general, the element is a curve displaying the path of a point element that depends on a *glider* element."
+    }
+  ]
+}

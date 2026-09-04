@@ -1,0 +1,32 @@
+{
+  "id": "circle-with-ticks",
+  "title": "Circle with ticks",
+  "summary": "Add ticks to the circle line. The ticks are realized as a single curve. It is divided into short segments by adding s.",
+  "formula": "",
+  "aliases": [
+    "circle with ticks",
+    "jsxgraph circle with ticks"
+  ],
+  "tags": [
+    "Circles",
+    "Technical"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/circle-with-ticks",
+  "steps": [
+    {
+      "title": "Circle with ticks",
+      "detail": "Add ticks to the circle line. The ticks are realized as a single curve. It is divided into short segments by adding s."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "power-series-for-sine-and-cosine",
+  "title": "Power series for sine and cosine",
+  "summary": "This example demonstrates the Taylor series expansions of the sine and cosine functions expanded at . The first graph shows along with its polynomial approximation, based on the formula\n\nThe slider controls the number of terms . The second graph shows and its approximation with an adjustable slider as well.",
+  "formula": "",
+  "aliases": [
+    "power series for sine and cosine",
+    "jsxgraph power series for sine and cosine"
+  ],
+  "tags": [
+    "Calculus"
+  ],
+  "boundingBox": [
+    -6,
+    3,
+    8,
+    -3
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/power-series-for-sine-and-cosine",
+  "steps": [
+    {
+      "title": "Power series for sine and cosine",
+      "detail": "This example demonstrates the Taylor series expansions of the sine and cosine functions expanded at . The first graph shows along with its polynomial approximation, based on the formula"
+    },
+    {
+      "title": "Explore further",
+      "detail": "The slider controls the number of terms . The second graph shows and its approximation with an adjustable slider as well."
+    }
+  ]
+}

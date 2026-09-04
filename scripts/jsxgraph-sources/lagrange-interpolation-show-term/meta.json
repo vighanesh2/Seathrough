@@ -1,0 +1,33 @@
+{
+  "id": "lagrange-interpolation-show-term",
+  "title": "Lagrange interpolation, show term",
+  "summary": "Constructs a polynomial of degree through given points.\nPoints can be added by clicking on \"Add point\".\nThe dotted line is the graph of the first derivative, the dashed line is the graph of the second derivative.",
+  "formula": "",
+  "aliases": [
+    "lagrange interpolation, show term",
+    "lagrange interpolation show term",
+    "jsxgraph lagrange interpolation, show term"
+  ],
+  "tags": [
+    "Calculus",
+    "Interpolation"
+  ],
+  "boundingBox": [
+    -5,
+    10,
+    7,
+    -6
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/lagrange-interpolation-show-term",
+  "steps": [
+    {
+      "title": "Lagrange interpolation, show term",
+      "detail": "Constructs a polynomial of degree through given points. Points can be added by clicking on \"Add point\". The dotted line is the graph of the first derivative, the dashed line is the graph of the second derivative."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

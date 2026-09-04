@@ -1,0 +1,37 @@
+{
+  "id": "approximate-circular-arc-by-a-b-zier-curve",
+  "title": "Approximate circular arc by a Bézier curve",
+  "summary": "Approximating a circular by a single Bézier curve only is sufficiently exact if the arc is less or equal than a quarter circle.",
+  "formula": "",
+  "aliases": [
+    "approximate circular arc by a bézier curve",
+    "approximate circular arc by a b zier curve",
+    "jsxgraph approximate circular arc by a bézier curve"
+  ],
+  "tags": [
+    "Applied calculus",
+    "Arcs and angles",
+    "Calculus",
+    "Curves",
+    "Interpolation",
+    "Technical"
+  ],
+  "boundingBox": [
+    -2,
+    2,
+    2,
+    -2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/approximate-circular-arc-by-a-b-zier-curve",
+  "steps": [
+    {
+      "title": "Approximate circular arc by a Bézier curve",
+      "detail": "Approximating a circular by a single Bézier curve only is sufficiently exact if the arc is less or equal than a quarter circle."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

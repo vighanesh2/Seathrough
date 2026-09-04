@@ -1,0 +1,31 @@
+{
+  "id": "parabola",
+  "title": "Parabola",
+  "summary": "This is a popular example in calculus to introduce the notion of a parabola function\n\nin schools. The parameters , , and can be changed by dragging the sliders.",
+  "formula": "",
+  "aliases": [
+    "jsxgraph parabola"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/parabola",
+  "steps": [
+    {
+      "title": "Parabola",
+      "detail": "This is a popular example in calculus to introduce the notion of a parabola function"
+    },
+    {
+      "title": "Explore further",
+      "detail": "in schools. The parameters , , and can be changed by dragging the sliders."
+    }
+  ]
+}

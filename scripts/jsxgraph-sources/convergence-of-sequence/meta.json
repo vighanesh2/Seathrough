@@ -1,0 +1,32 @@
+{
+  "id": "convergence-of-sequence",
+  "title": "Convergence of sequence",
+  "summary": "Compute values of the sequence .",
+  "formula": "",
+  "aliases": [
+    "convergence of sequence",
+    "jsxgraph convergence of sequence"
+  ],
+  "tags": [
+    "Calculus",
+    "Sequences and series"
+  ],
+  "boundingBox": [
+    -3,
+    8,
+    50,
+    -8
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/convergence-of-sequence",
+  "steps": [
+    {
+      "title": "Convergence of sequence",
+      "detail": "Compute values of the sequence ."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

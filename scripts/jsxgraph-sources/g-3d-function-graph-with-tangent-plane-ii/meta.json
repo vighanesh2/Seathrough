@@ -1,0 +1,33 @@
+{
+  "id": "g-3d-function-graph-with-tangent-plane-ii",
+  "title": "3D function graph with tangent plane II",
+  "summary": "Given a 3D function graph and a point , display the tangent plane and tangent vectors in .",
+  "formula": "",
+  "aliases": [
+    "3d function graph with tangent plane ii",
+    "jsxgraph 3d function graph with tangent plane ii"
+  ],
+  "tags": [
+    "3D",
+    "Calculus",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-function-graph-with-tangent-plane-ii",
+  "steps": [
+    {
+      "title": "3D function graph with tangent plane II",
+      "detail": "Given a 3D function graph and a point , display the tangent plane and tangent vectors in ."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

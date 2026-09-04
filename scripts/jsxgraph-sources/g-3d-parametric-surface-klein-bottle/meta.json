@@ -1,0 +1,32 @@
+{
+  "id": "g-3d-parametric-surface-klein-bottle",
+  "title": "3D parametric surface: Klein bottle",
+  "summary": "A parametric surface is defined by a function\n .\n\nWithout any parameters, the visualization style is .",
+  "formula": "",
+  "aliases": [
+    "3d parametric surface: klein bottle",
+    "3d parametric surface klein bottle",
+    "jsxgraph 3d parametric surface: klein bottle"
+  ],
+  "tags": [
+    "3D"
+  ],
+  "boundingBox": [
+    -8,
+    8,
+    8,
+    -8
+  ],
+  "keepAspectRatio": false,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-parametric-surface-klein-bottle",
+  "steps": [
+    {
+      "title": "3D parametric surface: Klein bottle",
+      "detail": "A parametric surface is defined by a function  ."
+    },
+    {
+      "title": "Explore further",
+      "detail": "Without any parameters, the visualization style is ."
+    }
+  ]
+}

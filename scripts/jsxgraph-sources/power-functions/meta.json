@@ -1,0 +1,32 @@
+{
+  "id": "power-functions",
+  "title": "Power functions",
+  "summary": "The interactive plot of the function . Two sliders adjust numerator and denominator of the exponent in real time, updating both the curve and its displayed formula dynamically.",
+  "formula": "",
+  "aliases": [
+    "power functions",
+    "jsxgraph power functions"
+  ],
+  "tags": [
+    "Calculus",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -15,
+    10,
+    15,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/power-functions",
+  "steps": [
+    {
+      "title": "Power functions",
+      "detail": "The interactive plot of the function . Two sliders adjust numerator and denominator of the exponent in real time, updating both the curve and its displayed formula dynamically."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

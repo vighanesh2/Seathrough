@@ -1,0 +1,32 @@
+{
+  "id": "power-series-pointwise",
+  "title": "Power series - pointwise",
+  "summary": "Approximate the value of for various values of and a user-supplied power series.\n\nDrag the red point 'x'. After releasing the mouse key (or lifting the finger), the approximation, i.e the value\n\nis computed for set to the -coordinate of the red point 'x'.\nThen the blue point is shown at position .\n\nSome examples for series:\n\n- : start at , term: . Input as\n- : start at , term: . Input as\n- : star…",
+  "formula": "",
+  "aliases": [
+    "power series - pointwise",
+    "power series pointwise",
+    "jsxgraph power series - pointwise"
+  ],
+  "tags": [
+    "Calculus"
+  ],
+  "boundingBox": [
+    -8,
+    8,
+    8,
+    -8
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/power-series-pointwise",
+  "steps": [
+    {
+      "title": "Power series - pointwise",
+      "detail": "Approximate the value of for various values of and a user-supplied power series."
+    },
+    {
+      "title": "Explore further",
+      "detail": "Drag the red point 'x'. After releasing the mouse key (or lifting the finger), the approximation, i.e the value"
+    }
+  ]
+}

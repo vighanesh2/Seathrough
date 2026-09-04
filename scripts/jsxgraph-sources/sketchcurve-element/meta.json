@@ -1,0 +1,34 @@
+{
+  "id": "sketchcurve-element",
+  "title": "Sketching with the sketchcurve element",
+  "summary": "A basic example of using the element of the board. Here, it may be used as a visual element if a JSXGraph applet is displayed on a projector.",
+  "formula": "",
+  "aliases": [
+    "sketching with the sketchcurve element",
+    "sketchcurve element",
+    "jsxgraph sketching with the sketchcurve element"
+  ],
+  "tags": [
+    "Curves",
+    "Sketch",
+    "Technical"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/sketchcurve-element",
+  "steps": [
+    {
+      "title": "Sketching with the sketchcurve element",
+      "detail": "A basic example of using the element of the board. Here, it may be used as a visual element if a JSXGraph applet is displayed on a projector."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

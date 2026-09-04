@@ -1,0 +1,33 @@
+{
+  "id": "archimedean-spiral",
+  "title": "Archimedean spiral",
+  "summary": "Archimedean spiral described in polar coordinates by the equation\n\nfor real numbers and . and can be controlled by sliders. The point is a glider on the curve and determines a tangent and normal to the curve.",
+  "formula": "",
+  "aliases": [
+    "archimedean spiral",
+    "jsxgraph archimedean spiral"
+  ],
+  "tags": [
+    "Applied calculus",
+    "Calculus",
+    "Curves"
+  ],
+  "boundingBox": [
+    -20,
+    20,
+    20,
+    -20
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/archimedean-spiral",
+  "steps": [
+    {
+      "title": "Archimedean spiral",
+      "detail": "Archimedean spiral described in polar coordinates by the equation"
+    },
+    {
+      "title": "Explore further",
+      "detail": "for real numbers and . and can be controlled by sliders. The point is a glider on the curve and determines a tangent and normal to the curve."
+    }
+  ]
+}

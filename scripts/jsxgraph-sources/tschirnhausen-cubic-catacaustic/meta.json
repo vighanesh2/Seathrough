@@ -1,0 +1,32 @@
+{
+  "id": "tschirnhausen-cubic-catacaustic",
+  "title": "Tschirnhausen Cubic Catacaustic",
+  "summary": "The Tschirnhausen cubic (black curve) is defined parametrically as\n\nIts __catacaustic__ (red curve) with radiant point (-8a,p)\nis the semicubical parabola with parametric equations\n\nThe __catacaustic__ is the envelope of the rays reflected by the Tschirnhausen cubic.\nThe ray's source is the *radiant point*.\n\nYou can get a feeling why the red curve is called *envelope* of the blue line if you __dr…",
+  "formula": "",
+  "aliases": [
+    "tschirnhausen cubic catacaustic",
+    "jsxgraph tschirnhausen cubic catacaustic"
+  ],
+  "tags": [
+    "Calculus",
+    "Curves"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/tschirnhausen-cubic-catacaustic",
+  "steps": [
+    {
+      "title": "Tschirnhausen Cubic Catacaustic",
+      "detail": "The Tschirnhausen cubic (black curve) is defined parametrically as"
+    },
+    {
+      "title": "Explore further",
+      "detail": "Its __catacaustic__ (red curve) with radiant point (-8a,p) is the semicubical parabola with parametric equations"
+    }
+  ]
+}

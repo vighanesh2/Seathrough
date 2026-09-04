@@ -1,0 +1,34 @@
+{
+  "id": "g-3d-net-of-cube",
+  "title": "3D net of cube",
+  "summary": "Interactively morph a cube to its net and back.",
+  "formula": "",
+  "aliases": [
+    "3d net of cube",
+    "jsxgraph 3d net of cube"
+  ],
+  "tags": [
+    "3D",
+    "Applications",
+    "Geometry",
+    "Transformations"
+  ],
+  "boundingBox": [
+    -10,
+    7,
+    6,
+    -9
+  ],
+  "keepAspectRatio": false,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-net-of-cube",
+  "steps": [
+    {
+      "title": "3D net of cube",
+      "detail": "Interactively morph a cube to its net and back."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

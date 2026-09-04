@@ -1,0 +1,34 @@
+{
+  "id": "elements-as-checkboxes-functions",
+  "title": "Elements as Checkboxes – Functions (assessment)",
+  "summary": "In this example, JSXGraph function graphs can be used as \"checkboxes\". By adding to a function graph's attributes, this element becomes clickable.\nThe input parameter defines whether the function graphs behave as a checkbox or a radio button .\n\nWhen such an function graph is clicked, the are stored in the result array.",
+  "formula": "",
+  "aliases": [
+    "elements as checkboxes – functions (assessment)",
+    "elements as checkboxes functions",
+    "jsxgraph elements as checkboxes – functions (assessment)"
+  ],
+  "tags": [
+    "Assessment",
+    "Basic calculus",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/elements-as-checkboxes-functions",
+  "steps": [
+    {
+      "title": "Elements as Checkboxes – Functions (assessment)",
+      "detail": "In this example, JSXGraph function graphs can be used as \"checkboxes\". By adding to a function graph's attributes, this element becomes clickable. The input parameter defines whether the function graphs behave as a checkbox or a radio button ."
+    },
+    {
+      "title": "Explore further",
+      "detail": "When such an function graph is clicked, the are stored in the result array."
+    }
+  ]
+}

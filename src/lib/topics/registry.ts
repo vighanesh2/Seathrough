@@ -1,20 +1,21 @@
+import { catalogTopicModules } from "@/lib/topics/catalog";
 import { differentialEquationsTopic } from "@/lib/topics/modules/differentialEquations";
+import { functionGraphTopic } from "@/lib/topics/modules/functionGraph";
 import { meanValueTheoremTopic } from "@/lib/topics/modules/meanValueTheorem";
 import { rollesTheoremTopic } from "@/lib/topics/modules/rollesTheorem";
 import { topicIdSchema, type TopicId } from "@/lib/topics/schema";
 import type { TopicModule } from "@/lib/topics/types";
 
 /**
- * Every interactive topic the app can teach, most specific first — the first
- * module whose matcher fires wins.
- *
- * To add a topic: write a module, import it here, and give it a board in
- * `@/components/topics/boards` (or reuse an existing `boardId`).
+ * Hand-tuned interactives first (most specific), then the generic function
+ * grapher, then the JSXGraph example catalog.
  */
 export const TOPIC_MODULES: readonly TopicModule[] = [
   differentialEquationsTopic,
   meanValueTheoremTopic,
   rollesTheoremTopic,
+  functionGraphTopic,
+  ...catalogTopicModules(),
 ];
 
 const BY_ID = new Map<TopicId, TopicModule>(

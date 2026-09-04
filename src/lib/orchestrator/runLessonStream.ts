@@ -191,7 +191,7 @@ export async function* runLessonStream(
     const topicPlan = topicVisualPlanFor(prompt, topicConceptKey);
     const topicModule = topicPlan ? getTopicModule(topicPlan.topicId) : null;
     if (topicModule && !isFollowUp) {
-      plan = buildTopicLessonPlan(plan, topicModule);
+      plan = buildTopicLessonPlan(plan, topicModule, prompt);
     }
 
     const { data: lessonRow, error: insertError } = await supabase

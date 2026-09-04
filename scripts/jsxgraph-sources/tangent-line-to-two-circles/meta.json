@@ -1,0 +1,33 @@
+{
+  "id": "tangent-line-to-two-circles",
+  "title": "Tangent lines simultaneously to two circles",
+  "summary": "Step by step Euclidean construction of tangent lines simultaneously to two circles.",
+  "formula": "",
+  "aliases": [
+    "tangent lines simultaneously to two circles",
+    "tangent line to two circles",
+    "jsxgraph tangent lines simultaneously to two circles"
+  ],
+  "tags": [
+    "Euclidean",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -8,
+    8,
+    8,
+    -8
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/tangent-line-to-two-circles",
+  "steps": [
+    {
+      "title": "Tangent lines simultaneously to two circles",
+      "detail": "Step by step Euclidean construction of tangent lines simultaneously to two circles."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

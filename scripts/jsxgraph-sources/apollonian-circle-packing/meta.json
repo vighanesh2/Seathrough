@@ -1,0 +1,32 @@
+{
+  "id": "apollonian-circle-packing",
+  "title": "Apollonian circle packing",
+  "summary": "__References__\n\n- [https://www.ams.org/featurecolumn/archive/kissing.html](https://www.ams.org/featurecolumn/archive/kissing.html)\n- Jeffrey C. Lagarias, Colin L. Mallows, Allan R. Wilks: Beyond the Descartes circle theorem\n- [https://en.wikipedia.org/wiki/Apollonian_gasket](https://en.wikipedia.org/wiki/Apollonian_gasket)\n- Weisstein, Eric W. [\"Apollonian Gasket.\"](https://mathworld.wolfram.com/…",
+  "formula": "",
+  "aliases": [
+    "apollonian circle packing",
+    "jsxgraph apollonian circle packing"
+  ],
+  "tags": [
+    "Euclidean",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -2.5,
+    2.5,
+    2.5,
+    -2.5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/apollonian-circle-packing",
+  "steps": [
+    {
+      "title": "Apollonian circle packing",
+      "detail": "__References__"
+    },
+    {
+      "title": "Explore further",
+      "detail": "- [https://www.ams.org/featurecolumn/archive/kissing.html](https://www.ams.org/featurecolumn/archive/kissing.html) - Jeffrey C. Lagarias, Colin L. Mallows, Allan R. Wilks: Beyond the Descartes circle theorem - [https://en.wikipedia.org/wiki/Apollonian_gasket](https://en.wikipedia.org/wiki/Apollonian_gasket) - Weisstein, Eric W. [\"Apollonian Gasket.\"](https://mathworld.wolfram.com/ApollonianGasket.html) From MathWorld - A Wolfram Web Resource - Weisstein, Eric W. [\"Soddy Circles.\"](https://mathw…"
+    }
+  ]
+}

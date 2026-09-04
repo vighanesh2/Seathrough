@@ -1,0 +1,32 @@
+{
+  "id": "axis-logarithmic-scale",
+  "title": "Axis logarithmic scale",
+  "summary": "Use logarithmic scale for vertical axis.",
+  "formula": "",
+  "aliases": [
+    "axis logarithmic scale",
+    "jsxgraph axis logarithmic scale"
+  ],
+  "tags": [
+    "Axes",
+    "Technical"
+  ],
+  "boundingBox": [
+    -5,
+    6,
+    5,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/axis-logarithmic-scale",
+  "steps": [
+    {
+      "title": "Axis logarithmic scale",
+      "detail": "Use logarithmic scale for vertical axis."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

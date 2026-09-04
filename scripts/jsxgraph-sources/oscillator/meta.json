@@ -1,0 +1,33 @@
+{
+  "id": "oscillator",
+  "title": "Oscillator",
+  "summary": "This JXSGraph application simulates a damped oscillator. If you can catch the weight with the mouse, you can drag it and the animation restarts after releasing the mouse.",
+  "formula": "",
+  "aliases": [
+    "oscillator",
+    "jsxgraph oscillator"
+  ],
+  "tags": [
+    "Animation",
+    "Differential equations",
+    "Physics"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/oscillator",
+  "steps": [
+    {
+      "title": "Oscillator",
+      "detail": "This JXSGraph application simulates a damped oscillator. If you can catch the weight with the mouse, you can drag it and the animation restarts after releasing the mouse."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

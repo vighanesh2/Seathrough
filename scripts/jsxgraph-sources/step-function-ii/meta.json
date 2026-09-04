@@ -1,0 +1,33 @@
+{
+  "id": "step-function-ii",
+  "title": "Step functions: static and dynamic",
+  "summary": "This is an example for the element step function. The first step function is just a static example. The second step function is dynamic and depends on the y-coordinate of the free point and the JavaScript function . The function will be updated whenever the point is dragged.\nThere is no real application for this, but it shows the dynamic nature of JSXGraph.",
+  "formula": "",
+  "aliases": [
+    "step functions: static and dynamic",
+    "step function ii",
+    "jsxgraph step functions: static and dynamic"
+  ],
+  "tags": [
+    "Calculus",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -5,
+    8,
+    8,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/step-function-ii",
+  "steps": [
+    {
+      "title": "Step functions: static and dynamic",
+      "detail": "This is an example for the element step function. The first step function is just a static example. The second step function is dynamic and depends on the y-coordinate of the free point and the JavaScript function . The function will be updated whenever the point is dragged. There is no real application for this, but it shows the dynamic nature of JSXGraph."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

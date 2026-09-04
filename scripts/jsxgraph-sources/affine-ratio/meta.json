@@ -1,0 +1,32 @@
+{
+  "id": "affine-ratio",
+  "title": "Affine ratio",
+  "summary": "Affine ratio of three points. The more popular name seems to be *simple ratio*, in German *Teilverhältnis*. It is defined as",
+  "formula": "",
+  "aliases": [
+    "affine ratio",
+    "jsxgraph affine ratio"
+  ],
+  "tags": [
+    "Analytic",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/affine-ratio",
+  "steps": [
+    {
+      "title": "Affine ratio",
+      "detail": "Affine ratio of three points. The more popular name seems to be *simple ratio*, in German *Teilverhältnis*. It is defined as"
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

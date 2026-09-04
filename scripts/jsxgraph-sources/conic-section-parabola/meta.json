@@ -1,0 +1,34 @@
+{
+  "id": "conic-section-parabola",
+  "title": "Conic section: parabola",
+  "summary": "The input elements for a parabola are\n\n- a point and a line: focus and the directrix",
+  "formula": "",
+  "aliases": [
+    "conic section: parabola",
+    "conic section parabola",
+    "jsxgraph conic section: parabola"
+  ],
+  "tags": [
+    "Analytic",
+    "Curves",
+    "JSXGraph objects"
+  ],
+  "boundingBox": [
+    -3,
+    3,
+    3,
+    -3
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/conic-section-parabola",
+  "steps": [
+    {
+      "title": "Conic section: parabola",
+      "detail": "The input elements for a parabola are"
+    },
+    {
+      "title": "Explore further",
+      "detail": "- a point and a line: focus and the directrix"
+    }
+  ]
+}

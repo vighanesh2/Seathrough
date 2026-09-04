@@ -1,0 +1,33 @@
+{
+  "id": "linear-function-parameters",
+  "title": "Linear Function: parameters",
+  "summary": "Interactive JSXGraph demo to explore __linear functions__ of the form . Sliders adjust slope ( and intercept ( ), updating the line, its slope triangle, and MathJax-rendered function text in real time.",
+  "formula": "",
+  "aliases": [
+    "linear function: parameters",
+    "linear function parameters",
+    "jsxgraph linear function: parameters"
+  ],
+  "tags": [
+    "Calculus",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -5,
+    7,
+    5,
+    -3
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/linear-function-parameters",
+  "steps": [
+    {
+      "title": "Linear Function: parameters",
+      "detail": "Interactive JSXGraph demo to explore __linear functions__ of the form . Sliders adjust slope ( and intercept ( ), updating the line, its slope triangle, and MathJax-rendered function text in real time."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

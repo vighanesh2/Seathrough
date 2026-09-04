@@ -323,13 +323,18 @@ export function visualStableKey(plan: VisualPlan): string {
       return s.type;
     })
     .join("|");
-  // Same topic on the same window = same board; a new interval or ODE reshapes it.
+  // Same topic on the same window = same board; a new interval, ODE, or
+  // function expression reshapes it.
   const topicSig = plan.topicId
     ? plan.topicParams?.boardKind === "ode-solution"
       ? `${plan.topicId}:ode:${plan.topicParams.odeExpression};${plan.topicParams.initialT},${plan.topicParams.initialY};c=${plan.topicParams.parameterC};N=${plan.topicParams.timeSpan}`
       : plan.topicParams?.boardKind === "secant-tangent"
         ? `${plan.topicId}@${plan.topicParams.points.map((p) => p.join(",")).join(";")}`
-        : `${plan.topicId}`
+        : plan.topicParams?.boardKind === "function-graph"
+          ? `${plan.topicId}:fn:${plan.topicParams.expression};${plan.topicParams.xMin},${plan.topicParams.xMax}`
+          : plan.topicParams?.boardKind === "construction"
+            ? `${plan.topicId}:c:${plan.topicParams.constructionId}`
+            : `${plan.topicId}`
     : "";
   return `${plan.renderer}:${plan.assetId ?? ""}:${plan.source ?? ""}:${plan.sceneRecipe?.kind ?? ""}:${scriptSig ?? ""}:${topicSig}`;
 }

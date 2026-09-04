@@ -1,0 +1,32 @@
+{
+  "id": "fermats-spiral",
+  "title": "Fermat's spiral",
+  "summary": "Fermat's spiral can be described in polar coordinates by the equation\n\nwith being a real number.",
+  "formula": "",
+  "aliases": [
+    "fermat's spiral",
+    "fermats spiral",
+    "jsxgraph fermat's spiral"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/fermats-spiral",
+  "steps": [
+    {
+      "title": "Fermat's spiral",
+      "detail": "Fermat's spiral can be described in polar coordinates by the equation"
+    },
+    {
+      "title": "Explore further",
+      "detail": "with being a real number."
+    }
+  ]
+}

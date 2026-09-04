@@ -1,0 +1,35 @@
+{
+  "id": "g-3d-curve-assessment",
+  "title": "3D Curve (assessment)",
+  "summary": "This example shows a 3D curve. The JSXGraph board contains a 3D view. Controls (azimuth, elevation, bank) for 3D view are visible. Trackball navigation is activated.\n\n output() generates an array which contains the slider values of azimuth, elevation, bank and a. The sliders a is part of der user's input.",
+  "formula": "",
+  "aliases": [
+    "3d curve (assessment)",
+    "3d curve assessment",
+    "jsxgraph 3d curve (assessment)"
+  ],
+  "tags": [
+    "3D",
+    "Assessment",
+    "Board options",
+    "Curves"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-curve-assessment",
+  "steps": [
+    {
+      "title": "3D Curve (assessment)",
+      "detail": "This example shows a 3D curve. The JSXGraph board contains a 3D view. Controls (azimuth, elevation, bank) for 3D view are visible. Trackball navigation is activated."
+    },
+    {
+      "title": "Explore further",
+      "detail": "output() generates an array which contains the slider values of azimuth, elevation, bank and a. The sliders a is part of der user's input."
+    }
+  ]
+}

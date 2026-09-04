@@ -1,0 +1,33 @@
+{
+  "id": "two-reflections-ii-intersecting-lines",
+  "title": "Two reflections: intersecting lines",
+  "summary": "This JSXGraph example shows reflections of points across two __intersecting__ lines. Points ( and ) are mirrored successively on line and its parallel , generating image points: and are the mirror images from line reflection across line . In turn, and are the mirror images of reflecting these points across .\n\nIt can be observed that two reflections across two intersecting lines result in a __rota…",
+  "formula": "",
+  "aliases": [
+    "two reflections: intersecting lines",
+    "two reflections ii intersecting lines",
+    "jsxgraph two reflections: intersecting lines"
+  ],
+  "tags": [
+    "Euclidean",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/two-reflections-ii-intersecting-lines",
+  "steps": [
+    {
+      "title": "Two reflections: intersecting lines",
+      "detail": "This JSXGraph example shows reflections of points across two __intersecting__ lines. Points ( and ) are mirrored successively on line and its parallel , generating image points: and are the mirror images from line reflection across line . In turn, and are the mirror images of reflecting these points across ."
+    },
+    {
+      "title": "Explore further",
+      "detail": "It can be observed that two reflections across two intersecting lines result in a __rotation__. To see this, move the defining points of the two lines and ."
+    }
+  ]
+}

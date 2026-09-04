@@ -1,0 +1,31 @@
+{
+  "id": "adding-jsxgraph-events",
+  "title": "Adding JSXGraph events",
+  "summary": "It is possible to supply user-defined defined functions for certain events. The user-defined functions are called additionally to the default JSXGraph events. For the events and the user-supplied event handlers are called before the default JSXGraph event handler. For the event the user-supplied handler is called after the default JSXGraph event handler which is an update of the board.\n\nA user-su…",
+  "formula": "",
+  "aliases": [
+    "adding jsxgraph events",
+    "jsxgraph adding jsxgraph events"
+  ],
+  "tags": [
+    "Technical"
+  ],
+  "boundingBox": [
+    -4,
+    4,
+    4,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/adding-jsxgraph-events",
+  "steps": [
+    {
+      "title": "Adding JSXGraph events",
+      "detail": "It is possible to supply user-defined defined functions for certain events. The user-defined functions are called additionally to the default JSXGraph events. For the events and the user-supplied event handlers are called before the default JSXGraph event handler. For the event the user-supplied handler is called after the default JSXGraph event handler which is an update of the board."
+    },
+    {
+      "title": "Explore further",
+      "detail": "A user-supplied event handler can be defined by the method :"
+    }
+  ]
+}

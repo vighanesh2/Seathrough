@@ -1,0 +1,31 @@
+{
+  "id": "lemniscate-of-bernoulli",
+  "title": "Lemniscate of Bernoulli",
+  "summary": "Lemniscate of Bernoulli — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "lemniscate of bernoulli",
+    "jsxgraph lemniscate of bernoulli"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    7,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/lemniscate-of-bernoulli",
+  "steps": [
+    {
+      "title": "Lemniscate of Bernoulli",
+      "detail": "Interactive JSXGraph construction: Lemniscate of Bernoulli. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

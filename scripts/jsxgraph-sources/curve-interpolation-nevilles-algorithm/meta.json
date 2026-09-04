@@ -1,0 +1,33 @@
+{
+  "id": "curve-interpolation-nevilles-algorithm",
+  "title": "Curve interpolation: Neville's algorithm",
+  "summary": "Curve interpolation: Neville's algorithm — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "curve interpolation: neville's algorithm",
+    "curve interpolation nevilles algorithm",
+    "jsxgraph curve interpolation: neville's algorithm"
+  ],
+  "tags": [
+    "Curves",
+    "Interpolation"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    7,
+    -3
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/curve-interpolation-nevilles-algorithm",
+  "steps": [
+    {
+      "title": "Curve interpolation: Neville's algorithm",
+      "detail": "Interactive JSXGraph construction: Curve interpolation: Neville's algorithm. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

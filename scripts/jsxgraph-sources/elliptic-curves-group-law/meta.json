@@ -1,0 +1,34 @@
+{
+  "id": "elliptic-curves-group-law",
+  "title": "Elliptic curves: group law",
+  "summary": "Visualization of the group law of points on an elliptic curve.\n\n__Attention:__ The curve intersection algorithm always determines as the third intersection point. In some constellations will coincide with or . In that cases the result is wrong.",
+  "formula": "",
+  "aliases": [
+    "elliptic curves: group law",
+    "elliptic curves group law",
+    "jsxgraph elliptic curves: group law"
+  ],
+  "tags": [
+    "Analytic",
+    "Curves",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/elliptic-curves-group-law",
+  "steps": [
+    {
+      "title": "Elliptic curves: group law",
+      "detail": "Visualization of the group law of points on an elliptic curve."
+    },
+    {
+      "title": "Explore further",
+      "detail": "__Attention:__ The curve intersection algorithm always determines as the third intersection point. In some constellations will coincide with or . In that cases the result is wrong."
+    }
+  ]
+}

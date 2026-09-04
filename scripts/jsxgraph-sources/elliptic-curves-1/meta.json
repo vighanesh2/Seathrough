@@ -1,0 +1,32 @@
+{
+  "id": "elliptic-curves-1",
+  "title": "Elliptic curves",
+  "summary": "An elliptic curve can be written as a plane algebraic curve defined by an equation of the form\n In JSXGraph, elliptic curves can be plotted using the element for the equation",
+  "formula": "",
+  "aliases": [
+    "elliptic curves",
+    "elliptic curves 1",
+    "jsxgraph elliptic curves"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -15,
+    10,
+    15,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/elliptic-curves-1",
+  "steps": [
+    {
+      "title": "Elliptic curves",
+      "detail": "An elliptic curve can be written as a plane algebraic curve defined by an equation of the form  In JSXGraph, elliptic curves can be plotted using the element for the equation"
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

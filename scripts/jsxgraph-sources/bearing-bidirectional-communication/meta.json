@@ -1,0 +1,33 @@
+{
+  "id": "bearing-bidirectional-communication",
+  "title": "Bearing (bidirectional communication)",
+  "summary": "This is an example of _bidirectional communication_ of JSXGraph with other elements of the web page.\n\n1. One can type a new value for the angle into the text box and\n2. see the actual value of the angle in the same text box when dragging the glider.",
+  "formula": "",
+  "aliases": [
+    "bearing (bidirectional communication)",
+    "bearing bidirectional communication",
+    "jsxgraph bearing (bidirectional communication)"
+  ],
+  "tags": [
+    "Animation",
+    "Technical"
+  ],
+  "boundingBox": [
+    -2,
+    1.5,
+    2,
+    -1.5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/bearing-bidirectional-communication",
+  "steps": [
+    {
+      "title": "Bearing (bidirectional communication)",
+      "detail": "This is an example of _bidirectional communication_ of JSXGraph with other elements of the web page."
+    },
+    {
+      "title": "Explore further",
+      "detail": "1. One can type a new value for the angle into the text box and 2. see the actual value of the angle in the same text box when dragging the glider."
+    }
+  ]
+}

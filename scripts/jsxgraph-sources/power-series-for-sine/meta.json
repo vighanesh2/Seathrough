@@ -1,0 +1,32 @@
+{
+  "id": "power-series-for-sine",
+  "title": "Taylor Series for Sine",
+  "summary": "Visualize the Taylor series\n\nfor the sine curve expanded at up to degree .",
+  "formula": "",
+  "aliases": [
+    "taylor series for sine",
+    "power series for sine",
+    "jsxgraph taylor series for sine"
+  ],
+  "tags": [
+    "Calculus"
+  ],
+  "boundingBox": [
+    -7,
+    3,
+    8,
+    -3
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/power-series-for-sine",
+  "steps": [
+    {
+      "title": "Taylor Series for Sine",
+      "detail": "Visualize the Taylor series"
+    },
+    {
+      "title": "Explore further",
+      "detail": "for the sine curve expanded at up to degree ."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "restrict-points-to-limited-area",
+  "title": "Restrict points to limited area",
+  "summary": "Points can be restricted to a certain area by correcting their position after a events. In this example, the points *A*, *B*, and *C* are restricted to the lower left quadrant. We do the correction of all three points in a single event handler.",
+  "formula": "",
+  "aliases": [
+    "restrict points to limited area",
+    "jsxgraph restrict points to limited area"
+  ],
+  "tags": [
+    "Geometry",
+    "Point"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/restrict-points-to-limited-area",
+  "steps": [
+    {
+      "title": "Restrict points to limited area",
+      "detail": "Points can be restricted to a certain area by correcting their position after a events. In this example, the points *A*, *B*, and *C* are restricted to the lower left quadrant. We do the correction of all three points in a single event handler."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

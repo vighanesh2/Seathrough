@@ -1,0 +1,35 @@
+{
+  "id": "g-3d-mirror-mirror-on-the-wall",
+  "title": "3D Mirror, Mirror on the Wall ... (assessment)",
+  "summary": "In this example, 3D polyhedrons and transformations are used to adapt a small cube to its symmetrical opposite.",
+  "formula": "",
+  "aliases": [
+    "3d mirror, mirror on the wall ... (assessment)",
+    "3d mirror mirror on the wall",
+    "jsxgraph 3d mirror, mirror on the wall ... (assessment)"
+  ],
+  "tags": [
+    "3D",
+    "Assessment",
+    "Geometry",
+    "Symmetry"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-mirror-mirror-on-the-wall",
+  "steps": [
+    {
+      "title": "3D Mirror, Mirror on the Wall ... (assessment)",
+      "detail": "In this example, 3D polyhedrons and transformations are used to adapt a small cube to its symmetrical opposite."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

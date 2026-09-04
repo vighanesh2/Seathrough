@@ -1,0 +1,32 @@
+{
+  "id": "random-walks",
+  "title": "Random walks",
+  "summary": "In this experiment, we let the JSXGraph element do *random walks*.\n\nFirst we put\nOne random walk always starts at the origin and consists of steps, where each step is a right turn by a random angle plus moving forward by the amount .\nThen, we compute the (squared) distance of the position after from the origin.\n\nFixed values in this simulation are:\n* stepSize and\n* Number of steps per walk .\n\nThe…",
+  "formula": "",
+  "aliases": [
+    "random walks",
+    "jsxgraph random walks"
+  ],
+  "tags": [
+    "Statistics",
+    "Turtle"
+  ],
+  "boundingBox": [
+    -100,
+    100,
+    100,
+    -100
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/random-walks",
+  "steps": [
+    {
+      "title": "Random walks",
+      "detail": "In this experiment, we let the JSXGraph element do *random walks*."
+    },
+    {
+      "title": "Explore further",
+      "detail": "First we put One random walk always starts at the origin and consists of steps, where each step is a right turn by a random angle plus moving forward by the amount . Then, we compute the (squared) distance of the position after from the origin."
+    }
+  ]
+}

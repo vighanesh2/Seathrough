@@ -1,0 +1,32 @@
+{
+  "id": "logistic-process",
+  "title": "Logistic process",
+  "summary": "In time the population grows by elements:\n , that is\n .\n\nWith we get\n , i.e. .\n\nThe initial population is , .",
+  "formula": "",
+  "aliases": [
+    "logistic process",
+    "jsxgraph logistic process"
+  ],
+  "tags": [
+    "Calculus",
+    "Turtle"
+  ],
+  "boundingBox": [
+    -0.5,
+    11.5,
+    14.5,
+    -11.5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/logistic-process",
+  "steps": [
+    {
+      "title": "Logistic process",
+      "detail": "In time the population grows by elements:  , that is  ."
+    },
+    {
+      "title": "Explore further",
+      "detail": "With we get  , i.e. ."
+    }
+  ]
+}

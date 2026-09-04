@@ -1,0 +1,32 @@
+{
+  "id": "chemical-molecules",
+  "title": "Chemical molecules",
+  "summary": "This is an example how to use JSXGraph to display the structure of chemical molecules. The main hurdle here is that between two atoms their might be double or even triple bonds.\n\n__Beware:__ This example just shows the technical concept, in chemical terms it is incorrect.",
+  "formula": "",
+  "aliases": [
+    "chemical molecules",
+    "jsxgraph chemical molecules"
+  ],
+  "tags": [
+    "Applications",
+    "Chemistry"
+  ],
+  "boundingBox": [
+    -2,
+    5,
+    5,
+    -2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/chemical-molecules",
+  "steps": [
+    {
+      "title": "Chemical molecules",
+      "detail": "This is an example how to use JSXGraph to display the structure of chemical molecules. The main hurdle here is that between two atoms their might be double or even triple bonds."
+    },
+    {
+      "title": "Explore further",
+      "detail": "__Beware:__ This example just shows the technical concept, in chemical terms it is incorrect."
+    }
+  ]
+}

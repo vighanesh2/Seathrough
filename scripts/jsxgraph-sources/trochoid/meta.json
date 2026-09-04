@@ -1,0 +1,31 @@
+{
+  "id": "trochoid",
+  "title": "Trochoid",
+  "summary": "The Trochoid curve (blue) and its dual curve (red).\nThe equation of the trochoid is",
+  "formula": "",
+  "aliases": [
+    "trochoid",
+    "jsxgraph trochoid"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/trochoid",
+  "steps": [
+    {
+      "title": "Trochoid",
+      "detail": "The Trochoid curve (blue) and its dual curve (red). The equation of the trochoid is"
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

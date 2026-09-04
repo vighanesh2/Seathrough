@@ -1,0 +1,31 @@
+{
+  "id": "cubic-spline-interpolation",
+  "title": "Cubic spline interpolation",
+  "summary": "A cubic spline function graph through given points is constructed. Points can be added by clicking on \"Add point\".",
+  "formula": "",
+  "aliases": [
+    "cubic spline interpolation",
+    "jsxgraph cubic spline interpolation"
+  ],
+  "tags": [
+    "Splines"
+  ],
+  "boundingBox": [
+    -5,
+    10,
+    7,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/cubic-spline-interpolation",
+  "steps": [
+    {
+      "title": "Cubic spline interpolation",
+      "detail": "A cubic spline function graph through given points is constructed. Points can be added by clicking on \"Add point\"."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "g-3d-function-graph-with-gradient-plane",
+  "title": "3D function graph with gradient plane",
+  "summary": "This is an example for a function graph together with the gradient plane.",
+  "formula": "",
+  "aliases": [
+    "3d function graph with gradient plane",
+    "jsxgraph 3d function graph with gradient plane"
+  ],
+  "tags": [
+    "3D",
+    "Calculus",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -8,
+    8,
+    8,
+    -8
+  ],
+  "keepAspectRatio": false,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-function-graph-with-gradient-plane",
+  "steps": [
+    {
+      "title": "3D function graph with gradient plane",
+      "detail": "This is an example for a function graph together with the gradient plane."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

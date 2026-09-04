@@ -1,0 +1,33 @@
+{
+  "id": "polygon-through-ordered-set-of-gliders",
+  "title": "Polygon with ordered set of gliders",
+  "summary": "This example shows a curve that can be manipulated by dragging the small points. This curve hosts four \"glider elements\", named A, B, C, and D. Now, these gliders can be moved on the curve, but their order from the start of the curve to the end of the curve (usually that is from left to right) will always stay A, B, C, D. For this, are supplied.",
+  "formula": "",
+  "aliases": [
+    "polygon with ordered set of gliders",
+    "polygon through ordered set of gliders",
+    "jsxgraph polygon with ordered set of gliders"
+  ],
+  "tags": [
+    "Curves",
+    "Polygons"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    7,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/polygon-through-ordered-set-of-gliders",
+  "steps": [
+    {
+      "title": "Polygon with ordered set of gliders",
+      "detail": "This example shows a curve that can be manipulated by dragging the small points. This curve hosts four \"glider elements\", named A, B, C, and D. Now, these gliders can be moved on the curve, but their order from the start of the curve to the end of the curve (usually that is from left to right) will always stay A, B, C, D. For this, are supplied."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

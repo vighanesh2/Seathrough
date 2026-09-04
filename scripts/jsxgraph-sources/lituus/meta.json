@@ -1,0 +1,31 @@
+{
+  "id": "lituus",
+  "title": "Lituus",
+  "summary": "A **lituus** is a spiral in which the angle is inversely proportional to the square of the radius (as expressed in polar coordinates).",
+  "formula": "",
+  "aliases": [
+    "lituus",
+    "jsxgraph lituus"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -4,
+    4,
+    4,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/lituus",
+  "steps": [
+    {
+      "title": "Lituus",
+      "detail": "A **lituus** is a spiral in which the angle is inversely proportional to the square of the radius (as expressed in polar coordinates)."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

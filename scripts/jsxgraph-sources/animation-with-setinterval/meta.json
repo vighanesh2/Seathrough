@@ -1,0 +1,32 @@
+{
+  "id": "animation-with-setinterval",
+  "title": "Animation with setInterval",
+  "summary": "This example has been provided by user Cleonis.",
+  "formula": "",
+  "aliases": [
+    "animation with setinterval",
+    "jsxgraph animation with setinterval"
+  ],
+  "tags": [
+    "Animation",
+    "Technical"
+  ],
+  "boundingBox": [
+    -1.5,
+    1.5,
+    1.5,
+    -1.5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/animation-with-setinterval",
+  "steps": [
+    {
+      "title": "Animation with setInterval",
+      "detail": "This example has been provided by user Cleonis."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}
