@@ -115,6 +115,7 @@ export async function* runLessonStream(
     assertNotAborted(options.signal);
 
     let plan: LessonPlanParsed;
+    let topicHint = "";
     if (isFollowUp && conversationId) {
       const ctx = await loadConversationContext(conversationId);
       if (!ctx) {
@@ -132,6 +133,8 @@ export async function* runLessonStream(
         };
         return;
       }
+
+      topicHint = [ctx.rootPrompt, ctx.title].filter(Boolean).join(" ");
 
       yield {
         type: "student_message",
@@ -188,10 +191,13 @@ export async function* runLessonStream(
 
     const topicConceptKey =
       plan.beats.find((b) => b.conceptKey?.trim())?.conceptKey ?? plan.title;
-    const topicPlan = topicVisualPlanFor(prompt, topicConceptKey);
+    const topicPlan = topicVisualPlanFor(prompt, topicConceptKey, topicHint);
     const topicModule = topicPlan ? getTopicModule(topicPlan.topicId) : null;
-    if (topicModule && !isFollowUp) {
-      plan = buildTopicLessonPlan(plan, topicModule, prompt);
+    if (topicModule) {
+      // Include the root topic phrase so follow-ups like "2 2 12 2 6 10 1"
+      // still derive assessment inputs against the matched construction.
+      const topicPrompt = [prompt, topicHint].filter(Boolean).join(" ");
+      plan = buildTopicLessonPlan(plan, topicModule, topicPrompt);
     }
 
     const { data: lessonRow, error: insertError } = await supabase
@@ -356,6 +362,7 @@ export async function* runLessonStream(
             // Including prior lesson text here falsely rematches old assets
             // (e.g. "class" → "Class blueprint → objects" on a cryptography follow-up).
             prompt,
+            topicHint: topicHint || undefined,
             beat: isFollowUp
               ? {
                   ...beat,

@@ -7,6 +7,15 @@ const catalog = require("../src/lib/topics/catalog/generated/catalog.json");
 
 assert.equal(catalog.version, 1);
 assert.ok(catalog.entries.length >= 200, "bulk share catalog imported");
+assert.ok(
+  !catalog.entries.some(
+    (e) =>
+      /assessment/i.test(e.id) ||
+      /assessment/i.test(e.title) ||
+      (e.tags || []).some((t) => /assessment/i.test(t)),
+  ),
+  "assessment examples removed",
+);
 
 const ids = new Set();
 for (const entry of catalog.entries) {

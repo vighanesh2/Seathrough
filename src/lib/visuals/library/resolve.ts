@@ -24,6 +24,8 @@ export type ResolveVisualInput = {
   beat: LessonBeatParsed;
   activeVisualKey?: string;
   hasVisual: boolean;
+  /** Prior lesson / root prompt so follow-ups can rematch the same topic. */
+  topicHint?: string;
 };
 
 /**
@@ -43,7 +45,7 @@ export async function resolveVisualWithLibrary(
   const topicPlan = topicVisualPlanFor(
     input.prompt,
     input.beat.conceptKey,
-    input.beat.narration,
+    [input.beat.narration, input.topicHint].filter(Boolean).join(" "),
   );
   if (topicPlan) {
     return keepIfSame(

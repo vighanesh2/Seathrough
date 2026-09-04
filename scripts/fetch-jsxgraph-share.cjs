@@ -489,6 +489,21 @@ async function main() {
       return;
     }
 
+    const titleProbe = String(example.name || slug);
+    const tagNames = Array.isArray(example.tags)
+      ? example.tags.map((t) => String(t.name || t.alias || ""))
+      : [];
+    const isAssessment =
+      /assessment/i.test(slug) ||
+      /assessment/i.test(titleProbe) ||
+      tagNames.some((t) => /assessment/i.test(t));
+    if (isAssessment) {
+      stats.skipped++;
+      stats.reasons["assessment"] = (stats.reasons["assessment"] || 0) + 1;
+      report.push({ slug, status: "skip", reason: "assessment" });
+      return;
+    }
+
     const transformed = transformBody(example.code);
     if (!transformed.ok) {
       stats.skipped++;

@@ -20,6 +20,9 @@ Share examples are typically **CC BY-SA 4.0** (Center of Mobile Learning with
 Digital Technology). Attribution URL is stored in each `meta.sourceUrl`.
 Runtime never fetches the share site — only the local ingested catalog.
 
+LMS **assessment** examples (course-system `input[]`) are skipped on fetch —
+they need external bindings we do not provide.
+
 Multi-board demos keep only the first board. Examples that need `window`,
 `eval`, `fetch`, etc. are skipped (see `scripts/jsxgraph-share-import-report.json`).
 

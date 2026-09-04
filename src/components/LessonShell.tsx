@@ -15,6 +15,14 @@ import { useQuestionAccess } from "@/components/usage/QuestionAccess";
 import { ThinkingLoader } from "@/components/ui/ThinkingLoader";
 import { VisualStage } from "@/components/VisualStage";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { PenCueTracker } from "@/lib/board/penCues";
 import { consumeLessonStream } from "@/lib/client/consumeLessonStream";
 import type { ConversationListItem } from "@/lib/conversations/types";
@@ -236,6 +244,11 @@ export function LessonShell() {
   const pauseGateRef = useRef<Promise<void>>(Promise.resolve());
   const resumePauseRef = useRef<(() => void) | null>(null);
   const lastVisualKeyRef = useRef<string>("");
+  const statusRef = useRef<LessonStatus>(status);
+  statusRef.current = status;
+  /** True when we auto-paused because the tab/window was hidden. */
+  const pausedByVisibilityRef = useRef(false);
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
 
   function pushNarration(
     text: string,
@@ -341,6 +354,61 @@ export function LessonShell() {
       penCues.stopWaiting();
     };
   }, [penCues]);
+
+  function pauseLesson(opts?: { fromVisibility?: boolean }) {
+    if (statusRef.current !== "running") return;
+    pausedRef.current = true;
+    audioRef.current?.pause();
+    send({ type: "INTERRUPT" });
+    setStatus("paused");
+    setDrawPlaying(false);
+    pausedByVisibilityRef.current = Boolean(opts?.fromVisibility);
+    if (!opts?.fromVisibility) {
+      setShowResumePrompt(false);
+    }
+  }
+
+  function resumeLesson() {
+    if (statusRef.current !== "paused" && !pausedRef.current) return;
+    pausedByVisibilityRef.current = false;
+    setShowResumePrompt(false);
+    pausedRef.current = false;
+    send({ type: "RESUME" });
+    setStatus("running");
+    resumePauseRef.current?.();
+    resumePauseRef.current = null;
+    void audioRef.current?.play().catch(() => undefined);
+  }
+
+  function dismissResumePrompt() {
+    pausedByVisibilityRef.current = false;
+    setShowResumePrompt(false);
+  }
+
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (document.visibilityState === "hidden") {
+        if (statusRef.current === "running") {
+          pauseLesson({ fromVisibility: true });
+        }
+        return;
+      }
+      if (document.visibilityState !== "visible") return;
+      if (
+        pausedByVisibilityRef.current &&
+        (statusRef.current === "paused" || pausedRef.current)
+      ) {
+        setShowResumePrompt(true);
+      }
+    }
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+    // pauseLesson closes over send/setState — stable enough for this listener
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [send]);
 
   function waitIfPaused(): Promise<void> {
     if (!pausedRef.current) return Promise.resolve();
@@ -541,6 +609,8 @@ export function LessonShell() {
     audioRef.current = null;
     penCues.reset();
     pausedRef.current = false;
+    pausedByVisibilityRef.current = false;
+    setShowResumePrompt(false);
     resumePauseRef.current?.();
     resumePauseRef.current = null;
     send({ type: "RESET" });
@@ -829,18 +899,10 @@ export function LessonShell() {
       return;
     }
     if (status === "running") {
-      pausedRef.current = true;
-      audioRef.current?.pause();
-      send({ type: "INTERRUPT" });
-      setStatus("paused");
+      pauseLesson({ fromVisibility: false });
       return;
     }
-    pausedRef.current = false;
-    send({ type: "RESUME" });
-    setStatus("running");
-    resumePauseRef.current?.();
-    resumePauseRef.current = null;
-    void audioRef.current?.play().catch(() => undefined);
+    resumeLesson();
   }
 
   function skipBeat() {
@@ -982,6 +1044,31 @@ export function LessonShell() {
           ) : null}
         </div>
       </div>
+
+      <Dialog
+        open={showResumePrompt}
+        onOpenChange={(open) => {
+          if (!open) dismissResumePrompt();
+        }}
+      >
+        <DialogContent className="sm:max-w-md" showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Resume lesson?</DialogTitle>
+            <DialogDescription>
+              The lesson paused when you left this tab. Want to pick up where
+              you left off?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={dismissResumePrompt}>
+              Stay paused
+            </Button>
+            <Button type="button" onClick={resumeLesson}>
+              Resume
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppShell>
   );
 }
