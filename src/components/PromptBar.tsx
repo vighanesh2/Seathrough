@@ -209,7 +209,11 @@ export function PromptBar({
       className="flex w-full flex-col gap-1.5"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!disabled) onSubmit();
+        if (disabled) return;
+        // Release the mic as soon as the turn starts — do not keep listening
+        // while the lesson streams / TTS talks.
+        stopListening();
+        onSubmit();
       }}
     >
       <div className="flex w-full items-stretch gap-2">
@@ -266,7 +270,7 @@ export function PromptBar({
       </div>
       {listening ? (
         <p className="font-sans text-[11px] text-accent">
-          Listening… click the mic when you are done.
+          Listening… mic turns off when you hit {submitLabel}.
         </p>
       ) : null}
       {micError ? (
