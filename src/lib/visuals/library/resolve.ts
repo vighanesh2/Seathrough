@@ -15,6 +15,10 @@ import {
   makeTopicKey,
 } from "@/lib/visuals/library/topicKey";
 import { topicVisualPlanFor } from "@/lib/topics/plan";
+import {
+  strongFigurePlan,
+  withCompanionFigure,
+} from "@/lib/visuals/companionFigure";
 import { decideVisual, type VisualTriggerResult } from "@/lib/triggers/visualTrigger";
 import { visualStableKey } from "@/lib/visuals/router";
 import { visualPlanSchema, type VisualPlan } from "@/lib/visuals/types";
@@ -55,6 +59,19 @@ export async function resolveVisualWithLibrary(
     );
   }
 
+  // Offline diagram pack (janosh / Commons / curated SVGs) before pen-only.
+  const figure = strongFigurePlan(
+    input.prompt,
+    input.beat.highlight ?? input.beat.conceptKey,
+  );
+  if (figure) {
+    return keepIfSame(
+      input.activeVisualKey,
+      figure,
+      `figure:${figure.assetId}`,
+    );
+  }
+
   // Pen heuristics win even when the beat says "keep" (fixes wrong mafs graphs)
   const heuristic = peekHeuristicBoardScript(
     input.prompt,
@@ -62,7 +79,10 @@ export async function resolveVisualWithLibrary(
   );
   if (heuristic) {
     const parsedH = visualPlanSchema.safeParse(heuristic);
-    const plan = parsedH.success ? parsedH.data : heuristic;
+    const plan = withCompanionFigure(
+      parsedH.success ? parsedH.data : heuristic,
+      input.prompt,
+    );
     await rememberVisualLibrary({
       topicKey,
       displayLabel:
@@ -89,7 +109,11 @@ export async function resolveVisualWithLibrary(
   const quality = classifyVisualPlan(base.plan);
 
   if (quality === "curated") {
-    return keepIfSame(input.activeVisualKey, base.plan, `curated:${base.reason}`);
+    return keepIfSame(
+      input.activeVisualKey,
+      withCompanionFigure(base.plan, input.prompt),
+      `curated:${base.reason}`,
+    );
   }
 
   const cached = await lookupVisualLibrary(topicKey);
@@ -128,6 +152,8 @@ export async function resolveVisualWithLibrary(
         routed: base.plan,
       });
   }
+
+  plan = withCompanionFigure(plan, input.prompt);
 
   const parsedLearned = visualPlanSchema.safeParse(plan);
   if (parsedLearned.success) plan = parsedLearned.data;

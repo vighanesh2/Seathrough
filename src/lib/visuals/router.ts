@@ -336,7 +336,8 @@ export function visualStableKey(plan: VisualPlan): string {
             ? `${plan.topicId}:c:${plan.topicParams.constructionId}`
             : `${plan.topicId}`
     : "";
-  return `${plan.renderer}:${plan.assetId ?? ""}:${plan.source ?? ""}:${plan.sceneRecipe?.kind ?? ""}:${scriptSig ?? ""}:${topicSig}`;
+  const figureSig = plan.assetId ? `:asset:${plan.assetId}` : "";
+  return `${plan.renderer}:${plan.assetId ?? ""}:${plan.source ?? ""}:${plan.sceneRecipe?.kind ?? ""}:${scriptSig ?? ""}:${topicSig}${figureSig}`;
 }
 
 export function visualKey(plan: VisualPlan): string {

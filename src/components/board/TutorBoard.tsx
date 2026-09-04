@@ -17,6 +17,7 @@ import type { DrawCommandQueue } from "@/lib/draw-engine/resolve";
 import type { AnatomyStructureId } from "@/lib/anatomy/types";
 import type { SceneRecipe } from "@/lib/schemas/sceneRecipe";
 import type { ThreeScenePlan } from "@/lib/three-scenes/decide";
+import { getVisualAsset } from "@/lib/visuals/assets/catalog";
 import type { VisualPlan } from "@/lib/visuals/types";
 import { visualStableKey } from "@/lib/visuals/router";
 
@@ -116,7 +117,33 @@ export function TutorBoard({
     Boolean(plan.topicId && plan.topicParams);
   const useDrawEngine =
     !showThree && !showTopicBoard && Boolean(preferDrawEngine && drawQueue);
-  const showTemplate = !showThree && !useDrawEngine && plan?.renderer === "template";
+  const companionAsset =
+    plan?.assetId && !showThree && !showTopicBoard
+      ? getVisualAsset(plan.assetId)
+      : undefined;
+  const companionTemplatePlan: VisualPlan | null =
+    companionAsset && plan
+      ? {
+          ...plan,
+          renderer: "template",
+          assetId: companionAsset.id,
+          actions:
+            plan.actions?.some((a) => a.type === "draw")
+              ? plan.actions
+              : [
+                  { type: "draw" },
+                  {
+                    type: "label",
+                    anchor: "center",
+                    text: companionAsset.title,
+                  },
+                ],
+        }
+      : null;
+  const showTemplate =
+    !showThree &&
+    !useDrawEngine &&
+    (plan?.renderer === "template" || Boolean(companionTemplatePlan));
   const showKatexOnly = !showThree && !useDrawEngine && plan?.renderer === "katex";
   const showMafs = !showThree && !useDrawEngine && plan?.renderer === "mafs";
   const showRough =
@@ -137,7 +164,8 @@ export function TutorBoard({
       showRough ||
       showKatexOnly ||
       showBoardScript ||
-      showTopicBoard,
+      showTopicBoard ||
+      companionTemplatePlan,
   );
   const formula = plan?.formula ?? (showKatexOnly ? plan?.source : undefined);
   const topicBoardKey =
@@ -190,18 +218,28 @@ export function TutorBoard({
                 <FormulaStrip source={formula} playKey={playKey} />
               </div>
             ) : null}
-            <div className="relative min-h-0 flex-1 p-2 md:p-3">
-              <KonvaDrawStage
-                queue={drawQueue}
-                sessionKey={drawSessionKey}
-                playing={drawPlaying}
-                speed={drawSpeed}
-                onClock={onDrawClock}
-                onComplete={onDrawComplete}
-                canvasHeight={canvasHeight}
-                scrollToY={scrollToY}
-                className="h-full min-h-[280px] w-full overflow-auto rounded-xl border border-board-edge bg-chalk"
-              />
+            <div className="relative flex min-h-0 flex-1 flex-col gap-2 p-2 md:flex-row md:p-3">
+              {companionTemplatePlan ? (
+                <div className="min-h-[200px] shrink-0 overflow-hidden rounded-xl border border-board-edge bg-chalk md:w-[min(42%,420px)]">
+                  <TemplateStage
+                    plan={companionTemplatePlan}
+                    playKey={playKey}
+                  />
+                </div>
+              ) : null}
+              <div className="relative min-h-0 min-w-0 flex-1">
+                <KonvaDrawStage
+                  queue={drawQueue}
+                  sessionKey={drawSessionKey}
+                  playing={drawPlaying}
+                  speed={drawSpeed}
+                  onClock={onDrawClock}
+                  onComplete={onDrawComplete}
+                  canvasHeight={canvasHeight}
+                  scrollToY={scrollToY}
+                  className="h-full min-h-[280px] w-full overflow-auto rounded-xl border border-board-edge bg-chalk"
+                />
+              </div>
             </div>
           </div>
         ) : showMermaid && plan?.source ? (
@@ -240,9 +278,9 @@ export function TutorBoard({
                   />
                 ) : null}
 
-                {showTemplate && plan ? (
+                {showTemplate && (companionTemplatePlan || plan) ? (
                   <TemplateStage
-                    plan={plan}
+                    plan={companionTemplatePlan ?? plan!}
                     playKey={playKey}
                     onDrawComplete={() => onDoneRef.current?.()}
                   />

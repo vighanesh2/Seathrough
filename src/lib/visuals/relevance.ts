@@ -80,7 +80,10 @@ export function scoreAssetForPrompt(
   return score;
 }
 
-export function matchAssetToPrompt(prompt: string): VisualAsset | undefined {
+export function matchAssetToPrompt(
+  prompt: string,
+  minScore = 5,
+): VisualAsset | undefined {
   let best: VisualAsset | undefined;
   let bestScore = 0;
   for (const asset of VISUAL_ASSETS) {
@@ -90,7 +93,7 @@ export function matchAssetToPrompt(prompt: string): VisualAsset | undefined {
       best = asset;
     }
   }
-  return bestScore > 0 ? best : undefined;
+  return bestScore >= minScore ? best : undefined;
 }
 
 /** Only accept LLM assetId if it actually relates to the user prompt */

@@ -1,6 +1,8 @@
 import type { VisualAsset } from "@/lib/visuals/types";
 import { METAPHOR_ASSETS } from "@/lib/visuals/assets/metaphorAssets";
 import { GENERATED_ASSETS } from "@/lib/visuals/assets/generated";
+import { EXTERNAL_DIAGRAM_ASSETS } from "@/lib/visuals/assets/externalDiagrams";
+
 
 /** Side-view airplane with force / part anchors (physics / lift lessons). */
 export const airplaneSideView: VisualAsset = {
@@ -296,6 +298,7 @@ export const VISUAL_ASSETS: VisualAsset[] = [
   rightTriangle,
   ...METAPHOR_ASSETS,
   ...GENERATED_ASSETS,
+  ...EXTERNAL_DIAGRAM_ASSETS,
 ];
 
 export function getVisualAsset(id: string): VisualAsset | undefined {
