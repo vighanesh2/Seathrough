@@ -20,6 +20,12 @@ type ChatSidebarProps = {
   onLogin: () => void;
   onSignup: () => void;
   onLogout: () => void;
+  /** Override copy for non-lesson workspaces (e.g. 3D body). */
+  historyTitle?: string;
+  historyEyebrow?: string;
+  newChatLabel?: string;
+  emptyHint?: string;
+  ariaLabel?: string;
 };
 
 function formatWhen(iso: string): string {
@@ -52,6 +58,11 @@ export function ChatSidebar({
   onLogin,
   onSignup,
   onLogout,
+  historyTitle = "Your lessons",
+  historyEyebrow = "History",
+  newChatLabel = "New lesson",
+  emptyHint = "Your lessons will show up here.",
+  ariaLabel = "Lesson history",
 }: ChatSidebarProps) {
   return (
     <aside
@@ -61,7 +72,7 @@ export function ChatSidebar({
           ? "w-0 border-r-0"
           : "w-[min(18rem,78vw)] border-r border-border",
       )}
-      aria-label="Lesson history"
+      aria-label={ariaLabel}
       aria-hidden={collapsed}
     >
       {collapsed ? null : (
@@ -69,10 +80,10 @@ export function ChatSidebar({
           <div className="flex items-center justify-between gap-2 px-3 py-3">
             <div className="min-w-0">
               <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-accent">
-                History
+                {historyEyebrow}
               </p>
               <p className="truncate text-sm font-semibold text-ink">
-                Your lessons
+                {historyTitle}
               </p>
             </div>
             <Button
@@ -81,7 +92,7 @@ export function ChatSidebar({
               size="icon"
               className="shrink-0"
               onClick={onToggle}
-              aria-label="Hide chats"
+              aria-label="Hide history"
               aria-expanded
             >
               <PanelLeftClose className="size-4" />
@@ -91,7 +102,7 @@ export function ChatSidebar({
           <div className="px-3 pb-2">
             <Button type="button" onClick={onNewChat} className="w-full">
               <Plus className="size-4" />
-              New lesson
+              {newChatLabel}
             </Button>
           </div>
 
@@ -101,13 +112,13 @@ export function ChatSidebar({
             <div className="p-2">
               {loading && !conversations.length ? (
                 <div className="px-2 py-3">
-                  <ThinkingLoader variant="inline" label="Loading chats" />
+                  <ThinkingLoader variant="inline" label="Loading history" />
                 </div>
               ) : null}
 
               {!loading && !conversations.length ? (
                 <p className="px-2 py-3 text-xs leading-relaxed text-muted">
-                  Your lessons will show up here.
+                  {emptyHint}
                 </p>
               ) : null}
 

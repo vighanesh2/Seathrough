@@ -13,6 +13,16 @@ import {
 
 type SessionStatus = "idle" | "building" | "fixing" | "explaining" | "error";
 
+export type SceneSessionSnapshot = {
+  prompt: string;
+  title: string;
+  program: SceneProgram;
+  code: string;
+  reveal: number;
+  logs: SceneAgentLine[];
+  narration: string[];
+};
+
 type GenerateResponse = SceneProgram & { error?: string };
 type RepairResponse = { code?: string; error?: string };
 type SpeakClip = { mimeType: string; base64: string };
@@ -184,6 +194,37 @@ export function useSceneSession(accessToken: string | null) {
     setProgram(null);
   }, [stopPlayback]);
 
+  const restore = useCallback(
+    (snapshot: {
+      title: string;
+      program: SceneProgram;
+      code: string;
+      reveal: number;
+      logs: SceneAgentLine[];
+      narration: string[];
+    }) => {
+      abortRef.current?.abort();
+      abortRef.current = null;
+      const waiter = loadWaiter.current;
+      loadWaiter.current = null;
+      loadGen.current += 1;
+      if (waiter) {
+        waiter.resolve({ ok: false, message: "Scene restored." });
+      }
+      stopPlayback();
+      setError(null);
+      setStatus("idle");
+      setTitle(snapshot.title);
+      setProgram(snapshot.program);
+      setLogs(snapshot.logs);
+      setNarration(snapshot.narration);
+      setReveal(snapshot.reveal);
+      setCode(snapshot.code);
+      setFrameKey((k) => k + 1);
+    },
+    [stopPlayback],
+  );
+
   useEffect(
     () => () => {
       abortRef.current?.abort();
@@ -267,20 +308,22 @@ export function useSceneSession(accessToken: string | null) {
       token: string | null,
       signal: AbortSignal,
       firstClip: Promise<SpeakClip | null> | null,
-    ) => {
+    ): Promise<string[]> => {
       stopPlayback();
       setNarration([]);
       setReveal(next.beats[0]?.reveal ?? 1);
 
       let upcoming = firstClip;
       let missingVoice = false;
+      const spoken: string[] = [];
 
       for (let i = 0; i < next.beats.length; i += 1) {
-        if (signal.aborted) return;
+        if (signal.aborted) return spoken;
         const beat = next.beats[i];
         if (!beat) break;
 
         setReveal(beat.reveal);
+        spoken.push(beat.narration);
         setNarration((prev) => [...prev, beat.narration]);
 
         const clip = upcoming
@@ -290,13 +333,13 @@ export function useSceneSession(accessToken: string | null) {
           ? fetchSpeechClip(token, next.beats[i + 1].narration, signal)
           : null;
 
-        if (signal.aborted) return;
+        if (signal.aborted) return spoken;
 
         let heard = false;
         if (clip) {
           heard = await playClip(clip, signal, audioRef);
         }
-        if (signal.aborted) return;
+        if (signal.aborted) return spoken;
         if (!heard) {
           missingVoice = true;
           await waitMs(
@@ -307,7 +350,7 @@ export function useSceneSession(accessToken: string | null) {
         }
       }
 
-      if (signal.aborted) return;
+      if (signal.aborted) return spoken;
       if (missingVoice && !voiceWarned.current) {
         voiceWarned.current = true;
         pushLog(
@@ -316,12 +359,13 @@ export function useSceneSession(accessToken: string | null) {
         );
       }
       setStatus("idle");
+      return spoken;
     },
     [pushLog, stopPlayback],
   );
 
   const run = useCallback(
-    async (prompt: string): Promise<boolean> => {
+    async (prompt: string): Promise<false | SceneSessionSnapshot> => {
       const trimmed = prompt.trim();
       if (!trimmed) return false;
 
@@ -342,9 +386,17 @@ export function useSceneSession(accessToken: string | null) {
       setReveal(1);
       setStatus("building");
       voiceWarned.current = false;
-      pushLog("status", "Planning a 3D scene for that process…");
 
-      const failOrAbort = (message?: string) => {
+      const runLogs: SceneAgentLine[] = [];
+      const addLog = (kind: SceneAgentKind, text: string) => {
+        logId.current += 1;
+        const line = { id: `a-${logId.current}`, kind, text };
+        runLogs.push(line);
+        setLogs((prev) => [...prev, line]);
+      };
+      addLog("status", "Planning a 3D scene for that process…");
+
+      const failOrAbort = (message?: string): false => {
         if (controller.signal.aborted || abortRef.current !== controller) {
           setStatus("idle");
           return false;
@@ -352,7 +404,7 @@ export function useSceneSession(accessToken: string | null) {
         if (message) {
           setStatus("error");
           setError(message);
-          pushLog("error", message);
+          addLog("error", message);
         } else {
           setStatus("idle");
         }
@@ -376,7 +428,7 @@ export function useSceneSession(accessToken: string | null) {
         let current = generated;
         setProgram(current);
         setTitle(current.title);
-        pushLog("status", `Built a draft of “${current.title}”. Loading it…`);
+        addLog("status", `Built a draft of “${current.title}”. Loading it…`);
 
         for (let attempt = 1; attempt <= MAX_SCENE_REPAIR_ATTEMPTS + 1; attempt += 1) {
           if (controller.signal.aborted) return failOrAbort();
@@ -387,7 +439,7 @@ export function useSceneSession(accessToken: string | null) {
               throw new Error(inspected.reason);
             }
             setStatus("fixing");
-            pushLog("fix", `${inspected.reason} Asking the agent to rewrite it…`);
+            addLog("fix", `${inspected.reason} Asking the agent to rewrite it…`);
             const repaired = await postJson<RepairResponse>(
               "/api/scene-explain/repair",
               accessToken,
@@ -418,20 +470,35 @@ export function useSceneSession(accessToken: string | null) {
             setProgram(current);
             setTitle(current.title);
             setStatus("explaining");
-            pushLog(
+            addLog(
               "ready",
               "Scene is running. Walking through what you’re seeing.",
             );
-            await playBeats(current, accessToken, controller.signal, firstClip);
+            const spoken = await playBeats(
+              current,
+              accessToken,
+              controller.signal,
+              firstClip,
+            );
             if (controller.signal.aborted) return failOrAbort();
-            return true;
+            const finalReveal =
+              current.beats.at(-1)?.reveal ?? current.maxReveal ?? 1;
+            return {
+              prompt: trimmed,
+              title: current.title,
+              program: current,
+              code: current.code,
+              reveal: finalReveal,
+              logs: runLogs,
+              narration: spoken,
+            };
           }
 
           if (attempt > MAX_SCENE_REPAIR_ATTEMPTS) {
             throw new Error(loaded.message);
           }
           setStatus("fixing");
-          pushLog("fix", `Crash: ${loaded.message} Fixing and reloading…`);
+          addLog("fix", `Crash: ${loaded.message} Fixing and reloading…`);
           const repaired = await postJson<RepairResponse>(
             "/api/scene-explain/repair",
             accessToken,
@@ -456,7 +523,7 @@ export function useSceneSession(accessToken: string | null) {
         return failOrAbort(message);
       }
     },
-    [accessToken, playBeats, program, pushLog, stopPlayback, waitForFrame],
+    [accessToken, playBeats, program, stopPlayback, waitForFrame],
   );
 
   return {
@@ -472,6 +539,7 @@ export function useSceneSession(accessToken: string | null) {
     busy: status === "building" || status === "fixing",
     run,
     reset,
+    restore,
     onFrameReady,
     onFrameError,
   };

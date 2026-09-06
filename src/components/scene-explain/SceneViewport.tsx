@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { buildSceneIframeSrc } from "@/lib/scene-explain/iframeRuntime";
 import { SCENE_LOAD_TIMEOUT_MS } from "@/lib/scene-explain/types";
 
@@ -29,9 +29,28 @@ export function SceneViewport({
   const frameRef = useRef<HTMLIFrameElement>(null);
   const readyRef = useRef(onReady);
   const errorRef = useRef(onError);
+  const revealRef = useRef(reveal);
   const startedRef = useRef(false);
   readyRef.current = onReady;
   errorRef.current = onError;
+  revealRef.current = reveal;
+
+  // Bake reveal into srcDoc only when the iframe remounts (code/frameKey).
+  // During beat playback, reveal changes via postMessage — not a full reload.
+  const srcDoc = useMemo(() => {
+    if (!code) return null;
+    return buildSceneIframeSrc(code, { initialReveal: reveal });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- remount-only
+  }, [code, frameKey]);
+
+  function postReveal(n: number) {
+    const frame = frameRef.current?.contentWindow;
+    if (!frame) return;
+    frame.postMessage(
+      { source: "seethrough-host", type: "reveal", n },
+      "*",
+    );
+  }
 
   useEffect(() => {
     function onMessage(event: MessageEvent<FrameMessage>) {
@@ -42,6 +61,8 @@ export function SceneViewport({
       }
       if (data.type === "ready") {
         startedRef.current = true;
+        // Re-apply host reveal after the iframe boots (restore / remount race).
+        postReveal(revealRef.current);
         readyRef.current(Math.max(1, Number(data.maxReveal) || 1));
         return;
       }
@@ -62,18 +83,14 @@ export function SceneViewport({
       }
     }, SCENE_LOAD_TIMEOUT_MS);
     return () => window.clearTimeout(timer);
-  }, [code]);
+  }, [code, frameKey]);
 
   useEffect(() => {
-    const frame = frameRef.current?.contentWindow;
-    if (!frame || !code) return;
-    frame.postMessage(
-      { source: "seethrough-host", type: "reveal", n: reveal },
-      "*",
-    );
-  }, [code, reveal]);
+    if (!code) return;
+    postReveal(reveal);
+  }, [code, reveal, frameKey]);
 
-  if (!code) {
+  if (!srcDoc) {
     return (
       <div className="grid h-full place-items-center bg-ink font-sans text-sm text-muted">
         Ask for a process — osmosis, an orbit, a cell — and the agent will build it here.
@@ -87,7 +104,7 @@ export function SceneViewport({
       ref={frameRef}
       title="3D scene"
       sandbox="allow-scripts"
-      srcDoc={buildSceneIframeSrc(code)}
+      srcDoc={srcDoc}
       className="h-full w-full border-0 bg-ink"
     />
   );

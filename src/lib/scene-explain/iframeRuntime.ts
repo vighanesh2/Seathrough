@@ -6,8 +6,22 @@
 const THREE_MODULE =
   "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.min.js";
 
-export function buildSceneIframeSrc(code: string): string {
+function hashCodeSeed(code: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < code.length; i += 1) {
+    h ^= code.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+export function buildSceneIframeSrc(
+  code: string,
+  options?: { initialReveal?: number },
+): string {
   const payload = JSON.stringify(code);
+  const initialReveal = Math.max(1, Math.floor(options?.initialReveal ?? 1));
+  const seed = hashCodeSeed(code);
   return `<!doctype html>
 <html>
 <head>
@@ -23,6 +37,18 @@ import * as THREE from ${JSON.stringify(THREE_MODULE)};
 
 const userCode = ${payload};
 const parentOrigin = "*";
+const __initialReveal = ${initialReveal};
+
+// Same code → same layout across reloads (particles, offsets, etc.).
+(function seedRandom(seed) {
+  let t = seed >>> 0;
+  Math.random = function () {
+    t += 0x6d2b79f5;
+    let r = Math.imul(t ^ (t >>> 15), 1 | t);
+    r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+    return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+  };
+})(${seed});
 
 function report(type, extra) {
   parent.postMessage({ source: "seethrough-scene", type, ...extra }, parentOrigin);
@@ -156,7 +182,7 @@ async function start() {
     requestAnimationFrame(tick);
   }
 
-  __setReveal(1);
+  __setReveal(__initialReveal);
   report("ready", { maxReveal: __maxReveal });
   requestAnimationFrame(tick);
 }
