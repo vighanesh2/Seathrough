@@ -85,7 +85,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
       className={cn(
         "sticky top-0 z-50 border-b",
         marketing
-          ? "border-[#e6ebf0]/40 bg-[#fafbfc]/72 backdrop-blur-xl"
+          ? "border-[#b8cedd]/45 bg-[#f3f8fb]/78 backdrop-blur-xl"
           : "border-border/80 bg-glass backdrop-blur-md",
       )}
     >
@@ -93,7 +93,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
         className={cn(
           "mx-auto flex items-center",
           marketing
-            ? "h-14 max-w-5xl px-5 md:px-6"
+            ? "h-16 max-w-6xl px-5 md:px-8"
             : "min-h-16 max-w-7xl gap-6 px-5 py-2.5 lg:px-10",
         )}
       >

@@ -18,7 +18,7 @@ export function SiteFooter({ variant = "default" }: SiteFooterProps) {
           : "border-t border-board-edge bg-chalk/80",
       )}
     >
-      <div className="mx-auto flex max-w-5xl flex-col gap-6 px-5 py-8 md:flex-row md:items-end md:justify-between md:px-6">
+      <div className="mx-auto flex max-w-6xl flex-col gap-6 border-t border-[#cbdbe6] px-5 py-10 md:flex-row md:items-end md:justify-between md:px-8">
         <div>
           <BrandMark />
           <p

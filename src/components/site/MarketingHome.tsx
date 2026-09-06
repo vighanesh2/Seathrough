@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { MarketingBodySection } from "@/components/site/MarketingBodySection";
 import { MarketingHero } from "@/components/site/MarketingHero";
-import { MarketingMathSection } from "@/components/site/MarketingMathSection";
-import { MarketingTestimonialsSection } from "@/components/site/MarketingTestimonialsSection";
+import { MarketingStory } from "@/components/site/MarketingStory";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { StudioAccessProvider } from "@/components/site/StudioAccess";
@@ -23,20 +21,13 @@ export function MarketingHome() {
 
   return (
     <StudioAccessProvider>
-      <div className="marketing-shell flex min-h-dvh flex-col text-[#1a2b3c]">
-        <div className="marketing-aurora" aria-hidden>
-          <div className="marketing-aurora__wash" />
-          <div className="marketing-aurora__blob marketing-aurora__blob--a" />
-          <div className="marketing-aurora__blob marketing-aurora__blob--b" />
-          <div className="marketing-aurora__blob marketing-aurora__blob--c" />
-        </div>
+      <div className="marketing-shell relative flex min-h-dvh flex-col overflow-hidden text-[#17324a]">
+        <div className="marketing-paper" aria-hidden />
         <div className="relative z-10 flex min-h-dvh flex-col">
           <SiteHeader variant="marketing" />
           <main className="flex flex-1 flex-col">
             <MarketingHero />
-            <MarketingBodySection />
-            <MarketingMathSection />
-            <MarketingTestimonialsSection />
+            <MarketingStory />
           </main>
           <SiteFooter variant="marketing" />
         </div>

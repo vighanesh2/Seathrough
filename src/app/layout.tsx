@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Geist, IBM_Plex_Mono } from "next/font/google";
+import { Geist, IBM_Plex_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
 import { QuestionAccessProvider } from "@/components/usage/QuestionAccess";
 import { PageTransition } from "@/components/site/PageTransition";
@@ -12,12 +12,6 @@ const geist = Geist({
   variable: "--font-geist",
 });
 
-const fraunces = Fraunces({
-  variable: "--font-fraunces",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-});
-
 const ibmPlexMono = IBM_Plex_Mono({
   variable: "--font-ibm-plex-mono",
   subsets: ["latin"],
@@ -27,7 +21,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "SeeThrough",
   description:
-    "Type a question. SeeThrough draws it while it explains — on a board, as a system map, or in 3D.",
+    "Type a question. SeeThrough starts a visual lesson and draws each step while it explains.",
   icons: {
     icon: [{ url: "/SeeThrough_logo.png", type: "image/png" }],
     apple: [{ url: "/SeeThrough_logo.png", type: "image/png" }],
@@ -45,7 +39,6 @@ export default function RootLayout({
       className={cn(
         "h-full antialiased",
         geist.variable,
-        fraunces.variable,
         ibmPlexMono.variable,
       )}
     >
