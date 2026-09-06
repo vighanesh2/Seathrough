@@ -35,7 +35,7 @@ export function AccountMenu({
       <div
         className={cn(
           "size-9 animate-pulse rounded-full",
-          marketing ? "bg-white/10" : "bg-secondary",
+          marketing ? "bg-paper-deep" : "bg-secondary",
         )}
         aria-hidden
       />
@@ -49,14 +49,14 @@ export function AccountMenu({
           <Button
             variant="ghost"
             onClick={onLogin}
-            className="h-8 px-3 text-[13.5px] font-medium text-[#3d5166] hover:bg-[#f2f4f7] hover:text-[#1a2b3c]"
+            className="h-8 px-3 text-[13.5px] font-medium text-ink-soft hover:bg-paper-deep/70 hover:text-ink"
           >
             Log in
           </Button>
           {onSignup ? (
             <Button
               onClick={onSignup}
-              className="h-8 rounded-full bg-[#1b6ca8] px-3.5 text-[13.5px] font-medium text-white shadow-none hover:bg-[#0f4f7c]"
+              className="h-8 rounded-[0.95rem] bg-accent px-3.5 text-[13.5px] font-medium text-white shadow-none hover:bg-accent-deep"
             >
               Get started
             </Button>

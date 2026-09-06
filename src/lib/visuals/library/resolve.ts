@@ -49,7 +49,7 @@ export async function resolveVisualWithLibrary(
   const topicPlan = topicVisualPlanFor(
     input.prompt,
     input.beat.conceptKey,
-    [input.beat.narration, input.topicHint].filter(Boolean).join(" "),
+    input.topicHint,
   );
   if (topicPlan) {
     return keepIfSame(
@@ -57,6 +57,24 @@ export async function resolveVisualWithLibrary(
       topicPlan,
       `topic:${topicPlan.topicId}`,
     );
+  }
+
+  // A later beat's concept key / LLM visual must not replace a live
+  // interactive with the generic function icon.
+  if (input.hasVisual && input.activeVisualKey?.startsWith("jsxgraph:")) {
+    const locked = topicVisualPlanFor(input.prompt);
+    if (locked) {
+      return keepIfSame(
+        input.activeVisualKey,
+        locked,
+        `topic-lock:${locked.topicId}`,
+      );
+    }
+    return {
+      action: "keep",
+      plan: null,
+      reason: "keep-jsxgraph-board",
+    };
   }
 
   // Offline diagram pack (janosh / Commons / curated SVGs) before pen-only.

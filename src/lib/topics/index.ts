@@ -36,6 +36,7 @@ export {
   extractFunctionExpression,
   listNamedCurveExpressions,
   parseFunctionGraphFromPrompt,
+  wantsFunctionGraph,
 } from "@/lib/topics/functionParse";
 export {
   resolveTopicPresentation,

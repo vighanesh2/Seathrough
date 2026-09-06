@@ -199,7 +199,7 @@ export function routeVisual(input: RouteVisualInput): VisualPlan {
 }
 
 function wantsCoordinateGraph(prompt: string): boolean {
-  return /\b(coordinate|parabola|sine wave|cosine wave|plot graph|xy-plane|graph of|plot the|function graph|graph (it|this|the))\b/i.test(
+  return /\b(coordinate|parabola|sine wave|cosine wave|plot graph|xy-plane|graph of|plot the|function graph|graphing|graph (it|this|the))\b/i.test(
     prompt,
   );
 }

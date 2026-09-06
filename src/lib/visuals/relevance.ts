@@ -1,3 +1,4 @@
+import { wantsFunctionGraph } from "@/lib/topics/functionParse";
 import type { VisualAsset } from "@/lib/visuals/types";
 import { getVisualAsset, VISUAL_ASSETS } from "@/lib/visuals/assets/catalog";
 
@@ -66,8 +67,16 @@ export function scoreAssetForPrompt(
       return 0;
     }
   }
-  // Generic function icon is a weak stand-in for "what is a derivative"
+  // Generic function icon is a weak stand-in for a real y = f(x) graph
+  // and for "what is a derivative".
   if (asset.id === "tabler-math-function") {
+    if (wantsFunctionGraph(prompt)) return 0;
+    if (
+      /\b(graphing|graph|plot|sketch)\b/.test(t) &&
+      /\b(function|curve|y\s*=|f\s*\(\s*x\s*\))\b/.test(t)
+    ) {
+      return 0;
+    }
     if (
       /\bderivative\b/.test(t) &&
       /\b(mean|means|meaning|what is|what's|explain)\b/.test(t) &&

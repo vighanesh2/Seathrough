@@ -13,12 +13,16 @@ import {
   solveParallelPoint,
   parseOdeFromPrompt,
   topicBoardParamsSchema,
+  extractFunctionExpression,
   topicVisualPlanById,
   topicVisualPlanFor,
 } from "../src/lib/topics/index";
 import { TOPIC_BOARDS } from "../src/components/topics/boards/index";
+import { commandsForBeat } from "../src/lib/draw-engine/fromVisualPlan";
 import { classifyVisualPlan } from "../src/lib/visuals/library/classify";
 import { isWeakVisualPlan } from "../src/lib/visuals/library/boardScriptPlan";
+import { getVisualAsset } from "../src/lib/visuals/assets/catalog";
+import { scoreAssetForPrompt } from "../src/lib/visuals/relevance";
 import { visualStableKey } from "../src/lib/visuals/router";
 import { visualPlanSchema } from "../src/lib/visuals/types";
 
@@ -41,6 +45,80 @@ assert.ok(TOPIC_BOARDS.construction, "generic construction board exists");
 assert.ok(TOPIC_BOARDS["function-graph"], "generic function-graph board exists");
 assert.equal(matchTopic("graph y = x^4")?.id, "function-graph");
 assert.equal(matchTopic("plot y = x^3")?.id, "function-graph");
+assert.equal(
+  matchTopic("Graphing the Function y = x^4")?.id,
+  "function-graph",
+  "graphing the function y = … is the interactive grapher, not an icon",
+);
+assert.equal(
+  matchTopic(
+    "Graphing the Function y = x^4",
+    "even functions and their graphs",
+  )?.id,
+  "function-graph",
+  "a beat concept key must not poison a parseable y = f(x) prompt",
+);
+assert.equal(
+  matchTopic("Graphing the Function $y = x^4$")?.id,
+  "function-graph",
+  "LaTeX delimiters around the formula still match",
+);
+{
+  const titled = topicVisualPlanFor(
+    "Graphing the Function y = x^4",
+    "even functions and rapid growth",
+    "Because the exponent is even, any positive or negative x gives the same y value.",
+  );
+  assert.equal(titled?.topicId, "function-graph");
+  assert.equal(titled?.renderer, "jsxgraph");
+  assert.equal(
+    titled?.topicParams && titled.topicParams.boardKind === "function-graph"
+      ? titled.topicParams.expression
+      : null,
+    "x^4",
+  );
+  const recapBeat = topicVisualPlanFor(
+    "Graphing the Function y = x^4",
+    "Graph of y = x^4",
+    "To recap, y equals x to the fourth power produces a symmetric, steep U-shaped curve.",
+  );
+  assert.equal(recapBeat?.topicId, "function-graph");
+  assert.equal(
+    visualStableKey(titled!),
+    visualStableKey(recapBeat!),
+    "later beats keep the same curve instead of remounting an icon",
+  );
+}
+assert.equal(extractFunctionExpression("y = x^{4}"), "x^4");
+assert.equal(extractFunctionExpression("y = x⁴"), "x^4");
+assert.equal(
+  extractFunctionExpression("Graphing the Function y = x^4 even functions and rapid growth"),
+  "x^4",
+);
+{
+  const icon = getVisualAsset("tabler-math-function");
+  assert.ok(icon, "function icon exists in the catalog");
+  assert.equal(
+    scoreAssetForPrompt("Graphing the Function y = x^4", icon!),
+    0,
+    "the stylized f icon must not win a real curve request",
+  );
+  const graphPlan = topicVisualPlanFor("Graphing the Function y = x^4");
+  const dumped = commandsForBeat({
+    plan: graphPlan,
+    beatOrder: 3,
+    totalBeats: 5,
+    beatId: "recap",
+    t0Base: 0,
+    narration: "Here is the curve.",
+    prompt: "Graphing the Function y = x^4",
+  });
+  assert.equal(
+    dumped.length,
+    0,
+    "graph lessons do not copy spoken lines onto the board",
+  );
+}
 {
   const p = matchTopic("graph y = x^4")!.deriveParams("graph y = x^4");
   assert.equal(p.boardKind, "function-graph");

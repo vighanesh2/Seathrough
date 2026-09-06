@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowRight, Sparkles } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { useStudioAccess } from "@/components/site/StudioAccess";
 import { stashPendingPrompt } from "@/lib/usage/pendingPrompt";
 import { cn } from "@/lib/utils";
@@ -45,49 +45,60 @@ export function MarketingHero() {
   }
 
   return (
-    <section className="relative overflow-hidden px-5 pt-14 pb-20 md:px-8 md:pt-24 md:pb-28">
-      <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[minmax(0,0.92fr)_minmax(30rem,1.08fr)] lg:gap-20">
-        <div>
-          <ProductHuntBadge />
-          <p className="mb-5 text-[13px] font-semibold tracking-[-0.01em] text-[#496176]">
-            A visual tutor for curious minds
+    <section className="relative overflow-hidden px-5 pt-12 pb-16 md:px-8 md:pt-20 md:pb-24">
+      <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[minmax(0,0.95fr)_minmax(28rem,1.05fr)] lg:gap-16">
+        <div className="min-w-0">
+          <div className="mb-7">
+            <ProductHuntBadge />
+            <p className="mt-2.5 text-[13px] font-medium text-ink-soft">
+              Ranked #53 Product of the Day
+            </p>
+          </div>
+
+          <p className="font-display text-[1.35rem] font-semibold tracking-[-0.03em] text-ink sm:text-[1.5rem]">
+            SeeThrough
           </p>
-          <h1 className="max-w-[11ch] text-[3.45rem] leading-[0.95] font-semibold tracking-[-0.07em] text-[#17324a] sm:text-[4.7rem] lg:text-[5.2rem]">
-            Start a lesson with{" "}
-            <span className="relative whitespace-nowrap text-[#1b6ca8]">
-              one question
+
+          <h1 className="font-display mt-3 max-w-[18ch] text-[2.55rem] leading-[1.05] font-semibold tracking-[-0.035em] text-ink sm:text-[3.25rem] lg:text-[3.7rem]">
+            The AI tutor that{" "}
+            <span className="relative whitespace-nowrap text-accent">
+              draws while it teaches
               <svg
-                viewBox="0 0 310 20"
-                className="absolute -bottom-3 left-0 h-4 w-full overflow-visible"
+                viewBox="0 0 410 20"
+                className="absolute -bottom-2 left-0 h-3.5 w-full overflow-visible sm:-bottom-3 sm:h-4"
                 aria-hidden
               >
                 <path
-                  d="M4 12 C 72 3, 160 18, 306 6"
+                  d="M4 12 C 96 3, 210 18, 406 6"
                   fill="none"
-                  stroke="#c45e1a"
+                  stroke="var(--copper)"
                   strokeWidth="4"
                   strokeLinecap="round"
+                  pathLength={280}
                   className="animate-stroke-draw"
                 />
               </svg>
             </span>
+            .
           </h1>
-          <p className="mt-9 max-w-xl text-[1.05rem] leading-8 text-[#52697d] sm:text-[1.15rem]">
-            Type anything you want to understand. SeeThrough starts a visual
-            lesson and draws each step while it explains.
+
+          <p className="mt-7 max-w-md text-[1.05rem] leading-8 text-ink-soft sm:text-[1.1rem]">
+            Ask any question in math, science, or anatomy. SeeThrough opens a
+            lesson on a digital board and sketches each step as it explains —
+            graphs, diagrams, and 3D models included.
           </p>
 
           <form
             onSubmit={onSubmit}
-            className="mt-9 max-w-xl"
+            className="mt-8 max-w-xl"
             aria-label="Ask a question"
           >
             <div
               className={cn(
-                "rounded-[1.4rem] border bg-white/95 p-2 shadow-[0_18px_60px_-34px_rgba(23,50,74,0.45)] transition-[border-color,box-shadow,transform] backdrop-blur-sm",
+                "rounded-[1.4rem] border bg-chalk/95 p-2 shadow-[0_18px_60px_-34px_rgba(26,43,60,0.4)] transition-[border-color,box-shadow,transform]",
                 focused
-                  ? "-translate-y-0.5 border-[#1b6ca8]/55 shadow-[0_22px_70px_-32px_rgba(27,108,168,0.5)]"
-                  : "border-[#cddbe6]",
+                  ? "-translate-y-0.5 border-accent/50 shadow-[0_22px_70px_-32px_rgba(27,108,168,0.45)]"
+                  : "border-board-edge",
               )}
             >
               <label htmlFor="hero-ask" className="sr-only">
@@ -101,240 +112,191 @@ export function MarketingHero() {
                   onFocus={() => setFocused(true)}
                   onBlur={() => setFocused(false)}
                   placeholder="What do you want to learn?"
-                  className="min-w-0 flex-1 bg-transparent px-3 py-3 text-[15px] text-[#17324a] outline-none placeholder:text-[#8092a2]"
+                  className="min-w-0 flex-1 bg-transparent px-3 py-3 text-[15px] text-ink outline-none placeholder:text-muted"
                   autoComplete="off"
                 />
                 <button
                   type="submit"
                   className={cn(
-                    "inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-[0.95rem] px-4 text-[13px] font-semibold transition-colors outline-none focus-visible:ring-3 focus-visible:ring-[#1b6ca8]/30 sm:px-5",
+                    "inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-[0.95rem] px-4 text-[13px] font-semibold text-white transition-colors outline-none focus-visible:ring-3 focus-visible:ring-accent/30 sm:px-5",
                     query.trim()
-                      ? "bg-[#1b6ca8] text-white hover:bg-[#0f4f7c]"
-                      : "bg-[#17324a] text-white hover:bg-[#244760]",
+                      ? "bg-accent hover:bg-accent-deep"
+                      : "bg-ink hover:bg-marker",
                   )}
                 >
-                  <Sparkles className="size-3.5" />
                   Start lesson
                 </button>
               </div>
             </div>
           </form>
 
-          <div className="mt-5 max-w-xl rounded-[1.25rem] border border-[#cbdbe6] bg-white/55 p-3.5 backdrop-blur-sm">
-            <div className="flex items-center gap-2 px-1">
-              <Sparkles className="size-3.5 text-[#1b6ca8]" />
-              <p className="text-[12px] font-semibold text-[#496176]">
-                Not sure what to ask? Start with a lesson
-              </p>
-            </div>
-            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+          <ul className="mt-5 flex max-w-xl flex-col gap-1.5 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-4 sm:gap-y-1">
+            <li className="text-[12px] font-medium text-muted">Try asking</li>
             {SUGGESTIONS.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                onClick={() => {
-                  setQuery(item.label);
-                  go(item.href, item.label);
-                }}
-                className="group flex min-h-16 items-center justify-between gap-2 rounded-xl border border-[#d7e3eb] bg-white px-3 py-2.5 text-left text-[12.5px] leading-5 font-medium text-[#29465e] shadow-[0_5px_14px_-12px_rgba(23,50,74,0.5)] transition hover:-translate-y-0.5 hover:border-[#1b6ca8]/50 hover:text-[#1b6ca8]"
-              >
-                <span>{item.label}</span>
-                <ArrowRight className="size-3.5 shrink-0 text-[#1b6ca8] transition group-hover:translate-x-0.5" />
-              </button>
+              <li key={item.label}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQuery(item.label);
+                    go(item.href, item.label);
+                  }}
+                  className="group inline-flex items-center gap-1 text-left text-[12.5px] font-medium text-ink-soft transition hover:text-accent"
+                >
+                  <span className="border-b border-board-edge group-hover:border-accent/50">
+                    {item.label}
+                  </span>
+                  <ArrowRight className="size-3 opacity-0 transition group-hover:translate-x-0.5 group-hover:opacity-100" />
+                </button>
+              </li>
             ))}
-            </div>
-          </div>
+          </ul>
         </div>
 
-        <LessonPreview
-          onOpen={() =>
-            go("/lessons", query.trim() || "Show me what a derivative means")
-          }
-        />
+        <LessonPreview />
       </div>
     </section>
   );
 }
 
-const PREVIEW_QUESTION = "Show me what a derivative means";
-
-const PREVIEW_NARRATION = [
-  "Here is a curve. Pick one point on it.",
-  "Draw the line that just touches the curve there. That is the tangent.",
-  "The derivative is how steep that line is at this exact point.",
-];
-
-/**
- * Miniature of the real lesson screen: header, prompt bar, ruled board on
- * the left, "Teacher explains" rail on the right. Mirrors LessonShell.
- */
-function LessonPreview({ onOpen }: { onOpen: () => void }) {
+/** Board-only preview — decorative, not a link. */
+function LessonPreview() {
   return (
     <div className="relative mx-auto w-full max-w-152">
       <div
-        className="absolute -inset-10 rounded-full bg-[#9cc7e5]/30 blur-3xl"
+        className="absolute -inset-8 rounded-full bg-accent/10 blur-3xl"
         aria-hidden
       />
-      <button
-        type="button"
-        onClick={onOpen}
-        className="group relative w-full overflow-hidden rounded-[1.4rem] border border-[#c8d6e4] bg-white text-left shadow-[0_28px_80px_-38px_rgba(23,50,74,0.45)] outline-none transition duration-500 hover:-translate-y-1 focus-visible:ring-3 focus-visible:ring-[#1b6ca8]/30"
-        aria-label={`Open this lesson: ${PREVIEW_QUESTION}`}
-      >
-        {/* App header */}
-        <div className="flex items-center gap-2.5 border-b border-[#e6ebf0] px-3.5 py-2.5">
-          {/* eslint-disable-next-line @next/next/no-img-element -- brand asset */}
-          <img
-            src="/SeeThrough_logo.png"
-            alt=""
-            className="size-6 shrink-0 object-contain"
-          />
-          <span className="h-4 w-px bg-[#e6ebf0]" aria-hidden />
-          <div className="min-w-0">
-            <p className="text-[9px] font-semibold tracking-[0.16em] text-[#1b6ca8] uppercase">
-              Topic explanation
-            </p>
-            <p className="truncate text-[12px] font-medium text-[#1a2b3c]">
-              The derivative as a slope
-            </p>
-          </div>
-          <span className="ml-auto inline-flex items-center gap-1 rounded-md border border-[#e6ebf0] px-2 py-1 text-[10px] font-medium text-[#3d5166]">
-            <span className="size-1.5 rounded-full bg-[#2a7a5c]" />
-            Playing
-          </span>
+      <div className="relative overflow-hidden rounded-[1.4rem] border border-board-edge bg-board shadow-[0_28px_80px_-38px_rgba(26,43,60,0.4)]">
+        <p className="px-5 pt-5 text-[13px] font-semibold tracking-tight text-ink sm:px-6 sm:pt-6 sm:text-[14px]">
+          Gravity keeps the moon falling around Earth
+        </p>
+        <div className="aspect-[3/2] w-full" aria-hidden>
+          <OrbitSketch />
         </div>
-
-        {/* Prompt bar */}
-        <div className="border-b border-[#e6ebf0] px-3.5 py-2.5">
-          <div className="flex items-center gap-2 rounded-xl border border-[#d7e3eb] bg-[#f7fafc] px-3 py-2">
-            <span className="min-w-0 flex-1 truncate text-[12px] text-[#1a2b3c]">
-              {PREVIEW_QUESTION}
-            </span>
-            <span className="shrink-0 rounded-lg bg-[#1b6ca8] px-2.5 py-1 text-[10px] font-semibold text-white">
-              Start
-            </span>
-          </div>
-        </div>
-
-        {/* Board + narration rail */}
-        <div className="grid grid-cols-[1.35fr_1fr]">
-          <div className="relative min-h-62 border-r border-[#e6ebf0] bg-[#fbfcfe]">
-            <p className="border-b border-[#e6ebf0]/70 bg-[#d4e8f6]/40 px-3 py-1.5 text-[10.5px] text-[#1a2b3c]">
-              <span className="font-semibold text-[#0f4f7c]">Tutor: </span>
-              Watch the tangent line turn as the point moves.
-            </p>
-            <BoardSketch />
-          </div>
-
-          <aside className="flex min-h-0 flex-col bg-white">
-            <div className="border-b border-[#e6ebf0] px-3 py-2.5">
-              <p className="flex items-center gap-1.5 text-[9px] font-semibold tracking-[0.16em] text-[#0f4f7c] uppercase">
-                Teacher explains
-                <span className="size-1.5 animate-soft-pulse rounded-full bg-[#2a7a5c]" />
-              </p>
-            </div>
-            <div className="space-y-2.5 px-3 py-3">
-              {PREVIEW_NARRATION.map((line, i) => (
-                <p
-                  key={line}
-                  className={cn(
-                    "text-[11.5px] leading-normal text-[#1e3a5f]",
-                    i === PREVIEW_NARRATION.length - 1 &&
-                      "border-l-[3px] border-[#2a7a5c] bg-[#d5efe4]/60 py-1 pl-2 text-[#1a2b3c]",
-                  )}
-                >
-                  {line}
-                </p>
-              ))}
-            </div>
-          </aside>
-        </div>
-
-        <div className="flex items-center justify-between border-t border-[#e6ebf0] bg-[#f7fafc] px-3.5 py-2">
-          <span className="text-[11px] text-[#6a7d90]">
-            This is what a lesson looks like
-          </span>
-          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#1b6ca8]">
-            Open this lesson
-            <ArrowRight className="size-3 transition group-hover:translate-x-0.5" />
-          </span>
-        </div>
-      </button>
+      </div>
     </div>
   );
 }
 
-/** Ruled board with a curve, a moving point and its tangent line. */
-function BoardSketch() {
+/** Lesson board: Earth, a moving moon, and the path it would take alone. */
+function OrbitSketch() {
+  const cx = 168;
+  const cy = 118;
+  const orbitR = 78;
+
   return (
     <svg
-      viewBox="0 0 360 210"
-      className="h-[calc(100%-1.9rem)] w-full"
+      viewBox="0 0 360 236"
+      className="h-full w-full"
       preserveAspectRatio="xMidYMid meet"
       aria-hidden
     >
-      {Array.from({ length: 9 }, (_, i) => (
-        <line
-          key={`h-${i}`}
-          x1="0"
-          x2="360"
-          y1={i * 28 - 1}
-          y2={i * 28 - 1}
-          stroke="rgba(27,108,168,0.08)"
-        />
-      ))}
-      {Array.from({ length: 14 }, (_, i) => (
-        <line
-          key={`v-${i}`}
-          y1="0"
-          y2="210"
-          x1={i * 28 - 1}
-          x2={i * 28 - 1}
-          stroke="rgba(27,108,168,0.08)"
-        />
-      ))}
-      {/* axes */}
-      <line x1="28" y1="182" x2="340" y2="182" stroke="#8a9aab" strokeWidth="1" />
-      <line x1="40" y1="20" x2="40" y2="196" stroke="#8a9aab" strokeWidth="1" />
-      {/* curve */}
-      <path
-        d="M44 166 C 92 166 112 150 138 118 C 168 80 190 42 236 40 C 282 39 300 120 336 132"
+      <defs>
+        <radialGradient id="preview-earth" cx="38%" cy="34%" r="68%">
+          <stop offset="0%" stopColor="#6eb4e0" />
+          <stop offset="42%" stopColor="var(--accent)" />
+          <stop offset="100%" stopColor="var(--accent-deep)" />
+        </radialGradient>
+        <radialGradient id="preview-land" cx="40%" cy="40%" r="70%">
+          <stop offset="0%" stopColor="#5aa87a" />
+          <stop offset="100%" stopColor="var(--success)" />
+        </radialGradient>
+        <radialGradient id="preview-moon" cx="32%" cy="30%" r="70%">
+          <stop offset="0%" stopColor="#f4f1ea" />
+          <stop offset="100%" stopColor="#9aa6b4" />
+        </radialGradient>
+        <radialGradient id="preview-glow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="color-mix(in srgb, var(--accent) 22%, transparent)" />
+          <stop offset="100%" stopColor="transparent" />
+        </radialGradient>
+      </defs>
+
+      <circle cx={cx} cy={cy} r="118" fill="url(#preview-glow)" />
+
+      <circle
+        cx={cx}
+        cy={cy}
+        r={orbitR}
         fill="none"
-        stroke="#1b6ca8"
-        strokeWidth="2.6"
-        strokeLinecap="round"
-        className="animate-stroke-draw"
+        stroke="var(--accent)"
+        strokeWidth="1.4"
+        strokeDasharray="5 6"
+        opacity="0.55"
+        className="animate-orbit-dash"
       />
-      {/* tangent */}
-      <line
-        x1="118"
-        y1="168"
-        x2="222"
-        y2="66"
-        stroke="#c45e1a"
-        strokeWidth="2"
-        strokeLinecap="round"
+
+      <circle
+        cx={cx}
+        cy={cy}
+        r="36"
+        fill="url(#preview-earth)"
+        stroke="var(--accent-deep)"
+        strokeWidth="1"
       />
-      <circle cx="170" cy="117" r="4.5" fill="#c45e1a" />
+      <path
+        d={`M${cx - 18} ${cy - 8} C ${cx - 8} ${cy - 22}, ${cx + 6} ${cy - 18}, ${cx + 4} ${cy - 4} C ${cx + 14} ${cy + 2}, ${cx + 2} ${cy + 16}, ${cx - 10} ${cy + 10} C ${cx - 22} ${cy + 4}, ${cx - 24} ${cy + 2}, ${cx - 18} ${cy - 8}Z`}
+        fill="url(#preview-land)"
+        opacity="0.92"
+      />
+      <path
+        d={`M${cx + 10} ${cy + 8} C ${cx + 20} ${cy + 4}, ${cx + 26} ${cy + 14}, ${cx + 16} ${cy + 20} C ${cx + 8} ${cy + 22}, ${cx + 4} ${cy + 14}, ${cx + 10} ${cy + 8}Z`}
+        fill="url(#preview-land)"
+        opacity="0.8"
+      />
+      <circle
+        cx={cx}
+        cy={cy}
+        r="40"
+        fill="none"
+        stroke="rgba(180,220,245,0.45)"
+        strokeWidth="3"
+      />
       <text
-        x="232"
-        y="104"
-        fontFamily="ui-sans-serif, system-ui, sans-serif"
+        x={cx}
+        y={cy + 52}
+        textAnchor="middle"
+        fontFamily="var(--font-geist), ui-sans-serif, system-ui, sans-serif"
         fontSize="10"
         fontWeight="600"
-        fill="#8d3f0f"
+        fill="var(--accent-deep)"
       >
-        slope = f&apos;(x)
+        Earth
       </text>
-      <text
-        x="52"
-        y="34"
-        fontFamily="ui-sans-serif, system-ui, sans-serif"
-        fontSize="10"
-        fill="#3d5166"
+
+      <g
+        className="animate-orbit"
+        style={{ transformOrigin: `${cx}px ${cy}px` }}
       >
-        f(x)
-      </text>
+        <circle
+          cx={cx + orbitR}
+          cy={cy}
+          r="8"
+          fill="url(#preview-moon)"
+          stroke="#8a9aab"
+          strokeWidth="0.8"
+        />
+        <circle cx={cx + orbitR - 2} cy={cy - 2} r="1.4" fill="#c5ccd4" />
+        <text
+          x={cx + orbitR}
+          y={cy + 20}
+          textAnchor="middle"
+          fontFamily="var(--font-geist), ui-sans-serif, system-ui, sans-serif"
+          fontSize="9"
+          fontWeight="600"
+          fill="var(--ink-soft)"
+        >
+          Moon
+        </text>
+        <line
+          x1={cx + orbitR - 12}
+          y1={cy}
+          x2={cx + 42}
+          y2={cy}
+          stroke="var(--copper)"
+          strokeWidth="1.6"
+          className="animate-gravity-fade"
+        />
+      </g>
     </svg>
   );
 }
@@ -345,7 +307,7 @@ function ProductHuntBadge() {
       href="https://www.producthunt.com/products/seethrough-2/launches/seethrough-2?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-seethrough-2"
       target="_blank"
       rel="noopener noreferrer"
-      className="mb-7 inline-block transition hover:-translate-y-0.5"
+      className="inline-block transition hover:-translate-y-0.5"
     >
       {/* eslint-disable-next-line @next/next/no-img-element -- Product Hunt badge */}
       <img

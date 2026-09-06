@@ -127,35 +127,93 @@ function extractNamedCurve(blob: string): string | null {
   return null;
 }
 
+const SUPER_DIGITS: Record<string, string> = {
+  "⁰": "0",
+  "¹": "1",
+  "²": "2",
+  "³": "3",
+  "⁴": "4",
+  "⁵": "5",
+  "⁶": "6",
+  "⁷": "7",
+  "⁸": "8",
+  "⁹": "9",
+};
+
+/** Drop $…$, \(…\), and unicode powers so typed / titled formulas still parse. */
+function stripMathWrappers(raw: string): string {
+  return raw
+    .replace(/\$\$([\s\S]+?)\$\$/g, " $1 ")
+    .replace(/\$([^$]+)\$/g, " $1 ")
+    .replace(/\\\((.+?)\\\)/g, " $1 ")
+    .replace(/\\\[(.+?)\\\]/g, " $1 ")
+    .replace(/\\mathrm\{([^{}]+)\}/g, "$1")
+    .replace(/\^\{([^{}]+)\}/g, "^$1")
+    .replace(/_\{([^{}]+)\}/g, "_$1")
+    .replace(/[{}]/g, "")
+    .replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, (ch) => `^${SUPER_DIGITS[ch] ?? ch}`);
+}
+
+const TRAILING_ENGLISH =
+  /\b(with|and|where|for|when|on|from|show|because|which|that|gives|producing|produces|touches|giving|here|at|the|this|a|an|is|as|to|of|in)\b/i;
+
+function takeMathSlice(captured: string): string {
+  return (captured.split(TRAILING_ENGLISH)[0] ?? captured).trim();
+}
+
+/**
+ * Keep the longest prefix that is a safe y = f(x) snippet. Stops when lesson
+ * concept keys / recap sentences are appended after the formula.
+ */
+function longestSafeExpression(raw: string): string | null {
+  const slice = takeMathSlice(raw);
+  const direct = cleanFunctionExpression(slice);
+  if (direct) return direct;
+
+  const tokens = raw.trim().split(/\s+/);
+  let best: string | null = null;
+  let acc = "";
+  for (const token of tokens) {
+    const next = acc ? `${acc} ${token}` : token;
+    const cleaned = cleanFunctionExpression(takeMathSlice(next));
+    if (cleaned) {
+      best = cleaned;
+      acc = next;
+      continue;
+    }
+    if (best) break;
+    acc = next;
+  }
+  return best;
+}
+
 /**
  * Pull y = f(x) (or a named curve like "graph sine") out of a question.
  */
 export function extractFunctionExpression(prompt: string): string | null {
-  const blob = prompt.trim();
+  const blob = stripMathWrappers(prompt).trim();
   if (!blob) return null;
 
   const patterns = [
-    /\b(?:graph|plot|draw|sketch)\s+(?:the\s+)?(?:curve\s+)?(?:of\s+)?y\s*=\s*([^.;?\n]+)/i,
-    /\b(?:graph|plot|draw|sketch)\s+(?:the\s+)?(?:function\s+)?f\s*\(\s*x\s*\)\s*=\s*([^.;?\n]+)/i,
+    /\b(?:graphing|graph|plot|draw|sketch)\s+(?:the\s+)?(?:curve\s+)?(?:of\s+)?(?:the\s+)?(?:function\s+)?y\s*=\s*([^.;?\n]+)/i,
+    /\b(?:graphing|graph|plot|draw|sketch)\s+(?:the\s+)?(?:function\s+)?f\s*\(\s*x\s*\)\s*=\s*([^.;?\n]+)/i,
     /\by\s*=\s*([^.;?\n]+)/i,
     /\bf\s*\(\s*x\s*\)\s*=\s*([^.;?\n]+)/i,
-    /\b(?:graph|plot|draw|sketch)\s+((?:[-\d.]+)?\s*x(?:\s*\^\s*[-\d.]+)?(?:\s*[+\-*/^()\dx\s]+)*)/i,
+    /\b(?:graphing|graph|plot|draw|sketch)\s+((?:[-\d.]+)?\s*x(?:\s*\^\s*[-\d.]+)?(?:\s*[+\-*/^()\dx\s]+)*)/i,
   ];
 
   for (const pattern of patterns) {
     const match = pattern.exec(blob);
     if (!match?.[1]) continue;
-    const trimmed =
-      match[1].split(/\b(with|and|where|for|when|on|from|show)\b/i)[0] ??
-      match[1];
+    const trimmed = takeMathSlice(match[1]);
     if (
       /^(sine|cosine|parabola|cubic|quartic|exponential|sinusoid)$/i.test(
-        trimmed.trim(),
+        trimmed,
       )
     ) {
       continue;
     }
-    const cleaned = cleanFunctionExpression(trimmed);
+    const cleaned = longestSafeExpression(trimmed);
     if (cleaned) return cleaned;
   }
 
@@ -281,9 +339,11 @@ export function parseFunctionGraphFromPrompt(
 }
 
 export function wantsFunctionGraph(prompt: string, conceptKey?: string): boolean {
-  const blob = `${prompt} ${conceptKey ?? ""}`.trim();
-  if (!blob) return false;
-  return extractFunctionExpression(blob) !== null;
+  // Parse each field on its own. Concatenating a beat concept key or recap
+  // onto "y = x^4" used to swallow the formula ("x^4 even functions and…").
+  if (extractFunctionExpression(prompt)) return true;
+  if (conceptKey && extractFunctionExpression(conceptKey)) return true;
+  return false;
 }
 
 export function listNamedCurveExpressions(): string[] {

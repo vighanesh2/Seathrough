@@ -36,8 +36,18 @@ export function matchTopic(
 ): TopicModule | null {
   if (!prompt.trim() && !conceptKey?.trim()) return null;
 
-  for (const topic of TOPIC_MODULES) {
-    if (topic.matches(prompt, conceptKey)) return topic;
+  // The live question wins. Mixing in a beat concept key / recap used to
+  // poison formula parsers (y = x^4 + "even functions and…").
+  if (prompt.trim()) {
+    for (const topic of TOPIC_MODULES) {
+      if (topic.matches(prompt)) return topic;
+    }
+  }
+
+  if (conceptKey?.trim()) {
+    for (const topic of TOPIC_MODULES) {
+      if (topic.matches(prompt, conceptKey)) return topic;
+    }
   }
   return null;
 }

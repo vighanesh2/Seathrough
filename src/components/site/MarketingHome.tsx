@@ -7,10 +7,7 @@ import { SiteFooter } from "@/components/site/SiteFooter";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { StudioAccessProvider } from "@/components/site/StudioAccess";
 
-/**
- * Marketing shell — redesigning part by part.
- * Done: navbar, hero, body, math, testimonials, aurora.
- */
+/** Marketing shell — classroom-board landing. Product chrome is separate. */
 export function MarketingHome() {
   useEffect(() => {
     document.documentElement.classList.add("marketing-page");
@@ -21,7 +18,7 @@ export function MarketingHome() {
 
   return (
     <StudioAccessProvider>
-      <div className="marketing-shell relative flex min-h-dvh flex-col overflow-hidden text-[#17324a]">
+      <div className="marketing-shell relative flex min-h-dvh flex-col overflow-x-hidden text-ink">
         <div className="marketing-paper" aria-hidden />
         <div className="relative z-10 flex min-h-dvh flex-col">
           <SiteHeader variant="marketing" />

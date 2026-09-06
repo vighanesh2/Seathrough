@@ -99,9 +99,11 @@
   --color-error: var(--error);
   --color-muted: var(--muted);
   --font-sans: var(--font-geist);
-  --font-display: var(--font-fraunces);
+  --font-display: var(--font-newsreader), "Newsreader", Georgia, "Times New Roman",
+    serif;
   --font-mono: var(--font-ibm-plex-mono);
-  --font-heading: var(--font-geist);
+  --font-heading: var(--font-newsreader), "Newsreader", Georgia, "Times New Roman",
+    serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -477,14 +479,16 @@ body {
 }
 
 .font-display {
-  font-family: var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-newsreader), "Newsreader", Georgia, "Times New Roman",
+    serif;
+  font-optical-sizing: auto;
 }
 
-/* Marketing page — quiet paper, sky light, hand-drawn marks */
+/* Marketing page — classroom paper, ruled board light, copper pen marks */
 .marketing-shell {
   position: relative;
   isolation: isolate;
-  background: #f3f8fb;
+  background: var(--paper);
 }
 
 .marketing-paper {
@@ -494,29 +498,164 @@ body {
   z-index: 0;
   background:
     radial-gradient(
-      ellipse 58% 34% at 84% 6%,
-      rgba(130, 190, 226, 0.35),
-      transparent 68%
+      ellipse 52% 30% at 88% 4%,
+      color-mix(in srgb, var(--accent) 18%, transparent),
+      transparent 70%
     ),
     radial-gradient(
-      ellipse 44% 28% at 8% 20%,
-      rgba(255, 255, 255, 0.85),
+      ellipse 40% 26% at 6% 18%,
+      color-mix(in srgb, var(--chalk) 90%, transparent),
       transparent 72%
     ),
-    linear-gradient(rgba(27, 108, 168, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(27, 108, 168, 0.025) 1px, transparent 1px);
+    linear-gradient(var(--ruled) 1px, transparent 1px),
+    linear-gradient(90deg, var(--ruled) 1px, transparent 1px);
   background-size:
     auto,
     auto,
     32px 32px,
     32px 32px;
-  mask-image: linear-gradient(to bottom, black 0%, black 32%, transparent 76%);
+  mask-image: linear-gradient(to bottom, black 0%, black 36%, transparent 78%);
+}
+
+/* Marketing scroll reveals — classroom quiet, not flashy */
+@keyframes marketing-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes marketing-cta-rise {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.marketing-reveal {
+  opacity: 0;
+}
+
+.marketing-reveal.is-in {
+  animation: marketing-fade-up 720ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.marketing-reveal-delay-1.is-in {
+  animation-delay: 110ms;
+}
+
+.marketing-reveal-delay-2.is-in {
+  animation-delay: 220ms;
+}
+
+.marketing-reveal-delay-3.is-in {
+  animation-delay: 320ms;
+}
+
+.marketing-figure-card {
+  transition:
+    transform 320ms ease,
+    box-shadow 320ms ease,
+    border-color 320ms ease;
+}
+
+.marketing-figure-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--board-edge));
+  box-shadow: 0 28px 70px -34px rgba(26, 43, 60, 0.42);
+}
+
+.marketing-cta-panel {
+  opacity: 0;
+}
+
+.marketing-cta-panel.is-in {
+  animation: marketing-cta-rise 800ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.marketing-cta-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: -20% -10% auto;
+  height: 70%;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    color-mix(in srgb, var(--accent) 34%, transparent),
+    transparent 68%
+  );
+  opacity: 0.35;
+}
+
+.marketing-cta-panel.is-in .marketing-cta-glow {
+  animation: marketing-cta-breathe 5.5s ease-in-out 800ms infinite;
+}
+
+.marketing-cta-button {
+  box-shadow: 0 0 0 0 transparent;
+}
+
+.marketing-cta-panel.is-in .marketing-cta-button {
+  animation: marketing-cta-nudge 2.8s ease-in-out 1s 2;
+}
+
+@keyframes marketing-cta-breathe {
+  0%,
+  100% {
+    opacity: 0.28;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 0.55;
+    transform: translateY(6px);
+  }
+}
+
+@keyframes marketing-cta-nudge {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+    transform: translateY(0);
+  }
+  40% {
+    box-shadow: 0 10px 28px -16px rgba(212, 232, 246, 0.55);
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-reveal,
+  .marketing-cta-panel {
+    opacity: 1 !important;
+    transform: none !important;
+    animation: none !important;
+  }
+
+  .marketing-figure-card:hover {
+    transform: none;
+  }
+
+  .marketing-cta-panel.is-in .marketing-cta-glow,
+  .marketing-cta-panel.is-in .marketing-cta-button {
+    animation: none !important;
+  }
 }
 
 html.marketing-page,
 html.marketing-page body {
-  background: #f3f8fb !important;
+  background: var(--paper) !important;
   background-image: none !important;
+}
+
+.lesson-topbar {
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .board-surface {

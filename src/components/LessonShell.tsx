@@ -924,6 +924,9 @@ export function LessonShell() {
         conversations={conversations}
         activeId={conversationId}
         loading={chatsLoading}
+        historyEyebrow=""
+        emptyHint="Lessons you start will show up here."
+        showAuth={false}
         onSelect={(id) => {
           void openConversation(id);
         }}
@@ -945,21 +948,38 @@ export function LessonShell() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <AppHeader
           current="lessons"
-          eyebrow="Topic explanation"
-          title={title ?? "Ask what you’re stuck on"}
+          title={title ?? undefined}
+          brandCompact
+          className="lesson-topbar"
           leading={
             sidebarCollapsed ? (
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 onClick={toggleSidebar}
-                aria-label="Show chats"
+                aria-label="Show lessons"
                 aria-expanded={false}
               >
                 <PanelLeft className="size-4" />
               </Button>
             ) : null
+          }
+          center={
+            <PromptBar
+              value={prompt}
+              onChange={setPrompt}
+              onSubmit={onPromptSubmit}
+              disabled={busy}
+              inputId="topic-prompt"
+              inputLabel="Lesson question"
+              placeholder={
+                canFollowUp
+                  ? "Ask a follow-up"
+                  : "What do you want to learn?"
+              }
+              submitLabel={canFollowUp ? "Ask" : "Start lesson"}
+            />
           }
           actions={
             <PaceControls
@@ -982,22 +1002,7 @@ export function LessonShell() {
               }}
             />
           }
-        >
-          <PromptBar
-            value={prompt}
-            onChange={setPrompt}
-            onSubmit={onPromptSubmit}
-            disabled={busy}
-            inputId="topic-prompt"
-            inputLabel="Topic prompt"
-            placeholder={
-              canFollowUp
-                ? "Ask a follow-up about this topic…"
-                : "What should we learn today?"
-            }
-            submitLabel={canFollowUp ? "Ask" : "Start"}
-          />
-        </AppHeader>
+        />
 
         <div className="relative min-h-0 flex-1">
           <VisualStage

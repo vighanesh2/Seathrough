@@ -59,11 +59,10 @@ export function StudyMenu({ current, className = "" }: StudyMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
-          className={cn("gap-1.5 font-medium", className)}
+          variant="ghost"
+          className={cn("h-8 gap-1 px-2 text-[13px] font-medium", className)}
           aria-label="Switch tool"
         >
-          <span className="text-muted">Tools</span>
           <span className="text-ink">{active?.navLabel ?? "Home"}</span>
           <ChevronDown className="size-3.5 text-muted" />
         </Button>

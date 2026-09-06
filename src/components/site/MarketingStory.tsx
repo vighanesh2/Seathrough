@@ -1,42 +1,75 @@
 "use client";
 
-import { ArrowRight, Box, HeartPulse, Image, PencilLine } from "lucide-react";
+import dynamic from "next/dynamic";
+import { ArrowRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useStudioAccess } from "@/components/site/StudioAccess";
 import { stashPendingPrompt } from "@/lib/usage/pendingPrompt";
+import type { ThreeScenePlan } from "@/lib/three-scenes/decide";
+import { cn } from "@/lib/utils";
 
-const QUESTIONS = [
+const ThreeBoard = dynamic(
+  () =>
+    import("@/components/board/ThreeBoard").then((m) => m.ThreeBoard),
   {
-    question: "What does a derivative actually mean?",
-    answer: "Watch the slope change as the point moves.",
-    href: "/lessons",
-    icon: PencilLine,
-    number: "01",
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full min-h-60 items-center justify-center bg-board font-sans text-sm text-muted">
+        Loading model…
+      </div>
+    ),
   },
-  {
-    question: "How does blood move through the heart?",
-    answer: "Turn the model and follow one complete trip.",
-    href: "/3d-figures",
-    icon: HeartPulse,
-    number: "02",
-  },
-  {
-    question: "Why doesn’t the moon fly away?",
-    answer: "Build the orbit, then watch gravity bend it.",
-    href: "/scene-explain",
-    icon: Box,
-    number: "03",
-  },
-  {
-    question: "What is this diagram trying to say?",
-    answer: "Upload it and unpack every part together.",
-    href: "/image-explain",
-    icon: Image,
-    number: "04",
-  },
-] as const;
+);
+
+const HEART_PLAN: ThreeScenePlan = {
+  id: "cardiopulmonary",
+  title: "Heart and lungs",
+  maxReveal: 6,
+  reveal: 6,
+  params: { animationMode: "overview" },
+};
+
+const EYE_PLAN: ThreeScenePlan = {
+  id: "eye",
+  title: "Eye and vision",
+  maxReveal: 6,
+  reveal: 6,
+  params: { animationMode: "overview" },
+};
+
+function useRevealOnScroll() {
+  const ref = useRef<HTMLElement | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        setVisible(true);
+        observer.disconnect();
+      },
+      { threshold: 0.16, rootMargin: "0px 0px -6% 0px" },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return { ref, visible };
+}
 
 export function MarketingStory() {
   const { openStudio } = useStudioAccess();
+  const anatomy = useRevealOnScroll();
+  const cta = useRevealOnScroll();
 
   function open(question: string, href: string) {
     stashPendingPrompt(question, true);
@@ -45,94 +78,93 @@ export function MarketingStory() {
 
   return (
     <>
-      <section className="border-y border-[#cbdbe6]/75 bg-white/38 px-5 py-20 md:px-8 md:py-28">
+      <section
+        ref={anatomy.ref}
+        className="border-t border-board-edge/80 bg-chalk/40 px-5 py-20 md:px-8 md:py-28"
+      >
         <div className="mx-auto max-w-6xl">
-          <div className="grid gap-12 lg:grid-cols-[0.72fr_1.28fr] lg:gap-24">
-            <div>
-              <p className="text-[2rem] leading-[1.08] font-semibold tracking-[-0.045em] text-[#17324a] md:text-[2.6rem]">
-                Learning should feel like someone pulled up a chair.
-              </p>
-              <p className="mt-5 max-w-md text-[15px] leading-7 text-[#5c7386]">
-                No menus to study. No special prompts to learn. Begin with the
-                question already in your head.
-              </p>
-            </div>
+          <div
+            className={cn(
+              "marketing-reveal max-w-2xl",
+              anatomy.visible && "is-in",
+            )}
+          >
+            <p className="mb-4 text-[13px] font-medium text-accent">
+              Turn the model
+            </p>
+            <h2 className="font-display text-[2rem] leading-[1.1] font-semibold tracking-[-0.03em] text-ink md:text-[2.55rem]">
+              Anatomy you can hold with your cursor.
+            </h2>
+            <p className="mt-5 max-w-xl text-[15px] leading-7 text-ink-soft">
+              Drag a heart or an eye in three dimensions. Follow one complete
+              path — blood through the chambers, light through the lens — while
+              the tutor names each part.
+            </p>
+          </div>
 
-            <div className="divide-y divide-[#ccdae5] border-y border-[#ccdae5]">
-              {QUESTIONS.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.number}
-                    type="button"
-                    onClick={() => open(item.question, item.href)}
-                    className="group grid w-full grid-cols-[2.5rem_1fr_auto] items-start gap-4 py-6 text-left outline-none transition hover:pl-2 focus-visible:bg-white/65 md:grid-cols-[3rem_1fr_auto] md:py-8"
-                  >
-                    <span className="pt-1 font-mono text-[11px] text-[#8a9dac]">
-                      {item.number}
-                    </span>
-                    <span>
-                      <span className="block text-[1rem] font-medium tracking-[-0.015em] text-[#17324a] md:text-[1.12rem]">
-                        {item.question}
-                      </span>
-                      <span className="mt-1.5 block text-[13.5px] leading-6 text-[#61788b]">
-                        {item.answer}
-                      </span>
-                    </span>
-                    <span className="mt-0.5 grid size-10 place-items-center rounded-full border border-[#cbdbe6] text-[#1b6ca8] transition group-hover:border-[#1b6ca8] group-hover:bg-[#1b6ca8] group-hover:text-white">
-                      <Icon className="size-4" />
-                    </span>
-                  </button>
-                );
-              })}
+          <div className="mt-12 grid gap-6 md:grid-cols-2 md:gap-8">
+            <div
+              className={cn(
+                "marketing-reveal marketing-reveal-delay-1",
+                anatomy.visible && "is-in",
+              )}
+            >
+              <FigureCard
+                eyebrow="Heart & lungs"
+                title="How blood moves through a beat"
+                body="Watch the heart contract and the lungs fill. Point at a chamber or vessel, then ask what that part is doing."
+                plan={HEART_PLAN}
+              />
+            </div>
+            <div
+              className={cn(
+                "marketing-reveal marketing-reveal-delay-2",
+                anatomy.visible && "is-in",
+              )}
+            >
+              <FigureCard
+                eyebrow="Eye & vision"
+                title="How light becomes an image"
+                body="Light enters from the left, bends through the cornea and lens, and lands on the retina. Turn the model to see the path."
+                plan={EYE_PLAN}
+              />
             </div>
           </div>
+
+          <button
+            type="button"
+            onClick={() =>
+              open("How does blood move through the heart?", "/3d-figures")
+            }
+            className={cn(
+              "marketing-reveal mt-10 inline-flex items-center gap-2 border-b border-accent/35 pb-1 text-[14px] font-semibold text-accent transition hover:border-accent marketing-reveal-delay-3",
+              anatomy.visible && "is-in",
+            )}
+          >
+            Open 3D figures
+            <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+          </button>
         </div>
       </section>
 
-      <section className="px-5 py-24 md:px-8 md:py-32">
-        <div className="mx-auto max-w-6xl">
-          <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-20">
-            <VisualLesson />
-            <div className="max-w-lg">
-              <p className="mb-5 text-[13px] font-medium text-[#1b6ca8]">
-                Not another wall of text
-              </p>
-              <h2 className="text-[2.75rem] leading-none font-semibold tracking-[-0.06em] text-[#17324a] sm:text-[3.4rem]">
-                See each idea arrive at the right moment.
-              </h2>
-              <p className="mt-6 text-[16px] leading-8 text-[#5c7386]">
-                The picture grows with the explanation. You can pause it, turn
-                it and point at any part. Then ask the next question just like
-                you would with a patient teacher.
-              </p>
-              <button
-                type="button"
-                onClick={() =>
-                  open("What does a derivative actually mean?", "/lessons")
-                }
-                className="mt-8 inline-flex items-center gap-2 border-b border-[#1b6ca8]/35 pb-1 text-[14px] font-semibold text-[#1b6ca8] transition hover:border-[#1b6ca8]"
-              >
-                Try a visual lesson
-                <ArrowRight className="size-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="px-5 pb-24 md:px-8 md:pb-32">
-        <div className="mx-auto max-w-6xl rounded-[2rem] bg-[#17324a] px-6 py-14 text-center text-white sm:px-10 md:py-20">
-          <p className="mx-auto max-w-3xl text-[2.25rem] leading-[1.02] font-semibold tracking-[-0.055em] sm:text-[3rem] md:text-[3.7rem]">
+      <section ref={cta.ref} className="px-5 pt-4 pb-24 md:px-8 md:pb-32">
+        <div
+          className={cn(
+            "marketing-cta-panel relative mx-auto max-w-6xl overflow-hidden rounded-[1.4rem] bg-ink px-6 py-14 text-center sm:px-10 md:py-20",
+            cta.visible && "is-in",
+          )}
+        >
+          <div className="marketing-cta-glow" aria-hidden />
+          <p className="font-display relative mx-auto max-w-3xl text-[2.1rem] leading-[1.08] font-semibold tracking-[-0.03em] text-chalk sm:text-[2.75rem] md:text-[3.25rem]">
             You don’t need to know where to begin.
           </p>
-          <p className="mx-auto mt-5 max-w-xl text-[15px] leading-7 text-[#bfd1df]">
+          <p className="relative mx-auto mt-5 max-w-xl text-[15px] leading-7 text-sky-deep">
             Bring the confusing part. We’ll make it visible together.
           </p>
           <button
             type="button"
             onClick={() => openStudio("/lessons")}
-            className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#e8f2f8] px-6 py-3 text-[14px] font-semibold text-[#17324a] transition hover:-translate-y-0.5 hover:bg-white"
+            className="marketing-cta-button relative mt-8 inline-flex items-center gap-2 rounded-[0.95rem] bg-chalk px-6 py-3 text-[14px] font-semibold text-ink transition hover:-translate-y-0.5 hover:bg-white"
           >
             Ask your first question
             <ArrowRight className="size-4" />
@@ -143,86 +175,37 @@ export function MarketingStory() {
   );
 }
 
-function VisualLesson() {
+function FigureCard({
+  eyebrow,
+  title,
+  body,
+  plan,
+}: {
+  eyebrow: string;
+  title: string;
+  body: string;
+  plan: ThreeScenePlan;
+}) {
   return (
-    <div className="relative mx-auto w-full max-w-136">
-      <div className="absolute -inset-8 rounded-full bg-[#a9cee6]/25 blur-3xl" />
-      <div className="relative rotate-[-1.5deg] rounded-[1.75rem] border border-[#c7d8e4] bg-[#fbfdff] p-5 shadow-[0_25px_70px_-42px_rgba(23,50,74,0.42)] sm:p-7">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-mono text-[10px] tracking-[0.12em] text-[#8295a5] uppercase">
-              Visual lesson, step 3 of 4
-            </p>
-            <p className="mt-2 text-[15px] font-semibold text-[#17324a]">
-              The derivative is a changing slope
-            </p>
-          </div>
-          <span className="size-2.5 rounded-full bg-[#2a7a5c]" />
-        </div>
-        <svg viewBox="0 0 520 310" className="mt-6 w-full" aria-hidden>
-          {Array.from({ length: 11 }, (_, i) => (
-            <line
-              key={`h-${i}`}
-              x1="0"
-              x2="520"
-              y1={i * 31}
-              y2={i * 31}
-              stroke="rgba(27,108,168,.07)"
-            />
-          ))}
-          {Array.from({ length: 18 }, (_, i) => (
-            <line
-              key={`v-${i}`}
-              y1="0"
-              y2="310"
-              x1={i * 31}
-              x2={i * 31}
-              stroke="rgba(27,108,168,.07)"
-            />
-          ))}
-          <path
-            d="M34 252 C 96 252 125 242 160 208 C 205 165 230 68 308 65 C 377 63 390 210 488 228"
-            fill="none"
-            stroke="#1b6ca8"
-            strokeWidth="4"
-            strokeLinecap="round"
-            className="animate-stroke-draw"
-          />
-          <line
-            x1="188"
-            y1="205"
-            x2="332"
-            y2="86"
-            stroke="#c45e1a"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-          <circle cx="260" cy="146" r="7" fill="#c45e1a" />
-          <path
-            d="M346 74 C 372 62 396 62 420 71"
-            fill="none"
-            stroke="#c45e1a"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <text
-            x="357"
-            y="49"
-            fontFamily="ui-sans-serif, system-ui"
-            fontSize="13"
-            fill="#9b4c16"
-          >
-            tangent line
-          </text>
-        </svg>
-        <p className="mt-4 border-l-2 border-[#1b6ca8] pl-4 text-[13.5px] leading-6 text-[#52697d]">
-          Move the point and the line turns with it. Its steepness is the
-          derivative at that exact place.
-        </p>
+    <article className="marketing-figure-card overflow-hidden rounded-[1.4rem] border border-board-edge bg-chalk shadow-[0_24px_60px_-36px_rgba(26,43,60,0.3)]">
+      <div className="relative h-[min(280px,42vh)] min-h-55 w-full overflow-hidden border-b border-board-edge bg-board">
+        <ThreeBoard
+          plan={plan}
+          playing
+          speed={1}
+          showStructureControls={false}
+          className="h-full w-full"
+        />
       </div>
-      <span className="absolute -right-3 -bottom-4 rotate-2 rounded-xl bg-[#d8ebf6] px-4 py-2 text-[14px] font-semibold text-[#17324a] shadow-sm">
-        Now it makes sense
-      </span>
-    </div>
+      <div className="px-5 py-5 sm:px-6 sm:py-6">
+        <p className="font-mono text-[10px] tracking-[0.12em] text-muted uppercase">
+          {eyebrow}
+        </p>
+        <h3 className="mt-2 font-display text-[1.2rem] leading-snug font-semibold tracking-[-0.02em] text-ink">
+          {title}
+        </h3>
+        <p className="mt-2.5 text-[14px] leading-6 text-ink-soft">{body}</p>
+      </div>
+    </article>
   );
 }

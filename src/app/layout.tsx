@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, IBM_Plex_Mono } from "next/font/google";
+import { Geist, IBM_Plex_Mono, Newsreader } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
 import { QuestionAccessProvider } from "@/components/usage/QuestionAccess";
 import { PageTransition } from "@/components/site/PageTransition";
@@ -10,6 +10,13 @@ import "./globals.css";
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
+});
+
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  variable: "--font-newsreader",
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
 });
 
 const ibmPlexMono = IBM_Plex_Mono({
@@ -39,6 +46,7 @@ export default function RootLayout({
       className={cn(
         "h-full antialiased",
         geist.variable,
+        newsreader.variable,
         ibmPlexMono.variable,
       )}
     >

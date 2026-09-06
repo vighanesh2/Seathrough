@@ -183,7 +183,6 @@ export function TutorBoard({
           <div className="absolute inset-0 flex flex-col bg-chalk">
             {drawSpeech ? (
               <p className="shrink-0 border-b border-board-edge/60 bg-accent-soft/30 px-4 py-2 font-sans text-sm text-ink">
-                <span className="font-semibold text-accent-deep">Tutor: </span>
                 {drawSpeech}
               </p>
             ) : null}
@@ -209,7 +208,6 @@ export function TutorBoard({
           <div className="absolute inset-0 flex flex-col bg-chalk">
             {drawSpeech ? (
               <p className="shrink-0 border-b border-board-edge/60 bg-accent-soft/30 px-4 py-2 font-sans text-sm text-ink">
-                <span className="font-semibold text-accent-deep">Tutor: </span>
                 {drawSpeech}
               </p>
             ) : null}
@@ -252,7 +250,6 @@ export function TutorBoard({
           <InfiniteCanvas resetKey={`${playKey}-${plan?.renderer ?? "idle"}`}>
             {drawSpeech ? (
               <p className="mb-4 max-w-[min(640px,92vw)] rounded-lg border border-board-edge/60 bg-accent-soft/30 px-4 py-2 font-sans text-sm text-ink">
-                <span className="font-semibold text-accent-deep">Tutor: </span>
                 {drawSpeech}
               </p>
             ) : null}
@@ -313,27 +310,17 @@ export function TutorBoard({
                   />
                 ) : null}
 
-                {showKatexOnly &&
-                !showTemplate &&
-                !showMafs &&
-                !showRough &&
-                !showBoardScript ? (
-                  <div className="font-sans text-sm font-semibold uppercase tracking-[0.16em] text-muted">
-                    equation
-                  </div>
-                ) : null}
-
                 {formula && !showTopicBoard ? (
                   <FormulaStrip source={formula} playKey={playKey} />
                 ) : null}
               </>
             ) : (
-              <div className="flex flex-col items-center gap-2 text-center">
-                <p className="font-display text-2xl text-marker-soft md:text-3xl">
-                  Ask anything to begin
+              <div className="flex flex-col items-center text-center">
+                <p className="text-[1.25rem] font-semibold tracking-tight text-[#17324a]">
+                  This is the board
                 </p>
-                <p className="max-w-sm font-sans text-sm text-muted">
-                  Pan and zoom freely — drawings appear on this infinite board.
+                <p className="mt-2 max-w-[16rem] text-[14px] leading-6 text-[#6a7d90]">
+                  Ask above. Figures appear here. Notes stay on the right.
                 </p>
               </div>
             )}
@@ -341,7 +328,7 @@ export function TutorBoard({
         )}
       </div>
 
-      <div className="hidden h-full w-[min(380px,34vw)] shrink-0 md:block">
+      <div className="hidden h-full w-[min(26rem,38vw)] shrink-0 sm:block">
         <BoardNarration
           lines={narrationLines}
           codeBuffer={codeBuffer}
@@ -351,7 +338,7 @@ export function TutorBoard({
         />
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 z-30 md:hidden">
+      <div className="absolute inset-x-0 bottom-0 z-30 sm:hidden">
         <BoardNarration
           lines={narrationLines}
           codeBuffer={codeBuffer}

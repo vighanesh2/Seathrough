@@ -126,7 +126,9 @@ export async function* runLessonStream(
         return;
       }
 
-      if (!ctx.userId || ctx.userId !== options.userId) {
+      // Same owner only. Guests create rows with userId null — both-null is a
+      // valid same-session follow-up, not a missing conversation.
+      if ((ctx.userId ?? null) !== (options.userId ?? null)) {
         yield {
           type: "error",
           message: "Conversation not found — start a new lesson first",
@@ -191,7 +193,9 @@ export async function* runLessonStream(
 
     const topicConceptKey =
       plan.beats.find((b) => b.conceptKey?.trim())?.conceptKey ?? plan.title;
-    const topicPlan = topicVisualPlanFor(prompt, topicConceptKey, topicHint);
+    const topicPlan =
+      topicVisualPlanFor(prompt) ??
+      topicVisualPlanFor(prompt, topicConceptKey, topicHint);
     const topicModule = topicPlan ? getTopicModule(topicPlan.topicId) : null;
     if (topicModule) {
       // Include the root topic phrase so follow-ups like "2 2 12 2 6 10 1"

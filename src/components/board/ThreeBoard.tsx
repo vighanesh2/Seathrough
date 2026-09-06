@@ -339,13 +339,16 @@ export function ThreeBoard({
 
   return (
     <div
-      className={
+      className={[
+        // Always contain the WebGL canvas — custom className must not drop
+        // `relative` or absolute inset-0 climbs to a page-level ancestor.
+        "relative isolate overflow-hidden",
         className ??
-        "relative h-full min-h-70 w-full overflow-hidden rounded-xl border border-board-edge bg-board"
-      }
+          "h-full min-h-70 w-full rounded-xl border border-board-edge bg-board",
+      ].join(" ")}
       aria-label={`${plan.title} — interactive 3D`}
     >
-      <div ref={mountRef} className="absolute inset-0" />
+      <div ref={mountRef} className="absolute inset-0 overflow-hidden [&>canvas]:block [&>canvas]:h-full [&>canvas]:w-full" />
       <div className="pointer-events-none absolute left-3 top-3 hidden max-w-[46%] truncate rounded-lg border border-border bg-card/85 px-2.5 py-1.5 font-sans text-[11px] text-ink shadow-sm backdrop-blur sm:block">
         <span className="font-semibold text-accent-deep">{plan.title}</span>
         <span className="text-muted">
