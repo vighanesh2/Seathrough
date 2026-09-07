@@ -10,7 +10,7 @@ export const screenshotExplainMode: ModeDefinition = {
   kind: "learning",
   group: "more",
   order: 40,
-  enabled: true,
+  enabled: false,
   badge: "new",
   usesWhiteboard: true,
   metaTitle: "From a photo | SeeThrough",

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 
-type PlateId = "topics" | "screenshots" | "scenes";
+type PlateId = "topics";
 
 const PLATES: Array<{
   id: PlateId;
@@ -17,25 +17,9 @@ const PLATES: Array<{
     id: "topics",
     href: "/lessons",
     label: "Topics",
-    tilt: "-rotate-6",
-    offset: "-translate-x-[18%] translate-y-3",
+    tilt: "-rotate-2",
+    offset: "translate-x-0",
     z: "z-10",
-  },
-  {
-    id: "screenshots",
-    href: "/image-explain",
-    label: "Screenshots",
-    tilt: "rotate-1",
-    offset: "translate-x-[2%] -translate-y-1",
-    z: "z-20",
-  },
-  {
-    id: "scenes",
-    href: "/lessons?view=3d",
-    label: "3D",
-    tilt: "rotate-6",
-    offset: "translate-x-[22%] translate-y-4",
-    z: "z-30",
   },
 ];
 
@@ -44,7 +28,7 @@ type AcetateStageProps = {
 };
 
 export function AcetateStage({ onOpen }: AcetateStageProps) {
-  const [active, setActive] = useState<PlateId>("scenes");
+  const [active, setActive] = useState<PlateId>("topics");
 
   return (
     <div className="relative mx-auto w-full max-w-xl">
@@ -71,7 +55,7 @@ export function AcetateStage({ onOpen }: AcetateStageProps) {
                 onFocus={() => setActive(plate.id)}
                 onClick={() => onOpen(plate.href)}
                 className={cn(
-                  "animate-acetate acetate-plate absolute h-[68%] w-[46%] rounded-xl p-3 transition duration-300 ease-out",
+                  "animate-acetate acetate-plate absolute h-[72%] w-[52%] rounded-xl p-3 transition duration-300 ease-out",
                   plate.tilt,
                   plate.offset,
                   plate.z,
@@ -85,9 +69,7 @@ export function AcetateStage({ onOpen }: AcetateStageProps) {
                   {plate.label}
                 </p>
                 <div className="mt-2 h-[calc(100%-1.5rem)]">
-                  {plate.id === "topics" ? <TopicSketch /> : null}
-                  {plate.id === "screenshots" ? <ScreenshotSketch /> : null}
-                  {plate.id === "scenes" ? <SceneSketch /> : null}
+                  <TopicSketch />
                 </div>
               </button>
             );
@@ -136,97 +118,6 @@ function TopicSketch() {
       >
         y = x²
       </text>
-    </svg>
-  );
-}
-
-function ScreenshotSketch() {
-  return (
-    <svg viewBox="0 0 160 120" className="h-full w-full" aria-hidden>
-      <rect
-        x="8"
-        y="44"
-        width="36"
-        height="28"
-        rx="4"
-        fill="#e8f2fa"
-        stroke="#1b6ca8"
-        strokeWidth="1.6"
-      />
-      <rect
-        x="62"
-        y="36"
-        width="40"
-        height="44"
-        rx="4"
-        fill="#d4e8f6"
-        stroke="#0f4f7c"
-        strokeWidth="1.6"
-      />
-      <rect
-        x="116"
-        y="44"
-        width="36"
-        height="28"
-        rx="4"
-        fill="#e8f2fa"
-        stroke="#1b6ca8"
-        strokeWidth="1.6"
-      />
-      <path
-        d="M46 58 H60"
-        stroke="#0c3558"
-        strokeWidth="1.6"
-        markerEnd="url(#arr)"
-      />
-      <path
-        d="M104 58 H114"
-        stroke="#0c3558"
-        strokeWidth="1.6"
-        markerEnd="url(#arr)"
-      />
-      <defs>
-        <marker
-          id="arr"
-          markerWidth="6"
-          markerHeight="6"
-          refX="5"
-          refY="3"
-          orient="auto"
-        >
-          <path d="M0 0 L6 3 L0 6 Z" fill="#0c3558" />
-        </marker>
-      </defs>
-      <text x="12" y="62" fontSize="7" fill="#0f4f7c">
-        Client
-      </text>
-      <text x="68" y="62" fontSize="7" fill="#0c3558">
-        API
-      </text>
-      <text x="121" y="62" fontSize="7" fill="#0f4f7c">
-        DB
-      </text>
-    </svg>
-  );
-}
-
-function SceneSketch() {
-  return (
-    <svg viewBox="0 0 160 120" className="h-full w-full" aria-hidden>
-      <ellipse
-        cx="80"
-        cy="64"
-        rx="54"
-        ry="22"
-        fill="none"
-        stroke="#1b6ca8"
-        strokeWidth="1.2"
-        opacity="0.5"
-      />
-      <circle cx="80" cy="64" r="12" fill="#0f4f7c" />
-      <g className="animate-orbit origin-center">
-        <circle cx="134" cy="64" r="6" fill="#7eb6d9" />
-      </g>
     </svg>
   );
 }

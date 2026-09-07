@@ -75,8 +75,8 @@ export function MarketingHero() {
           <span className="text-[#1b6ca8]">Watch it get drawn.</span>
         </h1>
         <p className="mx-auto mt-4 max-w-md text-[16px] leading-7 text-[#6a7d90]">
-          Type a question. SeeThrough draws the steps while it explains: on a
-          board, from a screenshot, or in 3D.
+          Type a question. SeeThrough draws the steps while it explains on the
+          board.
         </p>
       </div>
 

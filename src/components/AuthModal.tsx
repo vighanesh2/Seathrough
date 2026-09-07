@@ -95,7 +95,7 @@ export function AuthModal({
               ? "You've used today's 5 free questions. Sign in or create an account for unlimited access — the limit resets tomorrow if you stay signed out."
               : required
                 ? "Create an account or log in to keep learning."
-                : "One account across topics, systems, and 3D scenes."}
+                : "One account for every lesson you start."}
           </DialogDescription>
         </DialogHeader>
 

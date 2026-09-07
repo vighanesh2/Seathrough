@@ -1,14 +1,6 @@
-import type { Metadata } from "next";
-import { Workspace } from "@/modules/screenshot-explain";
-import { screenshotExplainMode } from "@/modules/screenshot-explain/mode";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: screenshotExplainMode.metaTitle,
-  description: screenshotExplainMode.metaDescription,
-};
-
+/** Legacy photo explain URL — retired from the product. */
 export default function ImageExplainPage() {
-  return (
-    <Workspace />
-  );
+  redirect("/lessons");
 }

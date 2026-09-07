@@ -43,13 +43,7 @@ export function SiteFooter({ variant = "default" }: SiteFooterProps) {
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-ink-soft">
             <Link href="/lessons" className="hover:text-ink">
-              Topics
-            </Link>
-            <Link href="/lessons?view=3d" className="hover:text-ink">
-              3D scenes
-            </Link>
-            <Link href="/image-explain" className="hover:text-ink">
-              Screenshots
+              Start a lesson
             </Link>
           </div>
         </div>

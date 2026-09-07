@@ -1,11 +1,11 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Atom,
+  BookOpen,
   Box,
   Camera,
   Code2,
   HeartPulse,
-  MessageCircleQuestion,
   Network,
   PenLine,
   WandSparkles,
@@ -22,7 +22,7 @@ export type ModeUi = {
 
 export const MODE_UI: Record<ModeId, ModeUi> = {
   lessons: {
-    icon: MessageCircleQuestion,
+    icon: BookOpen,
     hint: "Type what you’re stuck on. We’ll draw it step by step.",
     tone: "blue",
   },
@@ -48,7 +48,7 @@ export const MODE_UI: Record<ModeId, ModeUi> = {
   },
   "figures-3d": {
     icon: HeartPulse,
-    hint: "Turn a heart, lung, or eye. Then ask what a part does.",
+    hint: "Explore the heart and human eye in 3D.",
     tone: "teal",
   },
   "automatic-drawing": {

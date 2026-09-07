@@ -407,7 +407,7 @@ export function AnatomyWorkspace() {
           refreshSessions();
         }}
         historyTitle="Your explorations"
-        historyEyebrow="3D body"
+        historyEyebrow="Human anatomy"
         newChatLabel="New exploration"
         emptyHint="Ask about the figure — past Q&As will show up here."
         ariaLabel="3D body history"
@@ -416,7 +416,7 @@ export function AnatomyWorkspace() {
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <AppHeader
           current="figures-3d"
-          eyebrow="Body"
+          eyebrow="Human anatomy"
           title={SCENE_TITLES[sceneId]}
           leading={
             sidebarCollapsed ? (
@@ -436,8 +436,8 @@ export function AnatomyWorkspace() {
             <div className="flex items-center gap-1 rounded-lg border border-border bg-secondary p-0.5">
               {(
                 [
-                  ["eye", "Eye"],
                   ["cardiopulmonary", "Heart"],
+                  ["eye", "Human eye"],
                 ] as const
               ).map(([id, label]) => (
                 <button

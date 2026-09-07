@@ -111,8 +111,8 @@ __update = function(dt, time) { ball.position.x = Math.sin(time); };
   const mode = getMode("scene-explain");
   assert.ok(mode);
   assert.equal(mode?.href, "/lessons?view=3d");
-  assert.equal(mode?.enabled, true);
-  assert.ok(listEnabledModes("learning").some((m) => m.id === "scene-explain"));
+  assert.equal(mode?.enabled, false);
+  assert.ok(!listEnabledModes("learning").some((m) => m.id === "scene-explain"));
 }
 
 // --- retired Groq models still resolve --------------------------------

@@ -48,7 +48,7 @@ function ModeItem({
   );
 }
 
-/** Switch between tools — compact control for workspace chrome. */
+/** Switch what you’re learning — compact control for workspace chrome. */
 export function StudyMenu({ current, className = "" }: StudyMenuProps) {
   const studios = listModesByGroup("studio");
   const more = listModesByGroup("more");
@@ -61,7 +61,7 @@ export function StudyMenu({ current, className = "" }: StudyMenuProps) {
         <Button
           variant="ghost"
           className={cn("h-8 gap-1 px-2 text-[13px] font-medium", className)}
-          aria-label="Switch tool"
+          aria-label="Start learning"
         >
           <span className="text-ink">{active?.navLabel ?? "Home"}</span>
           <ChevronDown className="size-3.5 text-muted" />
@@ -70,13 +70,13 @@ export function StudyMenu({ current, className = "" }: StudyMenuProps) {
       <DropdownMenuContent align="end" className="min-w-64">
         <ModeItem href="/" icon={House} label="Home" />
         <DropdownMenuSeparator />
-        <DropdownMenuLabel>Tools</DropdownMenuLabel>
+        <DropdownMenuLabel>Start learning</DropdownMenuLabel>
         {studios.map((mode) => (
           <ModeItem
             key={mode.id}
             href={mode.href}
             icon={MODE_UI[mode.id].icon}
-            label={mode.title}
+            label={mode.navLabel}
             current={mode.id === current}
           />
         ))}

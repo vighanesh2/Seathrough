@@ -131,7 +131,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
               className="w-88 rounded-xl border-[#e6ebf0] p-1.5 shadow-[0_12px_40px_-12px_rgba(26,43,60,0.18)]"
             >
               <p className="px-3 pt-2 pb-1 text-[11px] font-medium tracking-[0.06em] text-[#8a9aab] uppercase">
-                Tools
+                Start learning
               </p>
               <div className="flex flex-col">
                 {studios.map((mode) => (
@@ -189,10 +189,6 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
               ) : null}
             </PopoverContent>
           </Popover>
-
-          <button type="button" className={NAV_LINK} aria-disabled="true">
-            Contact
-          </button>
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
@@ -213,7 +209,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
               </SheetHeader>
               <nav className="flex flex-col p-2" aria-label="Mobile">
                 <p className="px-3 pt-2 pb-1 text-[11px] font-medium tracking-[0.06em] text-[#8a9aab] uppercase">
-                  Features
+                  Start learning
                 </p>
                 {studios.map((mode) => {
                   const Icon = MODE_UI[mode.id].icon;
@@ -293,13 +289,6 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
                     })}
                   </>
                 ) : null}
-                <Separator className="my-2 bg-[#e6ebf0]" />
-                <button
-                  type="button"
-                  className="rounded-lg px-3 py-2.5 text-left text-[15px] font-medium text-[#1a2b3c] hover:bg-[#f2f4f7]"
-                >
-                  Contact
-                </button>
               </nav>
             </SheetContent>
           </Sheet>

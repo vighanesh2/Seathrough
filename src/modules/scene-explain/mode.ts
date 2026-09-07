@@ -11,7 +11,7 @@ export const sceneExplainMode: ModeDefinition = {
   kind: "learning",
   group: "studio",
   order: 30,
-  enabled: true,
+  enabled: false,
   badge: "new",
   usesWhiteboard: false,
   metaTitle: "3D scene explanation | SeeThrough",
