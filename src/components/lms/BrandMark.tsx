@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 type BrandMarkProps = {
   className?: string;
   compact?: boolean;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   onDark?: boolean;
 };
 
@@ -14,10 +14,15 @@ export function BrandMark({
   size = "sm",
   onDark = false,
 }: BrandMarkProps) {
-  const mark = size === "md" ? "h-10 w-10" : "h-8 w-8";
+  const mark =
+    size === "lg" ? "h-18 w-18" : size === "md" ? "h-10 w-10" : "h-8 w-8";
   const word = cn(
     "truncate font-medium tracking-tight",
-    size === "md" ? "text-lg md:text-xl" : "text-base md:text-lg",
+    size === "lg"
+      ? "text-xl md:text-2xl"
+      : size === "md"
+        ? "text-lg md:text-xl"
+        : "text-base md:text-lg",
     onDark ? "text-white" : "text-ink",
   );
 

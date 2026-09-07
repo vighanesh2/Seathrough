@@ -45,20 +45,20 @@ export function AccountMenu({
   if (!user) {
     if (marketing) {
       return (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2.5">
           <Button
-            variant="ghost"
+            variant="outline"
             onClick={onLogin}
-            className="h-8 px-3 text-[13.5px] font-medium text-ink-soft hover:bg-paper-deep/70 hover:text-ink"
+            className="h-10 rounded-full border-[#1b6ca8] bg-white px-5 text-[14px] font-medium text-[#1b6ca8] shadow-none hover:bg-[#eef5fb] hover:text-[#1b6ca8]"
           >
-            Log in
+            Login
           </Button>
           {onSignup ? (
             <Button
               onClick={onSignup}
-              className="h-8 rounded-[0.95rem] bg-accent px-3.5 text-[13.5px] font-medium text-white shadow-none hover:bg-accent-deep"
+              className="h-10 rounded-full bg-[#1b6ca8] px-5 text-[14px] font-medium text-white shadow-none hover:bg-[#155a8f]"
             >
-              Get started
+              Get Started
             </Button>
           ) : null}
         </div>

@@ -1,38 +1,126 @@
 import Link from "next/link";
 import { BrandMark } from "@/components/lms/BrandMark";
-import { cn } from "@/lib/utils";
 
 type SiteFooterProps = {
   variant?: "default" | "marketing";
 };
 
-/** Quiet footer — paper / ink tokens for marketing and product. */
+function SocialIcon({
+  label,
+  href,
+  children,
+}: {
+  label: string;
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+      className="transition hover:text-[#1b6ca8]"
+    >
+      {children}
+    </a>
+  );
+}
+
+/** Quiet footer for product; multi-column marketing footer on the landing page. */
 export function SiteFooter({ variant = "default" }: SiteFooterProps) {
   const marketing = variant === "marketing";
 
-  return (
-    <footer
-      className={cn(
-        marketing ? "bg-transparent" : "border-t border-board-edge bg-chalk/80",
-      )}
-    >
-      <div className="mx-auto flex max-w-6xl flex-col gap-6 border-t border-board-edge px-5 py-10 md:flex-row md:items-end md:justify-between md:px-8">
-        <div>
-          <BrandMark />
-          <p className="mt-3 max-w-sm text-sm leading-6 text-ink-soft">
-            SeeThrough draws the explanation so you can see the steps.
-          </p>
+  if (!marketing) {
+    return (
+      <footer className="border-t border-board-edge bg-chalk/80">
+        <div className="mx-auto flex max-w-5xl flex-col gap-6 px-5 py-8 md:flex-row md:items-end md:justify-between md:px-6">
+          <div>
+            <BrandMark />
+            <p className="mt-3 max-w-sm text-sm leading-6 text-ink-soft">
+              SeeThrough draws the explanation so you can see the steps.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-ink-soft">
+            <Link href="/lessons" className="hover:text-ink">
+              Topics
+            </Link>
+            <Link href="/scene-explain" className="hover:text-ink">
+              3D scenes
+            </Link>
+            <Link href="/image-explain" className="hover:text-ink">
+              Screenshots
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-ink-soft">
-          <Link href="/lessons" className="transition hover:text-ink">
-            Topics
-          </Link>
-          <Link href="/scene-explain" className="transition hover:text-ink">
-            3D scenes
-          </Link>
-          <Link href="/image-explain" className="transition hover:text-ink">
-            Screenshots
-          </Link>
+      </footer>
+    );
+  }
+
+  return (
+    <footer className="border-t border-[#e6ebf0] bg-white">
+      <div className="mx-auto max-w-6xl px-5 py-12 md:px-8 md:py-14">
+        <div className="grid gap-10 sm:grid-cols-[1.4fr_1fr_auto] lg:grid-cols-[1.6fr_1fr_auto]">
+          <div className="max-w-xs">
+            <BrandMark />
+            <p className="mt-3 text-[14px] leading-6 text-[#6a7d90]">
+              See concepts clearly. Learn without limits.
+            </p>
+          </div>
+
+          <div>
+            <p className="text-[13px] font-semibold tracking-[-0.01em] text-[#1b6ca8]">
+              Product
+            </p>
+            <ul className="mt-3 space-y-2.5">
+              <li>
+                <Link
+                  href="/lessons"
+                  className="block text-[14px] text-[#6a7d90] transition hover:text-[#1a2b3c]"
+                >
+                  Start a lesson
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div className="sm:justify-self-end">
+            <div className="flex items-center gap-3 text-[#1a2b3c]">
+              <SocialIcon label="YouTube" href="https://youtube.com">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="size-4"
+                  aria-hidden
+                >
+                  <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31.5 31.5 0 0 0 0 12a31.5 31.5 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.5 31.5 0 0 0 24 12a31.5 31.5 0 0 0-.5-5.8zM9.75 15.5v-7l6.5 3.5-6.5 3.5z" />
+                </svg>
+              </SocialIcon>
+              <SocialIcon label="Instagram" href="https://instagram.com">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="size-4"
+                  aria-hidden
+                >
+                  <path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm0 2a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V7a3 3 0 0 0-3-3H7zm11 1.5a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />
+                </svg>
+              </SocialIcon>
+              <SocialIcon label="TikTok" href="https://tiktok.com">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="size-4"
+                  aria-hidden
+                >
+                  <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.76 2.89 2.89 0 0 1-2.88-2.76 2.89 2.89 0 0 1 2.88-2.76c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05A6.34 6.34 0 0 0 3.15 15.9a6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.34-6.34V8.73a8.19 8.19 0 0 0 4.76 1.52V6.84a4.84 4.84 0 0 1-1-.15z" />
+                </svg>
+              </SocialIcon>
+            </div>
+            <p className="mt-4 text-[12.5px] text-[#8a9aab]">
+              © {new Date().getFullYear()} SeeThrough. All rights reserved.
+            </p>
+          </div>
         </div>
       </div>
     </footer>
