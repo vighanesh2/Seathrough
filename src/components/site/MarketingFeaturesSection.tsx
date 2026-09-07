@@ -32,7 +32,7 @@ export function MarketingFeaturesSection() {
   return (
     <section
       id="features"
-      className="scroll-mt-24 bg-white px-5 py-14 md:px-6 md:py-16"
+      className="relative z-10 scroll-mt-24 bg-white px-5 py-14 md:px-6 md:py-16"
     >
       <div className="mx-auto grid max-w-5xl gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
         {FEATURES.map((feature) => {

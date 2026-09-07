@@ -227,6 +227,7 @@ async function completeLessonPlan(
   const completion = await client.chat.completions.create({
     model: config.model,
     temperature: 0.25,
+    max_tokens: 900,
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: system },

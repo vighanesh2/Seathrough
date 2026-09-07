@@ -1,14 +1,6 @@
-import type { Metadata } from "next";
-import { Workspace } from "@/modules/scene-explain";
-import { sceneExplainMode } from "@/modules/scene-explain/mode";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: sceneExplainMode.metaTitle,
-  description: sceneExplainMode.metaDescription,
-};
-
+/** Legacy 3D scenes URL — agent scenes now live on the lesson page. */
 export default function SceneExplainPage() {
-  return (
-    <Workspace />
-  );
+  redirect("/lessons?view=3d");
 }

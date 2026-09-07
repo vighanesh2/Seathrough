@@ -66,7 +66,7 @@ async function fetchSpeechClip(
     const data = await postJson<SpeakClip>(
       "/api/scene-explain/speak",
       token,
-      { text: spoken.slice(0, 400) },
+      { text: spoken.slice(0, 900) },
       signal,
     );
     if (!data.mimeType || !data.base64) return null;
@@ -343,7 +343,7 @@ export function useSceneSession(accessToken: string | null) {
         if (!heard) {
           missingVoice = true;
           await waitMs(
-            Math.min(9000, Math.max(3200, estimateSpeechMs(beat.narration))),
+            Math.min(18000, Math.max(5000, estimateSpeechMs(beat.narration))),
             signal,
             playTimer,
           );

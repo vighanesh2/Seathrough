@@ -31,7 +31,7 @@ const PLATES: Array<{
   },
   {
     id: "scenes",
-    href: "/scene-explain",
+    href: "/lessons?view=3d",
     label: "3D",
     tilt: "rotate-6",
     offset: "translate-x-[22%] translate-y-4",

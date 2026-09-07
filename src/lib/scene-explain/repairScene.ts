@@ -14,7 +14,8 @@ export async function repairSceneCode(input: SceneRepairInput): Promise<string> 
   const client = new OpenAI({ apiKey, baseURL });
   const completion = await client.chat.completions.create({
     model,
-    temperature: 0.15,
+    temperature: 0.2,
+    max_tokens: 9000,
     messages: [
       { role: "system", content: REPAIR_SYSTEM },
       {
@@ -24,7 +25,7 @@ export async function repairSceneCode(input: SceneRepairInput): Promise<string> 
           `Title: ${input.title}`,
           `Repair attempt: ${input.attempt}`,
           `Runtime/crash error:\n${error.slice(0, 1200)}`,
-          `Current code:\n${code.slice(0, 12_000)}`,
+          `Current code:\n${code.slice(0, 40_000)}`,
         ].join("\n\n"),
       },
     ],

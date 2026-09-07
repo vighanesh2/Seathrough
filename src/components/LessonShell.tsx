@@ -9,8 +9,12 @@ import { ChatSidebar } from "@/components/ChatSidebar";
 import { AccountMenu } from "@/components/lms/AccountMenu";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
+import { AskMeMcqDialog } from "@/components/AskMeMcqDialog";
 import { PaceControls } from "@/components/PaceControls";
 import { PromptBar } from "@/components/PromptBar";
+import { SceneAgentRail } from "@/components/scene-explain/SceneAgentRail";
+import { SceneViewport } from "@/components/scene-explain/SceneViewport";
+import { useSceneSession } from "@/components/scene-explain/useSceneSession";
 import { useQuestionAccess } from "@/components/usage/QuestionAccess";
 import { ThinkingLoader } from "@/components/ui/ThinkingLoader";
 import { VisualStage } from "@/components/VisualStage";
@@ -31,6 +35,15 @@ import { DrawCommandQueue } from "@/lib/draw-engine/resolve";
 import type { DrawCommand } from "@/lib/draw-engine/commands";
 import { toUserFacingError } from "@/lib/errors/userFacing";
 import { lessonMachine } from "@/lib/lesson/machine";
+import {
+  getSceneExplainSession,
+  migrateAnonSceneExplainSessions,
+  newSceneExplainSessionId,
+  readSceneExplainSessions,
+  sceneExplainSessionsToListItems,
+  upsertSceneExplainSession,
+  type SceneExplainSession,
+} from "@/lib/scene-explain/sessionHistory";
 import { clearPendingPrompt, takePendingPrompt } from "@/lib/usage/pendingPrompt";
 import { visualStableKey } from "@/lib/visuals/router";
 import type { VisualPlan } from "@/lib/visuals/types";
@@ -177,6 +190,7 @@ function commandsBottomY(commands: DrawCommand[]): number {
 export function LessonShell() {
   const { user, loading: authLoading, accessToken, logout } = useAuth();
   const { beginQuestion, cancelQuestion, openAuth } = useQuestionAccess();
+  const scene = useSceneSession(accessToken);
   const [prompt, setPrompt] = useState("");
   const [status, setStatus] = useState<LessonStatus>("idle");
   const pendingHandledRef = useRef(false);
@@ -221,9 +235,45 @@ export function LessonShell() {
   threeSceneRef.current = threeScene;
   threeSelectedRef.current = threeSelected;
 
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
+  const [showAskMe, setShowAskMe] = useState(false);
+  const [sceneMode, setSceneMode] = useState(false);
+  const [sceneSessionId, setSceneSessionId] = useState(() =>
+    newSceneExplainSessionId(),
+  );
+  const [sceneSessions, setSceneSessions] = useState<SceneExplainSession[]>([]);
+  const sceneSessionIdRef = useRef(sceneSessionId);
+  sceneSessionIdRef.current = sceneSessionId;
+
   const canFollowUp =
+    !sceneMode &&
     Boolean(conversationId) &&
     (status === "done" || status === "paused" || status === "error");
+
+  const canAskMe =
+    !sceneMode &&
+    status !== "idle" &&
+    Boolean(conversationId || title || boardNarration.length > 0);
+
+  const askMeNarration = useMemo(
+    () =>
+      boardNarration
+        .filter((line) => line.kind !== "error")
+        .map((line) => line.text.trim())
+        .filter(Boolean)
+        .slice(-20),
+    [boardNarration],
+  );
+
+  const sceneListItems: ConversationListItem[] = useMemo(
+    () => sceneExplainSessionsToListItems(sceneSessions),
+    [sceneSessions],
+  );
+
+  const sceneStreaming =
+    scene.status === "building" ||
+    scene.status === "fixing" ||
+    scene.status === "explaining";
 
   const onDrawComplete = useCallback(() => {
     send({ type: "DRAW_DONE" });
@@ -248,7 +298,6 @@ export function LessonShell() {
   statusRef.current = status;
   /** True when we auto-paused because the tab/window was hidden. */
   const pausedByVisibilityRef = useRef(false);
-  const [showResumePrompt, setShowResumePrompt] = useState(false);
 
   function pushNarration(
     text: string,
@@ -326,19 +375,51 @@ export function LessonShell() {
 
   useEffect(() => {
     if (pendingHandledRef.current) return;
+
+    let startAsScene = false;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("view") === "3d") {
+        startAsScene = true;
+        setSceneMode(true);
+        window.history.replaceState({}, "", "/lessons");
+      }
+    } catch {
+      // ignore
+    }
+
     const pending = takePendingPrompt();
-    if (!pending) return;
+    if (!pending) {
+      if (startAsScene) pendingHandledRef.current = true;
+      return;
+    }
     pendingHandledRef.current = true;
     setPrompt(pending.prompt);
     if (pending.autoStart) {
-      void startLessonWithText(pending.prompt).finally(() => {
-        clearPendingPrompt();
-      });
+      if (startAsScene) {
+        void startSceneWithText(pending.prompt).finally(() => {
+          clearPendingPrompt();
+        });
+      } else {
+        void startLessonWithText(pending.prompt).finally(() => {
+          clearPendingPrompt();
+        });
+      }
     } else {
       clearPendingPrompt();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot marketing handoff
   }, []);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      if (user?.id) {
+        setSceneSessions(migrateAnonSceneExplainSessions(user.id));
+        return;
+      }
+      setSceneSessions(readSceneExplainSessions(null));
+    });
+  }, [user?.id]);
 
   useEffect(() => {
     speedRef.current = speed;
@@ -366,6 +447,13 @@ export function LessonShell() {
     if (!opts?.fromVisibility) {
       setShowResumePrompt(false);
     }
+  }
+
+  function openAskMe() {
+    if (statusRef.current === "running") {
+      pauseLesson({ fromVisibility: false });
+    }
+    setShowAskMe(true);
   }
 
   function resumeLesson() {
@@ -744,7 +832,86 @@ export function LessonShell() {
     await runStream("follow_up", trimmed, { onAbort: cancelQuestion });
   }
 
+  function persistSceneSnapshot(snapshot: {
+    prompt: string;
+    title: string;
+    program: SceneExplainSession["program"];
+    code: string;
+    reveal: number;
+    logs: SceneExplainSession["logs"];
+    narration: string[];
+  }) {
+    const now = new Date().toISOString();
+    const existing = getSceneExplainSession(sceneSessionIdRef.current, user?.id);
+    const saved: SceneExplainSession = {
+      id: sceneSessionIdRef.current,
+      title: snapshot.title || snapshot.prompt.slice(0, 72),
+      prompt: snapshot.prompt,
+      program: snapshot.program,
+      code: snapshot.code,
+      reveal: snapshot.reveal,
+      logs: snapshot.logs,
+      narration: snapshot.narration,
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
+    };
+    setSceneSessions(upsertSceneExplainSession(saved, user?.id));
+  }
+
+  async function startSceneWithText(trimmed: string) {
+    if (!trimmed || scene.busy) return;
+    if (!beginQuestion()) return;
+
+    if (statusRef.current === "running") {
+      abortRef.current?.abort();
+      pauseLesson({ fromVisibility: false });
+    }
+
+    setSceneMode(true);
+    const result = await scene.run(trimmed);
+    if (result === false) {
+      cancelQuestion();
+      return;
+    }
+    persistSceneSnapshot(result);
+  }
+
+  function startNewScene() {
+    if (scene.busy) return;
+    scene.reset();
+    setSceneSessionId(newSceneExplainSessionId());
+    setPrompt("");
+  }
+
+  function openSceneSession(id: string) {
+    if (scene.busy) return;
+    const saved = getSceneExplainSession(id, user?.id);
+    if (!saved) {
+      if (user?.id) {
+        setSceneSessions(migrateAnonSceneExplainSessions(user.id));
+      } else {
+        setSceneSessions(readSceneExplainSessions(null));
+      }
+      return;
+    }
+    setSceneMode(true);
+    setSceneSessionId(saved.id);
+    setPrompt(saved.prompt);
+    scene.restore({
+      title: saved.title,
+      program: saved.program,
+      code: saved.code,
+      reveal: saved.reveal,
+      logs: saved.logs,
+      narration: saved.narration,
+    });
+  }
+
   function onPromptSubmit() {
+    if (sceneMode) {
+      void startSceneWithText(prompt.trim());
+      return;
+    }
     if (canFollowUp) {
       void askFollowUp();
       return;
@@ -758,6 +925,7 @@ export function LessonShell() {
       openAuth("login");
       return;
     }
+    setSceneMode(false);
     prepareSoftContinue();
     try {
       const res = await fetch(`/api/conversations/${id}`, {
@@ -914,23 +1082,38 @@ export function LessonShell() {
     }
   }
 
-  const busy = status === "running";
+  const busy = sceneMode ? scene.busy : status === "running";
 
   return (
     <AppShell>
       <ChatSidebar
         collapsed={sidebarCollapsed}
         onToggle={toggleSidebar}
-        conversations={conversations}
-        activeId={conversationId}
-        loading={chatsLoading}
-        historyEyebrow=""
-        emptyHint="Lessons you start will show up here."
+        conversations={sceneMode ? sceneListItems : conversations}
+        activeId={sceneMode ? sceneSessionId : conversationId}
+        loading={sceneMode ? false : chatsLoading}
+        historyEyebrow={sceneMode ? "3D scenes" : ""}
+        historyTitle={sceneMode ? "Your scenes" : undefined}
+        emptyHint={
+          sceneMode
+            ? "Build a process — past scenes will show up here."
+            : "Lessons you start will show up here."
+        }
+        newChatLabel={sceneMode ? "New scene" : undefined}
+        ariaLabel={sceneMode ? "3D scene history" : undefined}
         showAuth={false}
         onSelect={(id) => {
+          if (sceneMode) {
+            openSceneSession(id);
+            return;
+          }
           void openConversation(id);
         }}
         onNewChat={() => {
+          if (sceneMode) {
+            startNewScene();
+            return;
+          }
           resetLesson();
           setPrompt("");
         }}
@@ -942,13 +1125,20 @@ export function LessonShell() {
           void logout();
           resetLesson();
           setConversations([]);
+          scene.reset();
+          setSceneSessionId(newSceneExplainSessionId());
+          setSceneSessions([]);
         }}
       />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <AppHeader
           current="lessons"
-          title={title ?? undefined}
+          title={
+            sceneMode
+              ? (scene.title ?? "Ask for any process")
+              : (title ?? undefined)
+          }
           brandCompact
           className="lesson-topbar"
           leading={
@@ -958,7 +1148,7 @@ export function LessonShell() {
                 variant="ghost"
                 size="icon"
                 onClick={toggleSidebar}
-                aria-label="Show lessons"
+                aria-label={sceneMode ? "Show scenes" : "Show lessons"}
                 aria-expanded={false}
               >
                 <PanelLeft className="size-4" />
@@ -971,25 +1161,66 @@ export function LessonShell() {
               onChange={setPrompt}
               onSubmit={onPromptSubmit}
               disabled={busy}
-              inputId="topic-prompt"
-              inputLabel="Lesson question"
+              inputId={sceneMode ? "scene-prompt" : "topic-prompt"}
+              inputLabel={sceneMode ? "3D scene prompt" : "Lesson question"}
               placeholder={
-                canFollowUp
-                  ? "Ask a follow-up"
-                  : "What do you want to learn?"
+                sceneMode
+                  ? "Try “osmosis” or “how a comet orbits the sun”…"
+                  : canFollowUp
+                    ? "Ask a follow-up"
+                    : "What do you want to learn?"
               }
-              submitLabel={canFollowUp ? "Ask" : "Start lesson"}
+              submitLabel={
+                sceneMode
+                  ? scene.program
+                    ? "Rebuild"
+                    : "Build scene"
+                  : canFollowUp
+                    ? "Ask"
+                    : "Start lesson"
+              }
             />
           }
           actions={
-            <PaceControls
-              playing={status === "running"}
-              speed={speed}
-              onTogglePlay={togglePlay}
-              onSpeedChange={setSpeed}
-              onSkip={skipBeat}
-              disabled={status === "idle" && !prompt.trim()}
-            />
+            <div className="flex items-center gap-1.5">
+              {canAskMe ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 max-w-[9.5rem] truncate rounded-lg border-[#d7e3eb] px-2.5 text-[12px] font-medium text-[#17324a] hover:bg-[#eef4f9] sm:max-w-none"
+                  onClick={openAskMe}
+                >
+                  Ask me a question
+                </Button>
+              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                aria-pressed={sceneMode}
+                className={
+                  sceneMode
+                    ? "h-8 rounded-lg border-[#1b6ca8]/35 bg-[#e8f2fa] px-2.5 text-[12px] font-medium text-[#1b6ca8]"
+                    : "h-8 rounded-lg border-[#d7e3eb] px-2.5 text-[12px] font-medium text-[#17324a] hover:bg-[#eef4f9]"
+                }
+                onClick={() => {
+                  setSceneMode((on) => !on);
+                }}
+              >
+                3D
+              </Button>
+              {!sceneMode ? (
+                <PaceControls
+                  playing={status === "running"}
+                  speed={speed}
+                  onTogglePlay={togglePlay}
+                  onSpeedChange={setSpeed}
+                  onSkip={skipBeat}
+                  disabled={status === "idle" && !prompt.trim()}
+                />
+              ) : null}
+            </div>
           }
           account={
             <AccountMenu
@@ -999,55 +1230,103 @@ export function LessonShell() {
                 void logout();
                 resetLesson();
                 setConversations([]);
+                scene.reset();
+                setSceneSessionId(newSceneExplainSessionId());
+                setSceneSessions([]);
               }}
             />
           }
         />
 
-        <div className="relative min-h-0 flex-1">
-          <VisualStage
-            plan={visualPlan}
-            playKey={playKey}
-            title={title}
-            beatOrder={beatOrder}
-            totalBeats={totalBeats}
-            narrationLines={boardNarration}
-            codeBuffer={codeBuffer}
-            streaming={status === "running"}
-            onDrawComplete={onDrawComplete}
-            drawQueue={drawQueue}
-            drawSessionKey={drawSessionKey}
-            drawPlaying={drawPlaying && status !== "paused"}
-            drawSpeed={speed}
-            preferDrawEngine={preferDrawEngine}
-            drawSpeech={drawSpeech}
-            canvasHeight={boardCanvasHeight}
-            scrollToY={boardScrollToY}
-            threeScene={threeScene}
-            threePlaying={status === "running"}
-            threeSpeed={speed}
-            threeSelectedStructure={threeSelected}
-            onThreeSelect={setThreeSelected}
-            onDrawClock={(ms) => {
-              drawClockRef.current = ms;
-            }}
-          />
-          {status === "running" &&
-          !visualPlan &&
-          !threeScene &&
-          !preferDrawEngine &&
-          boardNarration.length === 0 ? (
-            <ThinkingLoader
-              variant="overlay"
-              phrases={[
-                "Thinking",
-                "Planning the explanation",
-                "Setting up the board",
-                "Almost ready",
-              ]}
+        {sceneMode ? (
+          <div className="relative flex min-h-0 flex-1 overflow-hidden">
+            <div className="relative min-h-0 min-w-0 flex-1 bg-ink">
+              <SceneViewport
+                code={scene.code}
+                frameKey={scene.frameKey}
+                reveal={scene.reveal}
+                onReady={scene.onFrameReady}
+                onError={scene.onFrameError}
+              />
+              {scene.status === "building" || scene.status === "fixing" ? (
+                <ThinkingLoader
+                  variant="overlay"
+                  label={
+                    scene.status === "fixing"
+                      ? "Repairing the scene"
+                      : "Designing a detailed 3D scene"
+                  }
+                  className="bg-[radial-gradient(ellipse_at_50%_40%,rgba(26,43,60,0.55),rgba(26,43,60,0.72))] [&_p]:text-white [&_.thinking-shimmer]:bg-white/15 [&_.thinking-shimmer-beam]:via-white/70"
+                />
+              ) : null}
+            </div>
+            <div className="hidden h-full w-[min(26rem,38vw)] shrink-0 sm:block">
+              <SceneAgentRail
+                title={scene.title}
+                streaming={sceneStreaming}
+                logs={scene.logs}
+                narration={scene.narration}
+                emptyHint="As the scene builds, the spoken steps will land here so you can reread them."
+                placement="side"
+              />
+            </div>
+            <div className="absolute inset-x-0 bottom-0 z-30 sm:hidden">
+              <SceneAgentRail
+                title={scene.title}
+                streaming={sceneStreaming}
+                logs={scene.logs}
+                narration={scene.narration}
+                emptyHint="As the scene builds, the spoken steps will land here so you can reread them."
+                placement="bottom"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="relative min-h-0 flex-1">
+            <VisualStage
+              plan={visualPlan}
+              playKey={playKey}
+              title={title}
+              beatOrder={beatOrder}
+              totalBeats={totalBeats}
+              narrationLines={boardNarration}
+              codeBuffer={codeBuffer}
+              streaming={status === "running"}
+              onDrawComplete={onDrawComplete}
+              drawQueue={drawQueue}
+              drawSessionKey={drawSessionKey}
+              drawPlaying={drawPlaying && status !== "paused"}
+              drawSpeed={speed}
+              preferDrawEngine={preferDrawEngine}
+              drawSpeech={drawSpeech}
+              canvasHeight={boardCanvasHeight}
+              scrollToY={boardScrollToY}
+              threeScene={threeScene}
+              threePlaying={status === "running"}
+              threeSpeed={speed}
+              threeSelectedStructure={threeSelected}
+              onThreeSelect={setThreeSelected}
+              onDrawClock={(ms) => {
+                drawClockRef.current = ms;
+              }}
             />
-          ) : null}
-        </div>
+            {status === "running" &&
+            !visualPlan &&
+            !threeScene &&
+            !preferDrawEngine &&
+            boardNarration.length === 0 ? (
+              <ThinkingLoader
+                variant="overlay"
+                phrases={[
+                  "Thinking",
+                  "Planning the explanation",
+                  "Setting up the board",
+                  "Almost ready",
+                ]}
+              />
+            ) : null}
+          </div>
+        )}
       </div>
 
       <Dialog
@@ -1074,6 +1353,14 @@ export function LessonShell() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AskMeMcqDialog
+        open={showAskMe}
+        onOpenChange={setShowAskMe}
+        conversationId={conversationId}
+        title={title}
+        narrationLines={askMeNarration}
+      />
     </AppShell>
   );
 }

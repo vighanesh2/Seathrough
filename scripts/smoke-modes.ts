@@ -24,7 +24,7 @@ assert.equal(getMode("draw-engine")?.enabled, false);
 const siblings = listSiblingModes("lessons");
 assert.ok(siblings.every((m) => m.id !== "lessons"));
 assert.ok(siblings.some((m) => m.id === "screenshot-explain"));
-assert.equal(getMode("scene-explain")?.href, "/scene-explain");
+assert.equal(getMode("scene-explain")?.href, "/lessons?view=3d");
 assert.ok(listEnabledModes("learning").some((m) => m.id === "scene-explain"));
 assert.ok(!listEnabledModes().some((m) => m.id === "system-design"));
 assert.ok(!listEnabledModes().some((m) => m.id === "leetcode"));

@@ -29,7 +29,13 @@ const DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b";
 
 function resolveGroqModel(requested?: string): string {
   const id = requested?.trim() || DEFAULT_GROQ_MODEL;
-  return GROQ_MODEL_REPLACEMENTS[id] ?? id;
+  const resolved = GROQ_MODEL_REPLACEMENTS[id] ?? id;
+  if (resolved !== id) {
+    console.warn(
+      `[env] GROQ_MODEL "${id}" is retired on Groq; using "${resolved}" instead.`,
+    );
+  }
+  return resolved;
 }
 
 /** Exported for smokes — maps retired Groq ids onto a live model. */

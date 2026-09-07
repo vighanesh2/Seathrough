@@ -252,7 +252,7 @@ export function SceneExplainShell() {
           />
         </AppHeader>
 
-        <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+        <div className="relative flex min-h-0 flex-1 overflow-hidden">
           <div className="relative min-h-0 min-w-0 flex-1 bg-ink">
             <SceneViewport
               code={session.code}
@@ -267,19 +267,30 @@ export function SceneExplainShell() {
                 label={
                   session.status === "fixing"
                     ? "Repairing the scene"
-                    : "Building the 3D scene"
+                    : "Designing a detailed 3D scene"
                 }
                 className="bg-[radial-gradient(ellipse_at_50%_40%,rgba(26,43,60,0.55),rgba(26,43,60,0.72))] [&_p]:text-white [&_.thinking-shimmer]:bg-white/15 [&_.thinking-shimmer-beam]:via-white/70"
               />
             ) : null}
           </div>
-          <div className="h-[38dvh] shrink-0 md:h-auto md:w-[min(100%,380px)]">
+          <div className="hidden h-full w-[min(26rem,38vw)] shrink-0 sm:block">
             <SceneAgentRail
               title={session.title}
               streaming={streaming}
               logs={session.logs}
               narration={session.narration}
-              emptyHint="The agent will build any 3D process here, then explain it as it plays. If the scene crashes, it rewrites the code and tries again."
+              emptyHint="As the scene builds, the spoken steps will land here so you can reread them."
+              placement="side"
+            />
+          </div>
+          <div className="absolute inset-x-0 bottom-0 z-30 sm:hidden">
+            <SceneAgentRail
+              title={session.title}
+              streaming={streaming}
+              logs={session.logs}
+              narration={session.narration}
+              emptyHint="As the scene builds, the spoken steps will land here so you can reread them."
+              placement="bottom"
             />
           </div>
         </div>

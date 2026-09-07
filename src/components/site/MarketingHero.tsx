@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 const SUGGESTIONS = [
   {
     label: "Why do planets orbit the sun?",
-    href: "/scene-explain",
+    href: "/lessons?view=3d",
     icon: Atom,
   },
   {
@@ -19,7 +19,7 @@ const SUGGESTIONS = [
   },
   {
     label: "How does the heart pump blood?",
-    href: "/3d-figures",
+    href: "/lessons",
     icon: Heart,
   },
 ] as const;

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { inspectSceneCode } from "../src/lib/scene-explain/inspectCode";
-import { parseRepairedCode, parseSceneProgram } from "../src/lib/scene-explain/parseProgram";
+import { parseRepairedCode, parseScenePlan, parseSceneProgram } from "../src/lib/scene-explain/parseProgram";
 import { buildSceneIframeSrc } from "../src/lib/scene-explain/iframeRuntime";
 import {
   builtinSceneForPrompt,
@@ -61,6 +61,25 @@ __update = function(dt, time) { ball.position.x = Math.sin(time); };
 }
 
 {
+  const plan = parseScenePlan(
+    JSON.stringify({
+      title: "Deep orbit",
+      maxReveal: 9,
+      beats: Array.from({ length: 8 }, (_, i) => ({
+        order: i + 1,
+        narration: `Sentence one about stage ${i + 1}. Sentence two on mechanism. Sentence three on what comes next.`,
+        reveal: i + 1,
+      })),
+      visualBrief:
+        "Central star sphere emissive 0xffcc66. Planet mesh. 120 trail dots. Gravity arrow group. Velocity arrow. Reveal 1 star only; 2 add planet; 3 velocity; 4 gravity; 5 trail; 6 both arrows pulse; 7 periapsis highlight; 8–9 full system with labels-as-marker meshes. __update orbits planet and advances trail.",
+    }),
+  );
+  assert.equal(plan.title, "Deep orbit");
+  assert.equal(plan.beats.length, 8);
+  assert.ok(plan.visualBrief.includes("trail"));
+}
+
+{
   assert.throws(() => parseSceneProgram(""));
   assert.throws(() => parseSceneProgram("{ not json"));
   assert.throws(() =>
@@ -91,7 +110,7 @@ __update = function(dt, time) { ball.position.x = Math.sin(time); };
 {
   const mode = getMode("scene-explain");
   assert.ok(mode);
-  assert.equal(mode?.href, "/scene-explain");
+  assert.equal(mode?.href, "/lessons?view=3d");
   assert.equal(mode?.enabled, true);
   assert.ok(listEnabledModes("learning").some((m) => m.id === "scene-explain"));
 }
@@ -136,7 +155,7 @@ __update = function(dt, time) { ball.position.x = Math.sin(time); };
     true,
   );
   assert.equal(
-    sceneSpeakRequestSchema.safeParse({ text: "x".repeat(401) }).success,
+    sceneSpeakRequestSchema.safeParse({ text: "x".repeat(901) }).success,
     false,
   );
 }

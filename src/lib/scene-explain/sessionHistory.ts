@@ -18,7 +18,7 @@ export type SceneExplainSession = {
 };
 
 const MAX_SESSIONS = 24;
-const MAX_CODE_CHARS = 20_000;
+const MAX_CODE_CHARS = 60_000;
 
 function storageKey(userId?: string | null): string {
   return userId

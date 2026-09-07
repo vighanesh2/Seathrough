@@ -10,7 +10,7 @@ export const figures3dMode: ModeDefinition = {
   kind: "learning",
   group: "more",
   order: 60,
-  enabled: true,
+  enabled: false,
   usesWhiteboard: false,
   metaTitle: "Explore the body | SeeThrough",
   metaDescription:

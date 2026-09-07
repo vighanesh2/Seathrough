@@ -3,16 +3,30 @@ import type { SceneBeat, SceneProgram } from "@/lib/scene-explain/types";
 
 const beatSchema = z.object({
   order: z.coerce.number().int().min(1).max(12),
-  narration: z.string().trim().min(1).max(400),
+  narration: z.string().trim().min(1).max(900),
   reveal: z.coerce.number().int().min(1).max(12).optional(),
 });
 
 const metaSchema = z.object({
   title: z.string().trim().min(1).max(80),
   maxReveal: z.coerce.number().int().min(1).max(12).optional(),
-  beats: z.array(beatSchema).min(1).max(10),
+  beats: z.array(beatSchema).min(1).max(12),
   code: z.string().optional(),
 });
+
+const planSchema = z.object({
+  title: z.string().trim().min(1).max(80),
+  maxReveal: z.coerce.number().int().min(1).max(12),
+  beats: z.array(beatSchema).min(4).max(12),
+  visualBrief: z.string().trim().min(120).max(4000),
+});
+
+export type ScenePlanParsed = {
+  title: string;
+  maxReveal: number;
+  beats: SceneBeat[];
+  visualBrief: string;
+};
 
 function fence(raw: string, lang: string): string | null {
   const re = new RegExp("```" + lang + "\\s*([\\s\\S]*?)```", "i");
@@ -56,7 +70,30 @@ function normalizeBeats(
     }))
     .filter((beat) => beat.narration)
     .sort((a, b) => a.order - b.order)
-    .slice(0, 10);
+    .slice(0, 12);
+}
+
+/** Plan-only JSON from the first generation pass. */
+export function parseScenePlan(raw: string): ScenePlanParsed {
+  if (!raw.trim()) {
+    throw new Error("The scene planner returned an empty plan.");
+  }
+  const json = extractJsonObject(raw);
+  const parsed = planSchema.safeParse(json);
+  if (!parsed.success) {
+    throw new Error("The scene planner did not return a usable deep plan.");
+  }
+  const maxReveal = Math.max(6, Math.min(12, parsed.data.maxReveal));
+  const beats = normalizeBeats(parsed.data.beats, maxReveal);
+  if (beats.length < 4) {
+    throw new Error("The scene planner returned too few explanation beats.");
+  }
+  return {
+    title: parsed.data.title.slice(0, 80),
+    maxReveal,
+    beats,
+    visualBrief: parsed.data.visualBrief.trim().slice(0, 4000),
+  };
 }
 
 /**
@@ -110,7 +147,6 @@ export function parseRepairedCode(raw: string, fallbackTitle: string): string {
   if (parsed.success && parsed.data.code?.trim()) {
     return parsed.data.code.trim();
   }
-  // Last resort: treat the whole reply as code if it looks like Three.js.
   if (/\bTHREE\b/.test(raw) && !raw.trim().startsWith("{")) {
     return raw.trim();
   }

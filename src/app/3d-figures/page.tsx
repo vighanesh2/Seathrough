@@ -1,14 +1,6 @@
-import type { Metadata } from "next";
-import { Workspace } from "@/modules/figures-3d";
-import { figures3dMode } from "@/modules/figures-3d/mode";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: figures3dMode.metaTitle,
-  description: figures3dMode.metaDescription,
-};
-
+/** Legacy 3D body URL — 3D now lives on the lesson page. */
 export default function ThreeDFiguresPage() {
-  return (
-    <Workspace />
-  );
+  redirect("/lessons");
 }

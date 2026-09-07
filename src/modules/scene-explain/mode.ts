@@ -1,9 +1,9 @@
 import type { ModeDefinition } from "@/modes/types";
 
-/** Agent-built Three.js scenes for any process the student asks about. */
+/** Agent-built Three.js scenes — lives on the lesson page via ?view=3d. */
 export const sceneExplainMode: ModeDefinition = {
   id: "scene-explain",
-  href: "/scene-explain",
+  href: "/lessons?view=3d",
   navLabel: "3D scenes",
   title: "3D scene explanation",
   description:

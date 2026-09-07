@@ -33,6 +33,6 @@ export type SceneRepairInput = {
   attempt: number;
 };
 
-export const MAX_SCENE_CODE_CHARS = 20_000;
+export const MAX_SCENE_CODE_CHARS = 60_000;
 export const MAX_SCENE_REPAIR_ATTEMPTS = 3;
-export const SCENE_LOAD_TIMEOUT_MS = 12_000;
+export const SCENE_LOAD_TIMEOUT_MS = 22_000;
