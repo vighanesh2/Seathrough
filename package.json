@@ -24,7 +24,9 @@
     "smoke:grounding": "npx --yes esbuild scripts/smoke-grounding.ts --bundle --platform=node --outfile=/tmp/smoke-grounding.js && node /tmp/smoke-grounding.js",
     "smoke:generated-visual": "npx --yes esbuild scripts/smoke-generated-visual.ts --bundle --platform=node --outfile=/tmp/smoke-generated-visual.js && node /tmp/smoke-generated-visual.js",
     "smoke:pipeline-status": "npx --yes esbuild scripts/smoke-pipeline-status.ts --bundle --platform=node --outfile=/tmp/smoke-pipeline-status.js && node /tmp/smoke-pipeline-status.js",
-    "smoke:topics": "npx --yes esbuild scripts/smoke-topics.ts --bundle --platform=node --outfile=/tmp/smoke-topics.js && node /tmp/smoke-topics.js"
+    "smoke:topics": "npx --yes esbuild scripts/smoke-topics.ts --bundle --platform=node --outfile=/tmp/smoke-topics.js && node /tmp/smoke-topics.js",
+    "smoke:token-compression": "npx --yes esbuild scripts/smoke-token-compression.ts --bundle --platform=node --outfile=/tmp/smoke-token-compression.js && node /tmp/smoke-token-compression.js",
+    "eval:token-compression-gold": "npx --yes esbuild scripts/eval-token-compression-gold.ts --bundle --platform=node --outfile=/tmp/eval-token-compression-gold.js && node --env-file=.env.local /tmp/eval-token-compression-gold.js"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "^0.18.1",

@@ -136,6 +136,13 @@ async function main() {
   assert.equal(isIntegralAreaTopic(""), false);
   assert.equal(isIntegralAreaTopic("integrate 3x^2 dx"), false);
   assert.equal(
+    isIntegralAreaTopic(
+      "Integration by parts — reverse the product rule in one worked example.",
+    ),
+    false,
+    "a confirmed technique ask must not route to the area board",
+  );
+  assert.equal(
     decideBoardVisualStrategy({ prompt: integralPrompt, hasBoardScript: true }),
     "sketch",
   );
@@ -144,10 +151,15 @@ async function main() {
   assert.ok(integralPlan?.boardScript?.steps?.length, "integral heuristic exists");
   assert.ok(
     integralPlan!.boardScript!.steps.some(
-      (s) => s.type === "write" && /area under a curve/i.test(s.text),
+      (s) => s.type === "write" && /signed area/i.test(s.text),
     ),
-    "board talks about area under the curve",
+    "board teaches signed area",
   );
+  const integralBoardCopy = integralPlan!.boardScript!.steps
+    .map((step) => ("text" in step ? step.text : ""))
+    .join(" ");
+  assert.match(integralBoardCopy, /below the x-axis subtracts/i);
+  assert.doesNotMatch(integralBoardCopy, /\btotal area\b/i);
 
   const spokenBeat1 = narrationMatchingBoard({
     steps: integralPlan!.boardScript!.steps,
@@ -156,7 +168,7 @@ async function main() {
     fallback: "unrelated algebra about 2x + 6 = 14",
   });
   assert.ok(
-    spokenBeat1.includes("area under a curve"),
+    spokenBeat1.includes("signed area"),
     `right-side text should match the board, got: ${spokenBeat1}`,
   );
   assert.ok(
@@ -186,7 +198,7 @@ async function main() {
     .map((c) => c.text)
     .join(" ");
   assert.ok(
-    /area under a curve/i.test(boardText),
+    /signed area/i.test(boardText),
     `beat 1 writes the same sentence the right rail says, got: ${boardText}`,
   );
 

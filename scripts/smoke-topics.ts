@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { formatNarrationForDisplay } from "../src/lib/math/formatNarrationForDisplay";
+import { normalizeKatexSource } from "../src/lib/math/latexToBoardText";
 import {
   TOPIC_MODULES,
   activeTopicStepIndex,
@@ -36,6 +37,11 @@ assert.ok(cleaned.includes("(f(7)-f(3))/(7-3)"), "fractions become readable ASCI
 assert.ok(
   formatNarrationForDisplay("on\u202f[3,7]").includes("[3,7]"),
   "odd unicode spaces are normalized",
+);
+assert.equal(
+  normalizeKatexSource("x\u202f+\u00a0y = 2"),
+  "x + y = 2",
+  "KaTeX input strips unsupported Unicode spaces",
 );
 
 // --- registry integrity -----------------------------------------------------

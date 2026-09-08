@@ -10,12 +10,17 @@ import type { TopicModule } from "@/lib/topics/types";
  * Hand-tuned interactives first (most specific), then the generic function
  * grapher, then the JSXGraph example catalog.
  */
-export const TOPIC_MODULES: readonly TopicModule[] = [
+const HAND_TUNED_TOPICS: readonly TopicModule[] = [
   differentialEquationsTopic,
   meanValueTheoremTopic,
   rollesTheoremTopic,
   functionGraphTopic,
-  ...catalogTopicModules(),
+];
+const HAND_TUNED_IDS = new Set(HAND_TUNED_TOPICS.map((topic) => topic.id));
+
+export const TOPIC_MODULES: readonly TopicModule[] = [
+  ...HAND_TUNED_TOPICS,
+  ...catalogTopicModules().filter((topic) => !HAND_TUNED_IDS.has(topic.id)),
 ];
 
 const BY_ID = new Map<TopicId, TopicModule>(

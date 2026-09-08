@@ -3,7 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { formatNarrationForDisplay } from "@/lib/math/formatNarrationForDisplay";
+import {
+  formatNarrationForDisplay,
+  sameNarrationText,
+} from "@/lib/math/formatNarrationForDisplay";
 import type { LessonSource } from "@/types/lesson";
 
 export type BoardNarrationLine = {
@@ -60,6 +63,22 @@ export function BoardNarration({
   }, [lines, codeBuffer, sources]);
 
   const isSide = placement === "side";
+  const visibleLines = lines.reduce<BoardNarrationLine[]>((kept, line) => {
+    const text = displayText(line.text);
+    if (!text) return kept;
+    if (line.kind === "summary") {
+      const duplicateIndex = kept.findIndex(
+        (prior) =>
+          prior.kind !== "student" &&
+          prior.kind !== "error" &&
+          sameNarrationText(prior.text, text),
+      );
+      if (duplicateIndex >= 0) kept.splice(duplicateIndex, 1);
+    }
+    kept.push({ ...line, text });
+    return kept;
+  }, []);
+  const empty = visibleLines.length === 0 && !codeBuffer?.trim();
 
   return (
     <aside
@@ -95,21 +114,21 @@ export function BoardNarration({
         ref={scrollerRef}
         className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-3"
       >
-        {lines.length === 0 && !codeBuffer?.trim() ? (
+        {empty ? (
           <p className="text-[14px] leading-6 text-[#6a7d90]">
             As the board draws, the spoken steps will land here so you can
             reread them.
           </p>
         ) : null}
 
-        {lines.map((line, index) => {
-          const text = displayText(line.text);
+        {visibleLines.map((line, index) => {
+          const text = line.text;
           const numbered =
             line.kind !== "student" &&
             line.kind !== "error" &&
             line.kind !== "summary";
           const n = numbered
-            ? lines
+            ? visibleLines
                 .slice(0, index + 1)
                 .filter(
                   (candidate) =>

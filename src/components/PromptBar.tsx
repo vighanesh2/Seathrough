@@ -210,8 +210,9 @@ export function PromptBar({
       onSubmit={(e) => {
         e.preventDefault();
         if (disabled) return;
-        // Release the mic as soon as the turn starts — do not keep listening
-        // while the lesson streams / TTS talks.
+        // Voice and typing intentionally share onSubmit. Freeze the visible
+        // transcript first so late recognition events cannot overwrite Pipe A's
+        // clarified or rewritten prompt while the lesson stream or TTS runs.
         stopListening();
         onSubmit();
       }}

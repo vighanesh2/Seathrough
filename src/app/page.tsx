@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function HomePage() {
-  return <MarketingHome copyrightYear={new Date().getUTCFullYear()} />;
+  return <MarketingHome />;
 }

@@ -10,6 +10,8 @@ export type ConsumeLessonOptions = {
   visualSummary?: string;
   boardBottomY?: number;
   accessToken?: string | null;
+  /** Pipe A clarify pick / confirmed rewrite. */
+  confirmedTightAsk?: string;
   onEvent: (event: StreamEvent) => void | Promise<void>;
 };
 
@@ -36,6 +38,7 @@ export async function consumeLessonStream(
       conversationId: options.conversationId,
       visualSummary: options.visualSummary,
       boardBottomY: options.boardBottomY,
+      confirmedTightAsk: options.confirmedTightAsk,
     }),
     signal: options.signal,
   });

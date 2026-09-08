@@ -56,6 +56,15 @@ export async function POST(request: Request) {
     });
 
     if (error || !data.session || !data.user) {
+      // Log the real Supabase reason server-side only (never return it to the client).
+      console.error("[auth/login] signIn failed", {
+        username,
+        email,
+        profileFound: Boolean(profile),
+        supabaseMessage: error?.message ?? "no session returned",
+        supabaseStatus: error?.status ?? null,
+        supabaseCode: (error as { code?: string } | null)?.code ?? null,
+      });
       return NextResponse.json(
         { error: "Incorrect username or password" },
         { status: 401 },

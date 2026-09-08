@@ -130,6 +130,28 @@ export function writeAnatomySessions(
   }
 }
 
+/** Merge local/remote snapshots, keeping the most complete newest session per id. */
+export function mergeAnatomySessions(
+  local: AnatomySession[],
+  remote: AnatomySession[],
+): AnatomySession[] {
+  const merged = new Map<string, AnatomySession>();
+  for (const session of [...local, ...remote]) {
+    const current = merged.get(session.id);
+    if (
+      !current ||
+      session.turns.length > current.turns.length ||
+      (session.turns.length === current.turns.length &&
+        session.updatedAt > current.updatedAt)
+    ) {
+      merged.set(session.id, session);
+    }
+  }
+  return [...merged.values()]
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    .slice(0, MAX_SESSIONS);
+}
+
 export function upsertAnatomySession(
   session: AnatomySession,
   userId?: string | null,

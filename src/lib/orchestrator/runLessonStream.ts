@@ -1,4 +1,13 @@
 import {
+  applyCompressedNarration,
+  isTokenCompressionEnabled,
+  runPipeA,
+  runPipeB,
+  teachingUnitToLessonPatch,
+  type CriticPass,
+  type TeachingUnit,
+} from "@/lib/token-compression";
+import {
   appendTurn,
   attachLessonToConversation,
   createConversation,
@@ -39,7 +48,14 @@ import {
 } from "@/lib/draw-engine/umlSchema";
 import { toUserFacingError } from "@/lib/errors/userFacing";
 import { narrationMatchingBoard } from "@/lib/visuals/library/scriptReveal";
-import { formatNarrationForDisplay } from "@/lib/math/formatNarrationForDisplay";
+import {
+  formatNarrationForDisplay,
+  sameNarrationText,
+} from "@/lib/math/formatNarrationForDisplay";
+import {
+  correctIntegralAreaClaims,
+  ensureSignedAreaSummary,
+} from "@/lib/math/integralAreaAccuracy";
 import {
   saveBoardSnapshot,
   type LessonBoardSnapshot,
@@ -64,6 +80,7 @@ import { topicVisualPlanFor } from "@/lib/topics/plan";
 import { getTopicModule } from "@/lib/topics/registry";
 import { buildTopicLessonPlan } from "@/lib/topics/topicLesson";
 import { visualStableKey } from "@/lib/visuals/router";
+import { isIntegralAreaTopic } from "@/lib/visuals/library/topicMatch";
 import type { LessonPlanParsed } from "@/lib/schemas/lesson";
 import type { VisualPlan } from "@/lib/visuals/types";
 import type { LessonSource, StreamEvent } from "@/types/lesson";
@@ -81,6 +98,11 @@ export type RunLessonOptions = {
   boardBottomY?: number;
   /** Signed-in user id when available */
   userId?: string | null;
+  /**
+   * Pipe A already resolved — run against this tight ask.
+   * `prompt` remains the sloppy draft stored on lessons.prompt.
+   */
+  confirmedTightAsk?: string;
 };
 
 function offsetUmlPlanY(plan: UmlDiagramPlan, dy: number): UmlDiagramPlan {
@@ -168,6 +190,13 @@ export async function* runLessonStream(
   try {
     assertNotAborted(options.signal);
 
+    const compressionOn = isTokenCompressionEnabled();
+    const sloppyDraft = prompt;
+    let lessonPrompt = prompt;
+    let teachingUnit: TeachingUnit | null = null;
+    let tightAsk: string | null = null;
+    let criticPass: CriticPass | null = null;
+
     let plan: LessonPlanParsed;
     let sources: LessonSource[] = [];
     let topicHint = "";
@@ -236,6 +265,54 @@ export async function* runLessonStream(
       }
       sources = mergeSources(priorSources(ctx.plan), freshSources);
 
+      if (compressionOn) {
+        assertNotAborted(options.signal);
+        const pipeA = await runPipeA({
+          draft: sloppyDraft,
+          confirmedTightAsk: options.confirmedTightAsk,
+          isFollowUp: true,
+          priorTitle: ctx.title,
+          priorRootPrompt: ctx.rootPrompt,
+          visualSummary: options.visualSummary,
+        });
+
+        if (pipeA.decision === "ask") {
+          criticPass = "asked_user";
+          yield {
+            type: "clarify",
+            message: pipeA.message,
+            options: pipeA.options,
+            conversationId,
+            draftPrompt: sloppyDraft,
+          };
+          yield { type: "done", conversationId };
+          return;
+        }
+
+        tightAsk = pipeA.tightAsk;
+        lessonPrompt = pipeA.tightAsk;
+        teachingUnit = {
+          contentName: pipeA.contentName,
+          scope: pipeA.scope,
+          coreConceptSummary: `${pipeA.contentName} on this canvas.`,
+          nextStep: "Follow the board mapping for the next teaching move.",
+          mappingOnCanvas: {
+            objectsOnBoard: "Objects that make this tight ask visible.",
+            whatDrawingMeans: "Each object maps to the core idea.",
+            stillVsMayMove:
+              "Still board; only mapped transitions may change on this canvas.",
+          },
+        };
+        yield {
+          type: "tight_ask",
+          tightAsk: pipeA.tightAsk,
+          contentName: pipeA.contentName,
+          displayRewrite: pipeA.displayRewrite ?? pipeA.tightAsk,
+        };
+      }
+
+      // Persist only once Pipe A has a runnable ask. A clarification response
+      // is resubmitted with confirmedTightAsk and must not duplicate the draft.
       await appendTurn({
         conversationId,
         lessonId: ctx.lessonId,
@@ -249,7 +326,7 @@ export async function* runLessonStream(
         stage: "lesson_plan",
         state: "started",
       };
-      plan = await generateFollowUpPlan(prompt, {
+      plan = await generateFollowUpPlan(lessonPrompt, {
         rootPrompt: ctx.rootPrompt,
         priorTitle: ctx.title,
         priorSummary: ctx.humanSummary,
@@ -272,6 +349,47 @@ export async function* runLessonStream(
         state: "completed",
       };
     } else {
+      if (compressionOn) {
+        assertNotAborted(options.signal);
+        const pipeA = await runPipeA({
+          draft: sloppyDraft,
+          confirmedTightAsk: options.confirmedTightAsk,
+          isFollowUp: false,
+        });
+
+        if (pipeA.decision === "ask") {
+          yield {
+            type: "clarify",
+            message: pipeA.message,
+            options: pipeA.options,
+            draftPrompt: sloppyDraft,
+          };
+          yield { type: "done" };
+          return;
+        }
+
+        tightAsk = pipeA.tightAsk;
+        lessonPrompt = pipeA.tightAsk;
+        teachingUnit = {
+          contentName: pipeA.contentName,
+          scope: pipeA.scope,
+          coreConceptSummary: `${pipeA.contentName} on this canvas.`,
+          nextStep: "Follow the board mapping for the next teaching move.",
+          mappingOnCanvas: {
+            objectsOnBoard: "Objects that make this tight ask visible.",
+            whatDrawingMeans: "Each object maps to the core idea.",
+            stillVsMayMove:
+              "Still board; only mapped transitions may change on this canvas.",
+          },
+        };
+        yield {
+          type: "tight_ask",
+          tightAsk: pipeA.tightAsk,
+          contentName: pipeA.contentName,
+          displayRewrite: pipeA.displayRewrite ?? pipeA.tightAsk,
+        };
+      }
+
       const created = await createConversation({
         rootPrompt: prompt,
         userId: options.userId ?? null,
@@ -297,7 +415,7 @@ export async function* runLessonStream(
           stage: "research",
           state: "started",
         };
-        const research = await researchSources(prompt, options.signal);
+        const research = await researchSources(lessonPrompt, options.signal);
         sources = research.sources;
         yield research.failed
           ? {
@@ -328,7 +446,10 @@ export async function* runLessonStream(
         stage: "lesson_plan",
         state: "started",
       };
-      plan = await generateLessonPlan(prompt, formatWebEvidence(sources));
+      plan = await generateLessonPlan(
+        lessonPrompt,
+        formatWebEvidence(sources),
+      );
       yield {
         type: "pipeline_status",
         stage: "lesson_plan",
@@ -343,43 +464,114 @@ export async function* runLessonStream(
 
     const topicConceptKey =
       plan.beats.find((b) => b.conceptKey?.trim())?.conceptKey ?? plan.title;
-    const topicPlan =
-      topicVisualPlanFor(prompt) ??
-      topicVisualPlanFor(prompt, topicConceptKey, topicHint);
+    const topicPlan = topicVisualPlanFor(
+      lessonPrompt,
+      topicConceptKey,
+      topicHint,
+    );
     const topicModule = topicPlan ? getTopicModule(topicPlan.topicId) : null;
+    const integralAreaLesson = isIntegralAreaTopic(
+      lessonPrompt,
+      topicConceptKey,
+    );
     if (topicModule) {
-      // Include the root topic phrase so follow-ups like "2 2 12 2 6 10 1"
-      // still derive assessment inputs against the matched construction.
-      const topicPrompt = [prompt, topicHint].filter(Boolean).join(" ");
+      // Keep the confirmed tight ask authoritative while retaining the prior
+      // topic hint for follow-up inputs that are only values or short answers.
+      const topicPrompt = [lessonPrompt, topicHint].filter(Boolean).join(" ");
       plan = buildTopicLessonPlan(plan, topicModule, topicPrompt);
     }
+
+    if (compressionOn && tightAsk) {
+      assertNotAborted(options.signal);
+      try {
+        const pipeB = await runPipeB({
+          tightAsk,
+          contentName: teachingUnit?.contentName ?? plan.title,
+          scope: teachingUnit?.scope ?? {
+            include: tightAsk,
+            exclude: "Survey and neighbor topics not on this canvas.",
+          },
+          landfillBeats: plan.beats.map((b) => ({
+            id: b.id,
+            kind: b.kind,
+            narration: b.narration,
+          })),
+          landfillHumanSummary: plan.humanSummary,
+        });
+        teachingUnit = pipeB.teachingUnit;
+        criticPass = pipeB.criticPass;
+        plan = applyCompressedNarration(
+          plan,
+          pipeB.beats,
+          pipeB.humanSummary,
+        );
+      } catch (pipeBError) {
+        console.error(
+          "[lesson-stream] Pipe B failed; continuing with planned narration",
+          pipeBError instanceof Error ? pipeBError.message : pipeBError,
+        );
+        criticPass = "no";
+      }
+    }
+
+    const cleanedSummary =
+      formatNarrationForDisplay(plan.humanSummary) ||
+      teachingUnit?.coreConceptSummary ||
+      "Review the concept on this board.";
+    plan = {
+      ...plan,
+      beats: integralAreaLesson
+        ? plan.beats.map((beat) => ({
+            ...beat,
+            narration:
+              beat.kind === "human_summary"
+                ? ensureSignedAreaSummary(beat.narration)
+                : correctIntegralAreaClaims(beat.narration),
+          }))
+        : plan.beats,
+      humanSummary: integralAreaLesson
+        ? ensureSignedAreaSummary(cleanedSummary)
+        : cleanedSummary,
+    };
+
+    const contractPatch =
+      teachingUnit != null
+        ? teachingUnitToLessonPatch(teachingUnit, {
+            tightAsk,
+            criticPass,
+          })
+        : null;
+
+    const lessonInsertBase = {
+      prompt: sloppyDraft,
+      title: plan.title,
+      language: plan.language,
+      status: "streaming" as const,
+      plan,
+      human_summary: plan.humanSummary,
+      user_id: options.userId ?? null,
+      conversation_id: conversationId ?? null,
+      ...(contractPatch ?? {}),
+    };
 
     yield {
       type: "pipeline_status",
       stage: "persistence",
       state: "started",
     };
+
     const { data: lessonRow, error: insertError } = await supabase
       .from("lessons")
-      .insert({
-        prompt,
-        title: plan.title,
-        language: plan.language,
-        status: "streaming",
-        plan,
-        human_summary: plan.humanSummary,
-        user_id: options.userId ?? null,
-        conversation_id: conversationId ?? null,
-      })
+      .insert(lessonInsertBase)
       .select("id")
       .single();
 
     if (insertError) {
-      // conversation_id column may be missing before migration — retry without it
+      // Older DBs may lack conversation_id and/or teaching-unit columns.
       const retry = await supabase
         .from("lessons")
         .insert({
-          prompt,
+          prompt: sloppyDraft,
           title: plan.title,
           language: plan.language,
           status: "streaming",
@@ -442,7 +634,7 @@ export async function* runLessonStream(
     // UML lessons: generate the FULL diagram JSON once, then reveal beat-by-beat.
     let umlPlan: UmlDiagramPlan | null = null;
     const umlRevealed = new Set<string>();
-    const umlPrompt = prompt;
+    const umlPrompt = lessonPrompt;
 
     if (shouldGenerateUmlPlan(umlPrompt)) {
       try {
@@ -515,7 +707,7 @@ export async function* runLessonStream(
           .map((source) => `${source.title}: ${source.excerpt}`)
           .join("\n");
         const generated = await generateEducationalSvg({
-          prompt,
+          prompt: lessonPrompt,
           lessonTitle: plan.title,
           lessonSummary: plan.humanSummary,
           lessonPoints: plan.beats.map((beat) => beat.narration),
@@ -609,7 +801,8 @@ export async function* runLessonStream(
             // Always route visuals from the CURRENT question only.
             // Including prior lesson text here falsely rematches old assets
             // (e.g. "class" → "Class blueprint → objects" on a cryptography follow-up).
-            prompt,
+            // Use Pipe A's confirmed tight ask, not the original broad draft.
+            prompt: lessonPrompt,
             topicHint: topicHint || undefined,
             beat: isFollowUp
               ? {
@@ -676,14 +869,26 @@ export async function* runLessonStream(
         state: "started",
         scope: beatScope,
       };
+      // Pipe B narration is the verified pane/voice contract. Board-script labels
+      // may be terse ("CIA", "check a case") and must not replace required content
+      // after the compression gates have passed.
+      const boardAlignedNarration =
+        compressionOn && tightAsk
+          ? beat.narration
+          : narrationMatchingBoard({
+              steps: threePlan ? undefined : activePlan?.boardScript?.steps,
+              beatOrder: beat.order,
+              totalBeats: plan.beats.length,
+              fallback: beat.narration,
+            });
       const alignedNarration = formatNarrationForDisplay(
-        narrationMatchingBoard({
-          steps: threePlan ? undefined : activePlan?.boardScript?.steps,
-          beatOrder: beat.order,
-          totalBeats: plan.beats.length,
-          fallback: beat.narration,
-        }),
+        integralAreaLesson
+          ? correctIntegralAreaClaims(boardAlignedNarration)
+          : boardAlignedNarration,
       );
+      const isRepeatedSummaryBeat =
+        beat.kind === "human_summary" &&
+        sameNarrationText(alignedNarration, plan.humanSummary);
 
       if (!threePlan && !usesTopicBoard) {
         // Every 2D beat draws something — 3D lessons update their live scene.
@@ -782,11 +987,13 @@ export async function* runLessonStream(
         yield { type: "code_delta", text: beat.codeDelta };
       }
 
-      yield {
-        type: "narration",
-        text: alignedNarration,
-        beatId: beat.id,
-      };
+      if (!isRepeatedSummaryBeat) {
+        yield {
+          type: "narration",
+          text: alignedNarration,
+          beatId: beat.id,
+        };
+      }
 
       const speechUnits = buildSpeechUnits(
         alignedNarration,
@@ -812,7 +1019,7 @@ export async function* runLessonStream(
         scope: beatScope,
       };
 
-      if (conversationId) {
+      if (conversationId && !isRepeatedSummaryBeat) {
         await appendTurn({
           conversationId,
           lessonId,
@@ -964,7 +1171,12 @@ export async function* runLessonStream(
 
     const completionUpdate = await supabase
       .from("lessons")
-      .update({ status: "completed", human_summary: plan.humanSummary })
+      .update({
+        status: "completed",
+        human_summary: plan.humanSummary,
+        plan,
+        ...(contractPatch ?? {}),
+      })
       .eq("id", lessonId);
     if (completionUpdate.error) {
       console.error(

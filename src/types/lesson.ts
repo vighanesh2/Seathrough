@@ -168,6 +168,25 @@ export type StreamEvent =
       cueT0?: number;
     }
   | { type: "human_summary"; text: string }
+  /**
+   * Pipe A could not name one canvas — wait for the user to pick.
+   * Never framed as “we failed to teach.”
+   */
+  | {
+      type: "clarify";
+      message: string;
+      options: Array<{ id: string; label: string; tightAsk: string }>;
+      conversationId?: string;
+      /** Original sloppy draft — client should resubmit this as `prompt`. */
+      draftPrompt?: string;
+    }
+  /** Pipe A named a tight ask and the lesson will run against it. */
+  | {
+      type: "tight_ask";
+      tightAsk: string;
+      contentName: string;
+      displayRewrite?: string;
+    }
   | { type: "error"; message: string }
   | { type: "done"; conversationId?: string; lessonId?: string };
 
