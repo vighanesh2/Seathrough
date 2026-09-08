@@ -1,0 +1,33 @@
+{
+  "id": "autocatalytic-process",
+  "title": "Autocatalytic process",
+  "summary": "This application simulates an *autocatalytic population growth model*. In JSXGraph, simulations involving differential equations can be easily realized with the *turtle element*.\n\n_The model_\n\nIn time the population grows by members:\n\nWith the limit process we get\n\nThe initial population is , .\n\nThe essential part of the code is: we have a step width (time) and in each step the turtle moves from…",
+  "formula": "",
+  "aliases": [
+    "autocatalytic process",
+    "jsxgraph autocatalytic process"
+  ],
+  "tags": [
+    "Calculus",
+    "Circles",
+    "Differential equations"
+  ],
+  "boundingBox": [
+    -0.5,
+    12.5,
+    14.5,
+    -12.5
+  ],
+  "keepAspectRatio": false,
+  "sourceUrl": "https://jsxgraph.org/share/example/autocatalytic-process",
+  "steps": [
+    {
+      "title": "Autocatalytic process",
+      "detail": "This application simulates an *autocatalytic population growth model*. In JSXGraph, simulations involving differential equations can be easily realized with the *turtle element*."
+    },
+    {
+      "title": "Explore further",
+      "detail": "_The model_"
+    }
+  ]
+}

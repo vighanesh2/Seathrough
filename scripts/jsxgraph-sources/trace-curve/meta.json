@@ -1,0 +1,34 @@
+{
+  "id": "trace-curve",
+  "title": "Trace curve - logarithm",
+  "summary": "Trace the orbit of point which depends \"somehow\" on a slider. The simple method is to add the attribute . This invites exploration. If the trace curve should be used for further construction, the element is useful.",
+  "formula": "",
+  "aliases": [
+    "trace curve - logarithm",
+    "trace curve",
+    "jsxgraph trace curve - logarithm"
+  ],
+  "tags": [
+    "Calculus",
+    "Curves",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -1,
+    5,
+    9,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/trace-curve",
+  "steps": [
+    {
+      "title": "Trace curve - logarithm",
+      "detail": "Trace the orbit of point which depends \"somehow\" on a slider. The simple method is to add the attribute . This invites exploration. If the trace curve should be used for further construction, the element is useful."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

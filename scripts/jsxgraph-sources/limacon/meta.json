@@ -1,0 +1,31 @@
+{
+  "id": "limacon",
+  "title": "Limacon",
+  "summary": "With JSXGraph, elements can be traced to visualize constructed loci. Here, with a simple Euclidean construction the limaçon curve (or Pascal's snail) is generated as trace. Its equation (up to translation and rotation) in polar form is",
+  "formula": "",
+  "aliases": [
+    "limacon",
+    "jsxgraph limacon"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -2,
+    16,
+    18,
+    -2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/limacon",
+  "steps": [
+    {
+      "title": "Limacon",
+      "detail": "With JSXGraph, elements can be traced to visualize constructed loci. Here, with a simple Euclidean construction the limaçon curve (or Pascal's snail) is generated as trace. Its equation (up to translation and rotation) in polar form is"
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

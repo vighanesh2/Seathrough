@@ -14,17 +14,26 @@ import {
   retrieveCardiopulmonaryKnowledge,
 } from "../src/lib/anatomy/knowledge/cardiopulmonary";
 import { retrieveEyeKnowledge } from "../src/lib/anatomy/knowledge/eye";
+import { retrieveBrainKnowledge } from "../src/lib/anatomy/knowledge/brain";
+import { retrieveKidneyKnowledge } from "../src/lib/anatomy/knowledge/kidney";
 import {
   anatomyModelAnswerSchema,
   anatomyQuestionRequestSchema,
 } from "../src/lib/anatomy/schemas";
-import { normalizeAnatomyModelAnswer } from "../src/lib/anatomy/answer";
+import {
+  normalizeAnatomyModelAnswer,
+  revealForFocusedStructures,
+} from "../src/lib/anatomy/answer";
 import {
   revealForBeat,
   threeSceneFromChoice,
   threeSceneFromLessonPlan,
 } from "../src/lib/three-scenes/decide";
 import { lessonPlanSchema } from "../src/lib/schemas/lesson";
+import {
+  loadBrainScene,
+  loadKidneyScene,
+} from "../src/lib/three-scenes/scenes/organs";
 
 function indexOf(id: (typeof CARDIOPULMONARY_FLOW_ORDER)[number]): number {
   return CARDIOPULMONARY_FLOW_ORDER.indexOf(id);
@@ -51,6 +60,15 @@ const eyeAliased = threeSceneFromChoice({
 });
 assert.equal(eyeAliased?.id, "eye");
 assert.equal(eyeAliased?.maxReveal, 6);
+
+assert.equal(
+  threeSceneFromChoice({ use: true, id: "cerebellum" })?.id,
+  "brain",
+);
+assert.equal(
+  threeSceneFromChoice({ use: true, id: "nephron" })?.id,
+  "kidney",
+);
 
 const whiteboardHeartPlan = lessonPlanSchema.parse({
   title: "How the heart pumps blood",
@@ -138,6 +156,18 @@ assert.ok(invertedEvidence.some((entry) => entry.id === "inverted-image"));
 assert.ok(citationsForKnowledge(invertedEvidence).length > 0);
 assert.deepEqual(retrieveEyeKnowledge("quantum chromodynamics"), []);
 
+const brainEvidence = retrieveBrainKnowledge(
+  "How does the cerebellum coordinate movement?",
+);
+assert.ok(brainEvidence.some((entry) => entry.id === "motor-control"));
+assert.ok(citationsForKnowledge(brainEvidence).length > 0);
+
+const kidneyEvidence = retrieveKidneyKnowledge(
+  "How does the glomerulus filter blood?",
+);
+assert.ok(kidneyEvidence.some((entry) => entry.id === "filtration"));
+assert.ok(citationsForKnowledge(kidneyEvidence).length > 0);
+
 assert.equal(
   anatomyQuestionRequestSchema.safeParse({ question: "" }).success,
   false,
@@ -202,6 +232,18 @@ const eyeAnswer = anatomyModelAnswerSchema.parse(
 );
 assert.equal(eyeAnswer.animationMode, "light-path");
 assert.deepEqual(eyeAnswer.focusStructures, ["retina", "lens"]);
+assert.equal(revealForFocusedStructures(2, ["glomerulus"]), 5);
+assert.equal(revealForFocusedStructures(6, ["frontal-lobe"]), 6);
+
+assert.equal(
+  anatomyQuestionRequestSchema.safeParse({
+    question: "How does the nephron filter blood?",
+    selectedStructure: "glomerulus",
+    sceneMode: "filtration",
+    sceneId: "kidney",
+  }).success,
+  true,
+);
 
 const assetDir = resolve(process.cwd(), "public/models/cardiopulmonary");
 const manifest = JSON.parse(
@@ -220,4 +262,35 @@ for (const asset of manifest.assets) {
   assert.match(asset.sourceEntry, /^https:\/\/3d\.nih\.gov\/entries\//);
 }
 
-console.log("anatomy smoke checks passed");
+async function checkProceduralOrgans() {
+  const brain = await loadBrainScene({
+    reveal: 6,
+    animationMode: "motor-control",
+  });
+  assert.ok(brain.pickables.length >= 8);
+  assert.equal(brain.getState().animationMode, "motor-control");
+  assert.ok(brain.getFocusTarget("cerebellum"));
+  assert.equal(
+    brain.getStructureForObject(brain.pickables[0]!),
+    brain.pickables[0]!.userData.structureId,
+  );
+  brain.setState({ selectedStructure: "frontal-lobe", reveal: 2 });
+  assert.equal(brain.getSnapshot().selectedStructure, "frontal-lobe");
+  brain.dispose();
+
+  const kidney = await loadKidneyScene({
+    reveal: 6,
+    animationMode: "filtration",
+  });
+  assert.ok(kidney.pickables.length >= 9);
+  assert.equal(kidney.getState().animationMode, "filtration");
+  assert.ok(kidney.getFocusTarget("glomerulus"));
+  kidney.setState({ animationMode: "urine-flow", selectedStructure: "ureter" });
+  assert.equal(kidney.getSnapshot().animationMode, "urine-flow");
+  assert.equal(kidney.getSnapshot().selectedStructure, "ureter");
+  kidney.dispose();
+}
+
+void checkProceduralOrgans().then(() => {
+  console.log("anatomy smoke checks passed");
+});

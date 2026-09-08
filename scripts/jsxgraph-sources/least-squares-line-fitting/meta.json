@@ -1,0 +1,32 @@
+{
+  "id": "least-squares-line-fitting",
+  "title": "Least-squares line fitting",
+  "summary": "This little JXSGraph application finds the line or the circle which is the best fit for given set of points.\nIf the resulting line is green, it is a straight line. If the line is blue, it is a circle.",
+  "formula": "",
+  "aliases": [
+    "least-squares line fitting",
+    "least squares line fitting",
+    "jsxgraph least-squares line fitting"
+  ],
+  "tags": [
+    "Statistics"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/least-squares-line-fitting",
+  "steps": [
+    {
+      "title": "Least-squares line fitting",
+      "detail": "This little JXSGraph application finds the line or the circle which is the best fit for given set of points. If the resulting line is green, it is a straight line. If the line is blue, it is a circle."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

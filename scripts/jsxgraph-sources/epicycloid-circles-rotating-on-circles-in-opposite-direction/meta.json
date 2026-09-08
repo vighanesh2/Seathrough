@@ -1,0 +1,35 @@
+{
+  "id": "epicycloid-circles-rotating-on-circles-in-opposite-direction",
+  "title": "Epicycloid: circles rotating on circles in opposite direction",
+  "summary": "This is an example of a _parametric curve plot_. It shows the orbit of a point on a circle rotating on a circle which again rotates on the unit circle. The resulting curve is described by the function\n\nThis is an example of seamless JSXGraph embedding into the web page. The sliders are external HTML sliders.\n\nEpicycloidal curves have been used by the ancient greeks to describe the orbits of the p…",
+  "formula": "",
+  "aliases": [
+    "epicycloid: circles rotating on circles in opposite direction",
+    "epicycloid circles rotating on circles in opposite direction",
+    "jsxgraph epicycloid: circles rotating on circles in opposite direction"
+  ],
+  "tags": [
+    "Applications",
+    "Curves",
+    "Geometry",
+    "Physics"
+  ],
+  "boundingBox": [
+    -2.5,
+    2.5,
+    2.5,
+    -2.5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/epicycloid-circles-rotating-on-circles-in-opposite-direction",
+  "steps": [
+    {
+      "title": "Epicycloid: circles rotating on circles in opposite direction",
+      "detail": "This is an example of a _parametric curve plot_. It shows the orbit of a point on a circle rotating on a circle which again rotates on the unit circle. The resulting curve is described by the function"
+    },
+    {
+      "title": "Explore further",
+      "detail": "This is an example of seamless JSXGraph embedding into the web page. The sliders are external HTML sliders."
+    }
+  ]
+}

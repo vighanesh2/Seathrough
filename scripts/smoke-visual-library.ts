@@ -30,7 +30,18 @@ async function main() {
   );
   assert.equal(
     makeTopicKey({ prompt: "anything", conceptKey: "photosynthesis" }),
-    "photosynthesis",
+    "anything-photosynthesis",
+  );
+  assert.notEqual(
+    makeTopicKey({
+      prompt: "how to become successful in life",
+      conceptKey: "success",
+    }),
+    makeTopicKey({
+      prompt: "PostgreSQL",
+      conceptKey: "success",
+    }),
+    "generic planner concepts must not replay another lesson's board script",
   );
   assert.ok(displayLabelFromKey("dividing-by-fractions").includes("Dividing"));
 
@@ -50,13 +61,14 @@ async function main() {
     makeTopicKey({ prompt: "what is 12 x 7" }),
     "arithmetic keys off the prompt, not the concept",
   );
-  // Plain topics still share a concept key, digits in prose and all.
+  // Plain topics retain both prompt and concept so detailed variants cannot
+  // replay a different lesson's narration.
   assert.equal(
     makeTopicKey({
       prompt: "explain photosynthesis in 3 steps",
       conceptKey: "photosynthesis",
     }),
-    "photosynthesis",
+    "photosynthesis-in-3-steps-photosynthesis",
   );
 
   assert.equal(

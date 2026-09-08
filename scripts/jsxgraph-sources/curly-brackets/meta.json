@@ -1,0 +1,31 @@
+{
+  "id": "curly-brackets",
+  "title": "Curly brackets",
+  "summary": "Add curly brackets (also called curly braces) to a line. The curly brackets are composed of two Bezier segments.",
+  "formula": "",
+  "aliases": [
+    "curly brackets",
+    "jsxgraph curly brackets"
+  ],
+  "tags": [
+    "Technical"
+  ],
+  "boundingBox": [
+    -4,
+    4,
+    4,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/curly-brackets",
+  "steps": [
+    {
+      "title": "Curly brackets",
+      "detail": "Add curly brackets (also called curly braces) to a line. The curly brackets are composed of two Bezier segments."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

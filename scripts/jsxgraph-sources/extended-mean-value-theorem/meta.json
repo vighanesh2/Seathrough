@@ -1,0 +1,34 @@
+{
+  "id": "extended-mean-value-theorem",
+  "title": "Extended mean value theorem",
+  "summary": "The*'extended mean value theorem* (also called *Cauchy's mean value theorem*) is usually formulated as:\n\nLet\n\nbe continuous functions that are differentiable in the open interval .\nIf for all ,\nthen there exists a value such that\n\n__Remark:__\nIt seems to be easier to state the extended mean value theorem in the following form:\n\nLet\n\nbe continuous functions that are differentiable in the open inte…",
+  "formula": "",
+  "aliases": [
+    "extended mean value theorem",
+    "jsxgraph extended mean value theorem"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus",
+    "Curves",
+    "Famous theorems"
+  ],
+  "boundingBox": [
+    -5,
+    10,
+    7,
+    -6
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/extended-mean-value-theorem",
+  "steps": [
+    {
+      "title": "Extended mean value theorem",
+      "detail": "The*'extended mean value theorem* (also called *Cauchy's mean value theorem*) is usually formulated as:"
+    },
+    {
+      "title": "Explore further",
+      "detail": "Let"
+    }
+  ]
+}

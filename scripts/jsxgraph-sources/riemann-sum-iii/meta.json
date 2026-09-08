@@ -1,0 +1,31 @@
+{
+  "id": "riemann-sum-iii",
+  "title": "Riemann sum III",
+  "summary": "Approximate the integral of\n in the interval .\n\nThe exact result is:",
+  "formula": "",
+  "aliases": [
+    "riemann sum iii",
+    "jsxgraph riemann sum iii"
+  ],
+  "tags": [
+    "Calculus"
+  ],
+  "boundingBox": [
+    -2,
+    40,
+    8,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/riemann-sum-iii",
+  "steps": [
+    {
+      "title": "Riemann sum III",
+      "detail": "Approximate the integral of  in the interval ."
+    },
+    {
+      "title": "Explore further",
+      "detail": "The exact result is:"
+    }
+  ]
+}

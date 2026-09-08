@@ -1,0 +1,35 @@
+{
+  "id": "sketch-curve-1",
+  "title": "Sketch curve",
+  "summary": "The users can sketch a curve (red line). The resulting point cloud is converted by the Visvalingam algorithm to a list consisting of a start point and an end point, as well as 6 internal points. Finally, these 8 points are interpolated by a cardinal spline curve.\n\nStarting with version 1.13.0, the internal elements 'board.sketches[]' are used.",
+  "formula": "",
+  "aliases": [
+    "sketch curve",
+    "sketch curve 1",
+    "jsxgraph sketch curve"
+  ],
+  "tags": [
+    "Calculus",
+    "Interpolation",
+    "Sketch",
+    "Technical"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/sketch-curve-1",
+  "steps": [
+    {
+      "title": "Sketch curve",
+      "detail": "The users can sketch a curve (red line). The resulting point cloud is converted by the Visvalingam algorithm to a list consisting of a start point and an end point, as well as 6 internal points. Finally, these 8 points are interpolated by a cardinal spline curve."
+    },
+    {
+      "title": "Explore further",
+      "detail": "Starting with version 1.13.0, the internal elements 'board.sketches[]' are used."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "mean-value-theorem",
+  "title": "Mean Value Theorem",
+  "summary": "In this visualization of the *mean value theorem*, we start with four points , , , and (from left to right) and plot a function graph through these points using the *Lagrange interpolation polynomial*. Now, the mean value theorem tells us that there exists at least one point between the points and on the curve such that the tangent at this point has the same slope as the dotted line through the t…",
+  "formula": "",
+  "aliases": [
+    "mean value theorem",
+    "jsxgraph mean value theorem"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus",
+    "Famous theorems"
+  ],
+  "boundingBox": [
+    -5,
+    10,
+    7,
+    -6
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/mean-value-theorem",
+  "steps": [
+    {
+      "title": "Mean Value Theorem",
+      "detail": "In this visualization of the *mean value theorem*, we start with four points , , , and (from left to right) and plot a function graph through these points using the *Lagrange interpolation polynomial*. Now, the mean value theorem tells us that there exists at least one point between the points and on the curve such that the tangent at this point has the same slope as the dotted line through the two points and ."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "lissajous-curves",
+  "title": "Lissajous curves",
+  "summary": "Lissajous curve (Lissajous figure or Bowditch curve) is the graph of the system of parametric equations",
+  "formula": "",
+  "aliases": [
+    "lissajous curves",
+    "jsxgraph lissajous curves"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -12,
+    10,
+    12,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/lissajous-curves",
+  "steps": [
+    {
+      "title": "Lissajous curves",
+      "detail": "Lissajous curve (Lissajous figure or Bowditch curve) is the graph of the system of parametric equations"
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

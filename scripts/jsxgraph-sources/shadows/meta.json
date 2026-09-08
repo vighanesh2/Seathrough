@@ -1,0 +1,32 @@
+{
+  "id": "shadows",
+  "title": "Shadows",
+  "summary": "Define individual shadows to stroke element.",
+  "formula": "",
+  "aliases": [
+    "shadows",
+    "jsxgraph shadows"
+  ],
+  "tags": [
+    "JSXGraph objects",
+    "Technical"
+  ],
+  "boundingBox": [
+    -8,
+    8,
+    8,
+    -8
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/shadows",
+  "steps": [
+    {
+      "title": "Shadows",
+      "detail": "Define individual shadows to stroke element."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

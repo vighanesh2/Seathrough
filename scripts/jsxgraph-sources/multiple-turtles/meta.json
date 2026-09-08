@@ -1,0 +1,35 @@
+{
+  "id": "multiple-turtles",
+  "title": "Multiple turtles - pursuit curve",
+  "summary": "Visualize a *pursuit curve*, also called *dog curve*, with two JSXGraph turtles. The first turtle (blue, pursuee) runs on a circular path, the second turtle (red, pursuer) starts at the center of the circle and runs towards the blue turtle, in every step adapting its direction towards the actual position of the blue turtle. The red curve is called *pursuit curve*.",
+  "formula": "",
+  "aliases": [
+    "multiple turtles - pursuit curve",
+    "multiple turtles",
+    "jsxgraph multiple turtles - pursuit curve"
+  ],
+  "tags": [
+    "Applications",
+    "Curves",
+    "Geometry",
+    "Turtle"
+  ],
+  "boundingBox": [
+    -300,
+    300,
+    300,
+    -300
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/multiple-turtles",
+  "steps": [
+    {
+      "title": "Multiple turtles - pursuit curve",
+      "detail": "Visualize a *pursuit curve*, also called *dog curve*, with two JSXGraph turtles. The first turtle (blue, pursuee) runs on a circular path, the second turtle (red, pursuer) starts at the center of the circle and runs towards the blue turtle, in every step adapting its direction towards the actual position of the blue turtle. The red curve is called *pursuit curve*."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

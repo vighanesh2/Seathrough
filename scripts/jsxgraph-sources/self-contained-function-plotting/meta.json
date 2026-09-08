@@ -1,0 +1,33 @@
+{
+  "id": "self-contained-function-plotting",
+  "title": "Self-contained function plotting",
+  "summary": "Function plotter, where the input field and buttons are part of the JSXGraph construction.\n\nThe math syntax of the input box is converted internally with JessieCode to JavaScript code.",
+  "formula": "",
+  "aliases": [
+    "self-contained function plotting",
+    "self contained function plotting",
+    "jsxgraph self-contained function plotting"
+  ],
+  "tags": [
+    "Calculus",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/self-contained-function-plotting",
+  "steps": [
+    {
+      "title": "Self-contained function plotting",
+      "detail": "Function plotter, where the input field and buttons are part of the JSXGraph construction."
+    },
+    {
+      "title": "Explore further",
+      "detail": "The math syntax of the input box is converted internally with JessieCode to JavaScript code."
+    }
+  ]
+}

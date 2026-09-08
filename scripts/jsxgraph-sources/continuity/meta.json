@@ -1,0 +1,32 @@
+{
+  "id": "continuity",
+  "title": "Continuity",
+  "summary": "This example illustrates the concept of continuity using a piecewise-defined function. The graph allows users to explore how the function behaves near a critical point where it was originally undefined. By interactively approaching this point from both sides, users can visually observe how the function value matches the limiting behavior.",
+  "formula": "",
+  "aliases": [
+    "continuity",
+    "jsxgraph continuity"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus"
+  ],
+  "boundingBox": [
+    -3,
+    5,
+    5.5,
+    -2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/continuity",
+  "steps": [
+    {
+      "title": "Continuity",
+      "detail": "This example illustrates the concept of continuity using a piecewise-defined function. The graph allows users to explore how the function behaves near a critical point where it was originally undefined. By interactively approaching this point from both sides, users can visually observe how the function value matches the limiting behavior."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

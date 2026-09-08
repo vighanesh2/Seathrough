@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 const SUGGESTIONS = [
   {
     label: "Why do planets orbit the sun?",
-    href: "/scene-explain",
+    href: "/lessons?view=3d",
     icon: Atom,
   },
   {
@@ -19,7 +19,7 @@ const SUGGESTIONS = [
   },
   {
     label: "How does the heart pump blood?",
-    href: "/3d-figures",
+    href: "/lessons",
     icon: Heart,
   },
 ] as const;
@@ -48,7 +48,7 @@ export function MarketingHero() {
   }
 
   return (
-    <section className="relative px-5 pt-16 pb-16 md:px-6 md:pt-24 md:pb-20">
+    <section className="relative bg-white px-5 pt-16 pb-16 md:px-6 md:pt-24 md:pb-20">
       <div className="mx-auto max-w-2xl text-center">
         <a
           href="https://www.producthunt.com/products/seethrough-2?embed=true&utm_source=badge-featured&utm_medium=badge&utm_campaign=badge-seethrough-2"
@@ -75,8 +75,8 @@ export function MarketingHero() {
           <span className="text-[#1b6ca8]">Watch it get drawn.</span>
         </h1>
         <p className="mx-auto mt-4 max-w-md text-[16px] leading-7 text-[#6a7d90]">
-          Type a question. SeeThrough draws the steps while it explains — on a
-          board, from a screenshot, or in 3D.
+          Type a question. SeeThrough draws the steps while it explains on the
+          board.
         </p>
       </div>
 
@@ -89,8 +89,8 @@ export function MarketingHero() {
           className={cn(
             "flex items-center gap-2 rounded-2xl border bg-white px-3 py-2.5 shadow-[0_1px_2px_rgba(26,43,60,0.04),0_8px_24px_-12px_rgba(26,43,60,0.12)] transition-[border-color,box-shadow]",
             focused
-              ? "border-[#1b6ca8]/45 shadow-[0_1px_2px_rgba(26,43,60,0.04),0_12px_32px_-12px_rgba(27,108,168,0.28)]"
-              : "border-[#e6ebf0]",
+              ? "border-[#0f4f7c] shadow-[0_1px_2px_rgba(26,43,60,0.04),0_12px_32px_-12px_rgba(27,108,168,0.28)]"
+              : "border-[#1b6ca8]",
           )}
         >
           <label htmlFor="hero-ask" className="sr-only">
@@ -141,246 +141,277 @@ export function MarketingHero() {
         })}
       </div>
 
+      <div
+        className="mx-auto mt-2 flex max-w-xl items-end justify-center gap-1 pl-6 text-[#5c6b7a] sm:pl-10"
+        aria-hidden
+      >
+        <svg
+          width="42"
+          height="40"
+          viewBox="0 0 42 40"
+          fill="none"
+          className="mb-0.5 shrink-0"
+        >
+          <path
+            d="M34.5 34.5c-6.2-1.4-16.8-5.8-22.2-16.2C9.5 12.6 9.2 7.2 10.8 3.2"
+            stroke="currentColor"
+            strokeWidth="1.55"
+            strokeLinecap="round"
+          />
+          <path
+            d="M6.2 8.8 11.2 2.4l5.8 5.2"
+            stroke="currentColor"
+            strokeWidth="1.55"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <span className="-rotate-1 pb-0.5 font-display text-[1.15rem] leading-none font-medium italic tracking-[-0.01em] text-[#5c6b7a] sm:text-[1.25rem]">
+          Try an example!
+        </span>
+      </div>
+
       <div className="mx-auto mt-14 max-w-3xl md:mt-16">
-        <p className="mb-3 text-center text-[12px] font-medium tracking-[0.08em] text-[#8a9aab] uppercase">
-          Visual output
-        </p>
-        <HeroVisual
-          onOpen={() =>
-            go(
-              "/scene-explain",
-              query.trim() || "Why do planets orbit the sun?",
-            )
-          }
-        />
+        <HeroVisual />
       </div>
     </section>
   );
 }
 
-function HeroVisual({ onOpen }: { onOpen: () => void }) {
+const HERO_TABS = ["Explanation", "Diagram", "Practice"] as const;
+type HeroTab = (typeof HERO_TABS)[number];
+
+function HeroVisual() {
+  const [tab, setTab] = useState<HeroTab>("Diagram");
+
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="group w-full overflow-hidden rounded-2xl border border-[#e6ebf0] bg-white text-left shadow-[0_16px_48px_-24px_rgba(26,43,60,0.18)] outline-none transition hover:border-[#c8d6e4] focus-visible:ring-3 focus-visible:ring-[#1b6ca8]/30"
-      aria-label="Open 3D scenes and explore the solar system"
-    >
-      <div className="flex items-center justify-between border-b border-[#eef2f6] px-4 py-2.5">
-        <div className="flex items-center gap-2">
-          <span className="flex size-6 items-center justify-center rounded-md bg-[#eef4f9] text-[#1b6ca8]">
-            <Atom className="size-3.5" />
-          </span>
-          <span className="text-[13px] font-medium text-[#1a2b3c]">3D scenes</span>
-          <span className="hidden text-[12px] text-[#8a9aab] sm:inline">
-            · the solar system
-          </span>
-        </div>
-        <span className="text-[12px] text-[#8a9aab] transition group-hover:text-[#1b6ca8]">
-          Open →
+    <div className="relative w-full">
+      {/* Annotation */}
+      <div
+        className="pointer-events-none absolute -top-1 right-0 z-10 hidden items-start gap-1 text-[#1b6ca8] sm:flex md:right-2"
+        aria-hidden
+      >
+        <svg
+          width="36"
+          height="34"
+          viewBox="0 0 36 34"
+          fill="none"
+          className="mt-5 shrink-0"
+        >
+          <path
+            d="M28 4C20 6 10 12 8 24"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M4.5 20.5 8.2 26.5 13.8 22"
+            stroke="currentColor"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+        <span className="rotate-2 font-display text-[1.05rem] leading-tight font-medium italic tracking-[-0.01em]">
+          From question
+          <br />
+          to clarity
         </span>
       </div>
 
-      <div className="relative aspect-16/10 bg-[#f7f9fb] sm:aspect-2/1">
-        <UniversePreview />
-        <div className="absolute inset-x-0 bottom-0 bg-linear-to-t from-white/90 to-transparent px-4 pt-10 pb-4 sm:px-5">
-          <p className="text-[13px] font-medium text-[#1a2b3c]">
-            Gravity holds the orbits
-          </p>
-          <p className="mt-0.5 text-[12px] text-[#6a7d90]">
-            Drawn as a scene while it explains why planets keep circling
-          </p>
+      {/* Question pill */}
+      <div className="relative z-10 mx-auto flex w-fit max-w-[calc(100%-1rem)] justify-center px-2">
+        <div className="rounded-full bg-[#f7dce6] px-5 py-2.5 text-center text-[14px] font-medium tracking-[-0.01em] text-[#1a2b3c] shadow-[0_1px_2px_rgba(26,43,60,0.04)] sm:px-6 sm:text-[15px]">
+          Why do planets orbit the sun?
         </div>
       </div>
-    </button>
+
+      {/* Lesson card */}
+      <div className="relative mt-4 overflow-hidden rounded-2xl border border-[#e6ebf0] bg-white shadow-[0_18px_50px_-28px_rgba(26,43,60,0.28)]">
+        <div
+          className="flex items-center justify-center gap-10 border-b border-[#eef2f6] px-4 pt-5 sm:gap-14 sm:px-8 sm:pt-6"
+          role="tablist"
+          aria-label="Lesson views"
+        >
+          {HERO_TABS.map((item) => {
+            const active = tab === item;
+            return (
+              <button
+                key={item}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setTab(item)}
+                className={cn(
+                  "relative pb-3.5 text-[15px] tracking-[-0.01em] transition-colors outline-none focus-visible:text-[#1b6ca8] sm:text-[16px]",
+                  active
+                    ? "font-semibold text-[#1b6ca8]"
+                    : "font-medium text-[#8a9aab] hover:text-[#3d5166]",
+                )}
+              >
+                {item}
+                {active ? (
+                  <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-[#1b6ca8]" />
+                ) : null}
+              </button>
+            );
+          })}
+        </div>
+
+        <div
+          className="px-5 pt-6 pb-6 sm:px-8 sm:pt-8 sm:pb-8"
+          role="tabpanel"
+        >
+          {tab === "Explanation" ? <ExplanationPanel /> : null}
+          {tab === "Diagram" ? <DiagramPanel /> : null}
+          {tab === "Practice" ? <PracticePanel /> : null}
+        </div>
+      </div>
+    </div>
   );
 }
 
-/**
- * Circular orbits only. Each planet sits on a ring radius and rotates
- * around the sun with SVG animateTransform — no CSS, no ellipses.
- */
-function UniversePreview() {
+function ExplanationPanel() {
+  return (
+    <div className="mx-auto max-w-xl space-y-4 text-center">
+      <h3 className="font-display text-[1.35rem] leading-snug font-medium tracking-[-0.02em] text-[#1a2b3c] sm:text-[1.5rem]">
+        Gravity and motion balance
+      </h3>
+      <p className="text-[14px] leading-6 text-[#3d5166] sm:text-[15px] sm:leading-7">
+        The Sun pulls every planet inward with gravity. At the same time, each
+        planet is already moving sideways. Those two effects cancel into a
+        steady curve, an orbit, instead of a crash or a straight escape.
+      </p>
+      <p className="text-[14px] leading-6 text-[#3d5166] sm:text-[15px] sm:leading-7">
+        Think of it as a continuous fall around the Sun: always pulled in, always
+        moving forward, never quite hitting.
+      </p>
+    </div>
+  );
+}
+
+function DiagramPanel() {
+  return (
+    <>
+      <OrbitDiagram />
+      <p className="mx-auto mt-5 max-w-xl text-center text-[14px] leading-6 text-[#3d5166] sm:mt-6 sm:text-[15px] sm:leading-7">
+        Planets stay in orbit because the Sun&apos;s gravity pulls them inward
+        while their motion carries them forward, creating a balanced, continuous
+        fall around the Sun.
+      </p>
+    </>
+  );
+}
+
+function PracticePanel() {
+  const [choice, setChoice] = useState<string | null>(null);
+  const correct = "Gravity pulls in while sideways motion carries them forward";
+
+  const options = [
+    "The Sun pushes planets away with light",
+    "Gravity pulls in while sideways motion carries them forward",
+    "Planets are attached by invisible strings",
+  ] as const;
+
+  return (
+    <div className="mx-auto max-w-xl">
+      <p className="text-center text-[14px] font-medium tracking-[-0.01em] text-[#1a2b3c] sm:text-[15px]">
+        What keeps a planet in orbit?
+      </p>
+      <div className="mt-4 flex flex-col gap-2">
+        {options.map((option) => {
+          const selected = choice === option;
+          const isCorrect = option === correct;
+          const showResult = choice !== null;
+          return (
+            <button
+              key={option}
+              type="button"
+              onClick={() => setChoice(option)}
+              className={cn(
+                "rounded-xl border px-4 py-3 text-left text-[13.5px] leading-5 transition-colors outline-none focus-visible:ring-3 focus-visible:ring-[#1b6ca8]/30 sm:text-[14px]",
+                !showResult &&
+                  "border-[#e6ebf0] bg-white text-[#3d5166] hover:border-[#c8d6e4] hover:bg-[#f7f9fb]",
+                showResult &&
+                  isCorrect &&
+                  "border-[#2a7a5c]/40 bg-[#eaf6f0] text-[#1a2b3c]",
+                showResult &&
+                  selected &&
+                  !isCorrect &&
+                  "border-[#c45c4a]/35 bg-[#fdf0ed] text-[#1a2b3c]",
+                showResult &&
+                  !selected &&
+                  !isCorrect &&
+                  "border-[#eef2f6] bg-[#fafbfc] text-[#8a9aab]",
+              )}
+            >
+              {option}
+            </button>
+          );
+        })}
+      </div>
+      {choice ? (
+        <p
+          className={cn(
+            "mt-4 text-center text-[13px] leading-5",
+            choice === correct ? "text-[#2a7a5c]" : "text-[#c45c4a]",
+          )}
+        >
+          {choice === correct
+            ? "Nice: gravity and forward motion work together."
+            : "Not quite. Try again, or peek at the Diagram tab."}
+        </p>
+      ) : (
+        <p className="mt-4 text-center text-[13px] text-[#8a9aab]">
+          Pick the best answer.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function OrbitDiagram() {
   return (
     <svg
-      viewBox="0 0 640 320"
-      className="h-full w-full"
+      viewBox="0 0 420 180"
+      className="mx-auto h-auto w-full max-w-md"
       aria-hidden
-      preserveAspectRatio="xMidYMid meet"
     >
-      {Array.from({ length: 11 }, (_, i) => (
-        <line
-          key={`h-${i}`}
-          x1="0"
-          y1={i * 32}
-          x2="640"
-          y2={i * 32}
-          stroke="rgba(27,108,168,0.07)"
-        />
-      ))}
-      {Array.from({ length: 21 }, (_, i) => (
-        <line
-          key={`v-${i}`}
-          x1={i * 32}
-          y1="0"
-          x2={i * 32}
-          y2="320"
-          stroke="rgba(27,108,168,0.07)"
-        />
-      ))}
-
-      <g transform="translate(320 150)">
-        <circle r="168" fill="rgba(27,108,168,0.04)" />
-
-        <circle
-          r="58"
-          fill="none"
-          stroke="#b7c9d8"
-          strokeWidth="1.2"
-          strokeDasharray="4 5"
-        />
-        <circle
-          r="100"
-          fill="none"
-          stroke="#1b6ca8"
-          strokeWidth="1.5"
-          opacity="0.55"
-        />
-        <circle
-          r="142"
-          fill="none"
-          stroke="#c8d6e4"
-          strokeWidth="1.2"
-          strokeDasharray="3 6"
-        />
-
-        {/* Mercury on r=58 */}
-        <g>
-          <animateTransform
-            attributeName="transform"
-            type="rotate"
-            from="0"
-            to="360"
-            dur="7s"
-            repeatCount="indefinite"
-          />
-          <circle cx="58" cy="0" r="5" fill="#8a9aab" />
-        </g>
-
-        {/* Earth + moon on r=100 */}
-        <g>
-          <animateTransform
-            attributeName="transform"
-            type="rotate"
-            from="40"
-            to="400"
-            dur="14s"
-            repeatCount="indefinite"
-          />
-          <circle cx="100" cy="0" r="9" fill="#0f4f7c" />
-          <g transform="translate(100 0)">
-            <g>
-              <animateTransform
-                attributeName="transform"
-                type="rotate"
-                from="0"
-                to="360"
-                dur="3.5s"
-                repeatCount="indefinite"
-              />
-              <circle cx="16" cy="0" r="3.5" fill="#7eb6d9" />
-            </g>
-          </g>
-        </g>
-
-        {/* Mars on r=142 */}
-        <g>
-          <animateTransform
-            attributeName="transform"
-            type="rotate"
-            from="200"
-            to="560"
-            dur="22s"
-            repeatCount="indefinite"
-          />
-          <circle cx="142" cy="0" r="7" fill="#5a7a96" />
-        </g>
-
-        <circle r="20" fill="#1b6ca8" />
-        <circle
-          r="30"
-          fill="none"
-          stroke="#1b6ca8"
-          strokeWidth="1"
-          opacity="0.28"
-          className="animate-soft-pulse"
-        />
-        <text
-          y="4"
-          textAnchor="middle"
-          fontSize="10"
-          fontFamily="ui-sans-serif, system-ui, sans-serif"
-          fontWeight="600"
-          fill="#ffffff"
-        >
-          Sun
-        </text>
-
-        <g className="animate-gravity-fade">
-          <path
-            d="M88 -28 C 62 -18, 40 -8, 24 -2"
-            fill="none"
-            stroke="#1b6ca8"
-            strokeWidth="1.6"
-            strokeLinecap="round"
-            markerEnd="url(#grav-arrow)"
-          />
-          <text
-            x="48"
-            y="-34"
-            fontSize="10"
-            fontFamily="ui-sans-serif, system-ui, sans-serif"
-            fill="#1b6ca8"
-          >
-            gravity
-          </text>
-        </g>
-      </g>
-
+      <ellipse
+        cx="210"
+        cy="92"
+        rx="150"
+        ry="58"
+        fill="none"
+        stroke="#1a2b3c"
+        strokeWidth="1.4"
+        strokeDasharray="5 6"
+        opacity="0.55"
+      />
+      <circle cx="210" cy="92" r="28" fill="#f5c842" />
       <text
-        x="420"
-        y="268"
+        x="210"
+        y="97"
+        textAnchor="middle"
+        fontSize="13"
+        fontFamily="var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif"
+        fontWeight="600"
+        fill="#1a2b3c"
+      >
+        Sun
+      </text>
+      <circle cx="348" cy="68" r="18" fill="#7eb6d9" />
+      <text
+        x="348"
+        y="72"
         textAnchor="middle"
         fontSize="11"
-        fontFamily="ui-sans-serif, system-ui, sans-serif"
+        fontFamily="var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif"
         fontWeight="600"
-        fill="#0f4f7c"
+        fill="#1a2b3c"
       >
-        Earth
+        Planet
       </text>
-      <text
-        x="500"
-        y="286"
-        textAnchor="middle"
-        fontSize="10"
-        fontFamily="ui-sans-serif, system-ui, sans-serif"
-        fill="#6a7d90"
-      >
-        Mars
-      </text>
-
-      <defs>
-        <marker
-          id="grav-arrow"
-          markerWidth="6"
-          markerHeight="6"
-          refX="5"
-          refY="3"
-          orient="auto"
-        >
-          <path d="M0 0 L6 3 L0 6 Z" fill="#1b6ca8" />
-        </marker>
-      </defs>
     </svg>
   );
 }

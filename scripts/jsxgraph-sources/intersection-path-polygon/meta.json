@@ -1,0 +1,33 @@
+{
+  "id": "intersection-path-polygon",
+  "title": "Intersection path-polygon",
+  "summary": "Intersection path-polygon — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "intersection path-polygon",
+    "intersection path polygon",
+    "jsxgraph intersection path-polygon"
+  ],
+  "tags": [
+    "Curves",
+    "Intersection, Union, Difference"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/intersection-path-polygon",
+  "steps": [
+    {
+      "title": "Intersection path-polygon",
+      "detail": "Interactive JSXGraph construction: Intersection path-polygon. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

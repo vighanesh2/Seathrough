@@ -1,0 +1,33 @@
+{
+  "id": "step-function",
+  "title": "Step function",
+  "summary": "This is a simple example for a *step function* realized as function graph. The steps are not drawn.",
+  "formula": "",
+  "aliases": [
+    "step function",
+    "jsxgraph step function"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -5,
+    8,
+    8,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/step-function",
+  "steps": [
+    {
+      "title": "Step function",
+      "detail": "This is a simple example for a *step function* realized as function graph. The steps are not drawn."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "trigonometric-functions",
+  "title": "Trigonometric functions on the unit circle",
+  "summary": "Visualize the trigonometric functions since, cosine, tangent, cotangent, secant , and cosecant. A movable point on the unit circle defines\nthe angle . Then, the values (sine), (cosine), (tangent), (cotangent), (secant), and (cosecant) - depending on the angle - are visualized as the length of the marked segments.",
+  "formula": "",
+  "aliases": [
+    "trigonometric functions on the unit circle",
+    "trigonometric functions",
+    "jsxgraph trigonometric functions on the unit circle"
+  ],
+  "tags": [
+    "Calculus",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -2,
+    2,
+    2,
+    -2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/trigonometric-functions",
+  "steps": [
+    {
+      "title": "Trigonometric functions on the unit circle",
+      "detail": "Visualize the trigonometric functions since, cosine, tangent, cotangent, secant , and cosecant. A movable point on the unit circle defines the angle . Then, the values (sine), (cosine), (tangent), (cotangent), (secant), and (cosecant) - depending on the angle - are visualized as the length of the marked segments."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

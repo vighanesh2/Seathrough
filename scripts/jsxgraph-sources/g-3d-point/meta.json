@@ -1,0 +1,31 @@
+{
+  "id": "g-3d-point",
+  "title": "3D point",
+  "summary": "A simple,free 3D point. Usual dragging does not change the -coordinate of the point. Shift+drag changes the -coordinate. Additionally, three helper lines are displayed.",
+  "formula": "",
+  "aliases": [
+    "3d point",
+    "jsxgraph 3d point"
+  ],
+  "tags": [
+    "3D"
+  ],
+  "boundingBox": [
+    -8,
+    8,
+    8,
+    -8
+  ],
+  "keepAspectRatio": false,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-point",
+  "steps": [
+    {
+      "title": "3D point",
+      "detail": "A simple,free 3D point. Usual dragging does not change the -coordinate of the point. Shift+drag changes the -coordinate. Additionally, three helper lines are displayed."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

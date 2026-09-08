@@ -1,0 +1,33 @@
+{
+  "id": "time-series",
+  "title": "Time series",
+  "summary": "This example plots a time series of weight measurements from given dates, styled like a Google chart as points connected by line segments. A polynomial regression curve of degree 2 highlights the overall trend.\n\nAdditionally, it is an example for custom styling of the element that displays point coordinates.",
+  "formula": "",
+  "aliases": [
+    "time series",
+    "jsxgraph time series"
+  ],
+  "tags": [
+    "Charts",
+    "Technical",
+    "Texts"
+  ],
+  "boundingBox": [
+    -1,
+    7000,
+    160,
+    2500
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/time-series",
+  "steps": [
+    {
+      "title": "Time series",
+      "detail": "This example plots a time series of weight measurements from given dates, styled like a Google chart as points connected by line segments. A polynomial regression curve of degree 2 highlights the overall trend."
+    },
+    {
+      "title": "Explore further",
+      "detail": "Additionally, it is an example for custom styling of the element that displays point coordinates."
+    }
+  ]
+}

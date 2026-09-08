@@ -1,0 +1,31 @@
+{
+  "id": "multiple-logarithmic-spirals",
+  "title": "Multiple logarithmic spirals",
+  "summary": "Eight logarithmic spirals defined by",
+  "formula": "",
+  "aliases": [
+    "multiple logarithmic spirals",
+    "jsxgraph multiple logarithmic spirals"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -12,
+    12,
+    12,
+    -12
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/multiple-logarithmic-spirals",
+  "steps": [
+    {
+      "title": "Multiple logarithmic spirals",
+      "detail": "Eight logarithmic spirals defined by"
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

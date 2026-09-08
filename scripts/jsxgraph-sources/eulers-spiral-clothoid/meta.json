@@ -1,0 +1,32 @@
+{
+  "id": "eulers-spiral-clothoid",
+  "title": "Euler's spiral (Clothoid)",
+  "summary": "Euler's spiral is defined as a curve whose curvature changes linearly with its curve length. Other names for the spiral are __clothoid__ and __spiral of Cornu__ or __Cornu spiral__.\n\nEuler spirals are widely used as transition curve in rail track / highway engineering for connecting and transiting the geometry between a tangent and a circular curve.\n\nThe curve can be described in parametric form…",
+  "formula": "",
+  "aliases": [
+    "euler's spiral (clothoid)",
+    "eulers spiral clothoid",
+    "jsxgraph euler's spiral (clothoid)"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/eulers-spiral-clothoid",
+  "steps": [
+    {
+      "title": "Euler's spiral (Clothoid)",
+      "detail": "Euler's spiral is defined as a curve whose curvature changes linearly with its curve length. Other names for the spiral are __clothoid__ and __spiral of Cornu__ or __Cornu spiral__."
+    },
+    {
+      "title": "Explore further",
+      "detail": "Euler spirals are widely used as transition curve in rail track / highway engineering for connecting and transiting the geometry between a tangent and a circular curve."
+    }
+  ]
+}

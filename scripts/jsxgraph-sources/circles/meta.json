@@ -1,0 +1,33 @@
+{
+  "id": "circles",
+  "title": "Circles",
+  "summary": "One possibility to construct a circle is to give its center and a point defining its radius. For this we use the two points and .\n\nWatch the different ways to access the points and . In the third example the fill color changes dynamically depending on the -coordinate of .",
+  "formula": "",
+  "aliases": [
+    "circles",
+    "jsxgraph circles"
+  ],
+  "tags": [
+    "Circles",
+    "First steps",
+    "Technical"
+  ],
+  "boundingBox": [
+    -5,
+    2,
+    5,
+    -2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/circles",
+  "steps": [
+    {
+      "title": "Circles",
+      "detail": "One possibility to construct a circle is to give its center and a point defining its radius. For this we use the two points and ."
+    },
+    {
+      "title": "Explore further",
+      "detail": "Watch the different ways to access the points and . In the third example the fill color changes dynamically depending on the -coordinate of ."
+    }
+  ]
+}

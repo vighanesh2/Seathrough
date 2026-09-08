@@ -16,9 +16,8 @@ import {
   ANATOMY_STRUCTURE_IDS,
 } from "@/lib/anatomy/types";
 import {
-  isCardiopulmonaryMode,
-  isEyeMode,
   SCENE_MODE_SETS,
+  STRUCTURE_BY_ID,
 } from "@/lib/anatomy/registry";
 
 function suggestedMode(
@@ -36,6 +35,18 @@ function suggestedMode(
     if (ids.has("light-path") || ids.has("inverted-image") || ids.has("cornea-refraction")) {
       return "light-path";
     }
+    return "overview";
+  }
+  if (sceneId === "brain") {
+    if (ids.has("motor-control")) return "motor-control";
+    if (ids.has("sensory-processing")) return "sensory-processing";
+    if (ids.has("brainstem-pathway")) return "neural-signal";
+    return "overview";
+  }
+  if (sceneId === "kidney") {
+    if (ids.has("filtration")) return "filtration";
+    if (ids.has("reabsorption")) return "reabsorption";
+    if (ids.has("urine-flow")) return "urine-flow";
     return "overview";
   }
   if (ids.has("gas-exchange")) return "gas-exchange";
@@ -84,6 +95,17 @@ function normalizeStructure(value: unknown): AnatomyStructureId | null {
   return aliases[key] ?? null;
 }
 
+export function revealForFocusedStructures(
+  requestedReveal: number,
+  structures: AnatomyStructureId[],
+): number {
+  return structures.reduce(
+    (maximum, structure) =>
+      Math.max(maximum, STRUCTURE_BY_ID[structure]?.reveal ?? 1),
+    Math.max(1, Math.min(6, Math.round(requestedReveal))),
+  );
+}
+
 function coerceMode(
   requested: string,
   fallback: AnatomyAnimationMode,
@@ -93,8 +115,11 @@ function coerceMode(
     return fallback;
   }
   const mode = requested as AnatomyAnimationMode;
-  if (sceneId === "eye" && !isEyeMode(mode)) return fallback;
-  if (sceneId === "cardiopulmonary" && !isCardiopulmonaryMode(mode)) {
+  if (
+    !(SCENE_MODE_SETS[sceneId] as readonly AnatomyAnimationMode[]).includes(
+      mode,
+    )
+  ) {
     return fallback;
   }
   return mode;
@@ -169,6 +194,32 @@ Return JSON only with:
   "supported": boolean
 }
 focusStructures may use only structure IDs appearing in the evidence.`,
+  brain: `You answer questions about normal adult brain anatomy and neural function for an educational 3D app.
+Use ONLY the supplied evidence. Do not add diagnoses, treatment advice, behavioral claims, or unsupported mechanisms.
+Explain pathways and regional functions clearly without implying that complex functions belong to only one isolated region.
+If evidence is insufficient, set supported=false and say what the evidence cannot establish.
+Return JSON only with:
+{
+  "answer": string,
+  "focusStructures": string[],
+  "animationMode": "overview" | "sensory-processing" | "motor-control" | "neural-signal",
+  "reveal": integer 1-6,
+  "supported": boolean
+}
+focusStructures may use only structure IDs appearing in the evidence.`,
+  kidney: `You answer questions about normal adult kidney anatomy and renal physiology for an educational 3D app.
+Use ONLY the supplied evidence. Do not add diagnoses, treatment advice, laboratory ranges, or unsupported mechanisms.
+Clearly distinguish filtration, tubular reabsorption, secretion, and final urine flow.
+If evidence is insufficient, set supported=false and say what the evidence cannot establish.
+Return JSON only with:
+{
+  "answer": string,
+  "focusStructures": string[],
+  "animationMode": "overview" | "filtration" | "reabsorption" | "urine-flow",
+  "reveal": integer 1-6,
+  "supported": boolean
+}
+focusStructures may use only structure IDs appearing in the evidence.`,
 };
 
 const UNSUPPORTED_BY_SCENE: Record<AnatomySceneId, string> = {
@@ -176,6 +227,10 @@ const UNSUPPORTED_BY_SCENE: Record<AnatomySceneId, string> = {
     "I do not have enough cardiopulmonary evidence in the reviewed source set to answer that question reliably. Try asking about normal heart chambers, valves, pulmonary blood flow, breathing, or alveolar gas exchange.",
   eye:
     "I do not have enough eye/vision evidence in the reviewed source set to answer that question reliably. Try asking about the light path, cornea, lens focus, pupil, retina, rods and cones, or how signals reach the brain.",
+  brain:
+    "I do not have enough brain evidence in the reviewed source set to answer that question reliably. Try asking about cerebral lobes, sensory pathways, motor control, the cerebellum, brainstem, or spinal cord.",
+  kidney:
+    "I do not have enough renal evidence in the reviewed source set to answer that question reliably. Try asking about filtration, nephrons, reabsorption, collecting ducts, urine flow, or renal blood vessels.",
 };
 
 export async function generateGroundedAnatomyAnswer(input: {
@@ -265,6 +320,10 @@ export async function generateGroundedAnatomyAnswer(input: {
   const focusStructures = parsed.data.focusStructures.filter((structure) =>
     allowedStructures.has(structure),
   );
+  const resolvedFocus =
+    focusStructures.length > 0
+      ? focusStructures
+      : input.entries[0]?.structureIds.slice(0, 4) ?? [];
 
   return {
     ...parsed.data,
@@ -273,10 +332,8 @@ export async function generateGroundedAnatomyAnswer(input: {
       mode,
       sceneId,
     ),
-    focusStructures:
-      focusStructures.length > 0
-        ? focusStructures
-        : input.entries[0]?.structureIds.slice(0, 4) ?? [],
+    focusStructures: resolvedFocus,
+    reveal: revealForFocusedStructures(parsed.data.reveal, resolvedFocus),
     citations,
   };
 }

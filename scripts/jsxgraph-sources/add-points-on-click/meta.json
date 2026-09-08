@@ -1,0 +1,31 @@
+{
+  "id": "add-points-on-click",
+  "title": "Add points on click",
+  "summary": "This example shows how to add a point whenever *the user clicks* on the board. The function extracts the click coordinates from the event object and returns a object with the point's coordinates on the board. The for loop in the event listener is to check if there is already a point as we don't want to create a point in this case.",
+  "formula": "",
+  "aliases": [
+    "add points on click",
+    "jsxgraph add points on click"
+  ],
+  "tags": [
+    "Technical"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/add-points-on-click",
+  "steps": [
+    {
+      "title": "Add points on click",
+      "detail": "This example shows how to add a point whenever *the user clicks* on the board. The function extracts the click coordinates from the event object and returns a object with the point's coordinates on the board. The for loop in the event listener is to check if there is already a point as we don't want to create a point in this case."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

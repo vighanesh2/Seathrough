@@ -1,0 +1,33 @@
+{
+  "id": "g-3d-cube-transformations",
+  "title": "3D cube transformations",
+  "summary": "3D cube transformations — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "3d cube transformations",
+    "jsxgraph 3d cube transformations"
+  ],
+  "tags": [
+    "3D",
+    "Analytic",
+    "Mappings"
+  ],
+  "boundingBox": [
+    -10,
+    7,
+    6,
+    -9
+  ],
+  "keepAspectRatio": false,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-cube-transformations",
+  "steps": [
+    {
+      "title": "3D cube transformations",
+      "detail": "Interactive JSXGraph construction: 3D cube transformations. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

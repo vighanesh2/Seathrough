@@ -1,0 +1,31 @@
+{
+  "id": "conic-sections-in-polar-form",
+  "title": "Conic sections in polar form",
+  "summary": "Conic sections can also be defined as curves in polar form. The equation of the curve is\n\nThe actual curve term is displayed in an HTML span using [ES6 template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals).",
+  "formula": "",
+  "aliases": [
+    "conic sections in polar form",
+    "jsxgraph conic sections in polar form"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -12,
+    10,
+    12,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/conic-sections-in-polar-form",
+  "steps": [
+    {
+      "title": "Conic sections in polar form",
+      "detail": "Conic sections can also be defined as curves in polar form. The equation of the curve is"
+    },
+    {
+      "title": "Explore further",
+      "detail": "The actual curve term is displayed in an HTML span using [ES6 template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals)."
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "g-3d-parametric-surface-with-colorarray",
+  "title": "3D parametric surface with type 'colorarray'",
+  "summary": "Possible types for representing parametric surfaces are:\n\n- ,\n- ,\n- ,\n-\n\nHere is an example for . Internally, the color array is realized with a element. The visual attributes are set inside of the sub-attribute.",
+  "formula": "",
+  "aliases": [
+    "3d parametric surface with type 'colorarray'",
+    "3d parametric surface with colorarray",
+    "jsxgraph 3d parametric surface with type 'colorarray'"
+  ],
+  "tags": [
+    "3D",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -8,
+    8,
+    8,
+    -8
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-parametric-surface-with-colorarray",
+  "steps": [
+    {
+      "title": "3D parametric surface with type 'colorarray'",
+      "detail": "Possible types for representing parametric surfaces are:"
+    },
+    {
+      "title": "Explore further",
+      "detail": "- , - , - , -"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "colorful-points",
+  "title": "Colorful points",
+  "summary": "This example uses the HSV color scheme to make the fill colors of the point visually pleasing.",
+  "formula": "",
+  "aliases": [
+    "colorful points",
+    "jsxgraph colorful points"
+  ],
+  "tags": [
+    "Point",
+    "Technical"
+  ],
+  "boundingBox": [
+    -0.1,
+    1.1,
+    1.1,
+    -0.1
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/colorful-points",
+  "steps": [
+    {
+      "title": "Colorful points",
+      "detail": "This example uses the HSV color scheme to make the fill colors of the point visually pleasing."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

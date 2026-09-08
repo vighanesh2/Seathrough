@@ -1,0 +1,34 @@
+{
+  "id": "sketch-polynomial",
+  "title": "Sketch polynomial - old version",
+  "summary": "The users can sketch a curve (thick grey line). The resulting point cloud is converted by the Visvalingam algorithm to a list consisting of a start point and an end point, as well as internal points. The overall number of these points is given as the slider value . Then, these points are interpolated by a Lagrange polynomial of degree .",
+  "formula": "",
+  "aliases": [
+    "sketch polynomial - old version",
+    "sketch polynomial",
+    "jsxgraph sketch polynomial - old version"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Function plotting",
+    "Sketch"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/sketch-polynomial",
+  "steps": [
+    {
+      "title": "Sketch polynomial - old version",
+      "detail": "The users can sketch a curve (thick grey line). The resulting point cloud is converted by the Visvalingam algorithm to a list consisting of a start point and an end point, as well as internal points. The overall number of these points is given as the slider value . Then, these points are interpolated by a Lagrange polynomial of degree ."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

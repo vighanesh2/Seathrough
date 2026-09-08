@@ -1,0 +1,32 @@
+{
+  "id": "screen-reader",
+  "title": "Screen reader",
+  "summary": "For every JSXGraph element, all [ARIA attributes](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA) can be set. In this example, a [screen reader](https://en.wikipedia.org/wiki/Screen_reader) will read the coordinates of *point A* when the point has the focus. The focus can be set with the key or with mouse click. The point may be moved by mouse, pen, finger, or arrow keys.",
+  "formula": "",
+  "aliases": [
+    "screen reader",
+    "jsxgraph screen reader"
+  ],
+  "tags": [
+    "Accessibility",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/screen-reader",
+  "steps": [
+    {
+      "title": "Screen reader",
+      "detail": "For every JSXGraph element, all [ARIA attributes](https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA) can be set. In this example, a [screen reader](https://en.wikipedia.org/wiki/Screen_reader) will read the coordinates of *point A* when the point has the focus. The focus can be set with the key or with mouse click. The point may be moved by mouse, pen, finger, or arrow keys."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "id": "sketch-curve",
+  "title": "Sketch curve - old version",
+  "summary": "The users can sketch a curve (thick grey line). The resulting point cloud is converted by the Visvalingam algorithm to a list consisting of a start point and an end point, as well as 6 internal point. Finally, these 8 points are interpolated by a cardinal spline curve.",
+  "formula": "",
+  "aliases": [
+    "sketch curve - old version",
+    "sketch curve",
+    "jsxgraph sketch curve - old version"
+  ],
+  "tags": [
+    "Curves",
+    "Sketch",
+    "Technical"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/sketch-curve",
+  "steps": [
+    {
+      "title": "Sketch curve - old version",
+      "detail": "The users can sketch a curve (thick grey line). The resulting point cloud is converted by the Visvalingam algorithm to a list consisting of a start point and an end point, as well as 6 internal point. Finally, these 8 points are interpolated by a cardinal spline curve."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "differential-equations",
+  "title": "Differential equations",
+  "summary": "Plot ordinary differential equations (ODE), i.e. display solutions of the ordinary differential equation\n with initial value .",
+  "formula": "",
+  "aliases": [
+    "differential equations",
+    "jsxgraph differential equations"
+  ],
+  "tags": [
+    "Calculus",
+    "Differential equations"
+  ],
+  "boundingBox": [
+    -11,
+    11,
+    11,
+    -11
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/differential-equations",
+  "steps": [
+    {
+      "title": "Differential equations",
+      "detail": "Plot ordinary differential equations (ODE), i.e. display solutions of the ordinary differential equation  with initial value ."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "sketch-polynomial-1",
+  "title": "Sketch polynomial",
+  "summary": "The users can sketch a curve (red line). The resulting point cloud is converted by the Visvalingam algorithm to a list consisting of a start point and an end point, as well as internal points. The overall number of these points is given as the slider value . Then, these points are interpolated by a Lagrange polynomial of degree .\n\nStarting with version 1.13.0, the internal elements 'board.sketche…",
+  "formula": "",
+  "aliases": [
+    "sketch polynomial",
+    "sketch polynomial 1",
+    "jsxgraph sketch polynomial"
+  ],
+  "tags": [
+    "Calculus",
+    "Curves",
+    "Interpolation",
+    "Sketch"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/sketch-polynomial-1",
+  "steps": [
+    {
+      "title": "Sketch polynomial",
+      "detail": "The users can sketch a curve (red line). The resulting point cloud is converted by the Visvalingam algorithm to a list consisting of a start point and an end point, as well as internal points. The overall number of these points is given as the slider value . Then, these points are interpolated by a Lagrange polynomial of degree ."
+    },
+    {
+      "title": "Explore further",
+      "detail": "Starting with version 1.13.0, the internal elements 'board.sketches[]' are used."
+    }
+  ]
+}

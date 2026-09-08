@@ -3,6 +3,7 @@ import type {
   TopicBoardParams,
   TopicId,
 } from "@/lib/topics/schema";
+import type { TopicPresentation } from "@/lib/topics/presentation";
 
 /** One line of the written explanation that sits beside the board. */
 export type TopicStep = {
@@ -14,8 +15,8 @@ export type TopicStep = {
  * A self-contained lesson topic: how to recognise it in a question, what to
  * say about it, and how to parameterise its interactive board.
  *
- * Adding a topic means adding one of these plus (if it needs a new board) one
- * drawer in `@/components/topics/boards`. Nothing else has to change.
+ * Dynamic topics implement `present()` so title / formula / steps match the
+ * actual question (e.g. y = x^3), not a static placeholder.
  */
 export type TopicModule = {
   id: TopicId;
@@ -36,6 +37,14 @@ export type TopicModule = {
    */
   deriveParams: (prompt: string) => TopicBoardParams;
   matches: (prompt: string, conceptKey?: string) => boolean;
+  /**
+   * Optional live copy for this question/params. When omitted, the static
+   * title / summary / formula / steps above are used.
+   */
+  present?: (input: {
+    prompt?: string;
+    params: TopicBoardParams;
+  }) => TopicPresentation;
 };
 
 export type {
@@ -45,3 +54,4 @@ export type {
   TopicBoardParams,
   TopicId,
 } from "@/lib/topics/schema";
+export type { TopicPresentation } from "@/lib/topics/presentation";

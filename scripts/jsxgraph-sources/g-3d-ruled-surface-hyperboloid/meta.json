@@ -1,0 +1,34 @@
+{
+  "id": "g-3d-ruled-surface-hyperboloid",
+  "title": "3D ruled surface: hyperboloid",
+  "summary": "A ruled surface is a special case of a parametric surface.",
+  "formula": "",
+  "aliases": [
+    "3d ruled surface: hyperboloid",
+    "3d ruled surface hyperboloid",
+    "jsxgraph 3d ruled surface: hyperboloid"
+  ],
+  "tags": [
+    "3D",
+    "3D",
+    "Analytic"
+  ],
+  "boundingBox": [
+    -8,
+    8,
+    8,
+    -8
+  ],
+  "keepAspectRatio": false,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-ruled-surface-hyperboloid",
+  "steps": [
+    {
+      "title": "3D ruled surface: hyperboloid",
+      "detail": "A ruled surface is a special case of a parametric surface."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

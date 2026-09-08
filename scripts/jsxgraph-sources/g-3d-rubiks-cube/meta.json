@@ -1,0 +1,34 @@
+{
+  "id": "g-3d-rubiks-cube",
+  "title": "3D Rubik's Cube",
+  "summary": "Animation of Rubik's cube moves using 3D transformations. This beautiful example has been programmed by Thomas Miller.",
+  "formula": "",
+  "aliases": [
+    "3d rubik's cube",
+    "3d rubiks cube",
+    "jsxgraph 3d rubik's cube"
+  ],
+  "tags": [
+    "Animation",
+    "Applications",
+    "Transformations"
+  ],
+  "boundingBox": [
+    -8,
+    8,
+    8,
+    -8
+  ],
+  "keepAspectRatio": false,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-rubiks-cube",
+  "steps": [
+    {
+      "title": "3D Rubik's Cube",
+      "detail": "Animation of Rubik's cube moves using 3D transformations. This beautiful example has been programmed by Thomas Miller."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

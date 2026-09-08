@@ -1,0 +1,32 @@
+{
+  "id": "intersection-of-curves",
+  "title": "Intersection of curves",
+  "summary": "Intersection of curves — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "intersection of curves",
+    "jsxgraph intersection of curves"
+  ],
+  "tags": [
+    "Curves",
+    "Intersection, Union, Difference"
+  ],
+  "boundingBox": [
+    -15,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/intersection-of-curves",
+  "steps": [
+    {
+      "title": "Intersection of curves",
+      "detail": "Interactive JSXGraph construction: Intersection of curves. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

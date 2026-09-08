@@ -1,0 +1,33 @@
+{
+  "id": "epicycloid-export-svg",
+  "title": "Epicycloid: export SVG",
+  "summary": "Epicycloid: export SVG — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "epicycloid: export svg",
+    "epicycloid export svg",
+    "jsxgraph epicycloid: export svg"
+  ],
+  "tags": [
+    "Applications",
+    "Curves"
+  ],
+  "boundingBox": [
+    -2.5,
+    2.5,
+    2.5,
+    -2.5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/epicycloid-export-svg",
+  "steps": [
+    {
+      "title": "Epicycloid: export SVG",
+      "detail": "Interactive JSXGraph construction: Epicycloid: export SVG. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -27,16 +27,21 @@ export function toUserFacingError(
 
   // Known safe / intentional product messages — keep as-is
   if (
-    /^(Prompt is required|Description is required|Description is too long|Conversation not found|Lesson stream returned an empty body|Add OPENAI_API_KEY|Enter a topic|Crash details are required|Sign in required|Prompt is too long|The scene planner|The scene agent|Couldn't get a stable 3D scene|Voice is not configured|Nothing to speak)/i.test(
+    /^(Prompt is required|Description is required|Description is too long|Conversation not found|Lesson stream returned an empty body|Add OPENAI_API_KEY|Add GROQ_API_KEY|Enter a topic|Crash details are required|Sign in required|Prompt is too long|The scene planner|The scene agent|Couldn't get a stable 3D scene|Voice is not configured|Nothing to speak|Start a lesson first|Not enough lesson context)/i.test(
       raw,
     )
   ) {
     return raw;
   }
 
+  // Provider structured-output / generation failures
+  if (isProviderGenerationError(raw)) {
+    return fallback;
+  }
+
   // Hide provider / org / model / billing leakage
   if (
-    /\b(groq|openai|deepgram|anthropic|org_[a-z0-9]+|llama-|gpt-|console\.|api key|billing|tokens? per day|TPD|TPM|RPM)\b/i.test(
+    /\b(groq|openai|deepgram|anthropic|org_[a-z0-9]+|llama-|gpt-|qwen|console\.|api key|billing|tokens? per day|TPD|TPM|RPM|OTPM|failed_generation)\b/i.test(
       raw,
     )
   ) {
@@ -44,7 +49,7 @@ export function toUserFacingError(
   }
 
   // Hide HTTP / stack-ish dumps
-  if (/\b(429|500|502|503|ECONN|ETIMEDOUT|fetch failed)\b/i.test(raw)) {
+  if (/\b(400|401|403|404|429|500|502|503|ECONN|ETIMEDOUT|fetch failed)\b/i.test(raw)) {
     if (/\b429\b|rate limit|quota|capacity/i.test(raw)) {
       return BUSY_USER_MESSAGE;
     }
@@ -60,7 +65,13 @@ export function toUserFacingError(
 }
 
 export function isCapacityOrRateLimitError(message: string): boolean {
-  return /\b(429|rate limit|rate_limit|tokens? per day|TPD|TPM|RPM|quota|too many requests|capacity|overloaded|resource_exhausted)\b/i.test(
+  return /\b(429|rate limit|rate_limit|tokens? per day|TPD|TPM|RPM|OTPM|quota|too many requests|capacity|overloaded|resource_exhausted|request too large)\b/i.test(
+    message,
+  );
+}
+
+export function isProviderGenerationError(message: string): boolean {
+  return /\b(failed to validate json|failed_generation|invalid json|json_validate|lesson plan failed validation|empty lesson plan|quiz question failed validation|empty quiz|adjust your prompt)\b/i.test(
     message,
   );
 }

@@ -1,0 +1,33 @@
+{
+  "id": "polar-grid",
+  "title": "Polar grid",
+  "summary": "This example shows a custom coordinate system with polar grid lines instead of orthogonal lines. To be specific, the ticks of the horizontal axis are of type *polar*. The ticks of the vertical axis are horizontal as usual.",
+  "formula": "",
+  "aliases": [
+    "polar grid",
+    "jsxgraph polar grid"
+  ],
+  "tags": [
+    "Axes",
+    "Board options",
+    "Calculus"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/polar-grid",
+  "steps": [
+    {
+      "title": "Polar grid",
+      "detail": "This example shows a custom coordinate system with polar grid lines instead of orthogonal lines. To be specific, the ticks of the horizontal axis are of type *polar*. The ticks of the vertical axis are horizontal as usual."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

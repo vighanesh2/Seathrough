@@ -1,0 +1,33 @@
+{
+  "id": "continuous-function-non-uniform-continuous-example",
+  "title": "Continuous function: non-uniform continuous example",
+  "summary": "Continuous function: non-uniform continuous example — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "continuous function: non-uniform continuous example",
+    "continuous function non uniform continuous example",
+    "jsxgraph continuous function: non-uniform continuous example"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus"
+  ],
+  "boundingBox": [
+    -1,
+    10,
+    2,
+    -2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/continuous-function-non-uniform-continuous-example",
+  "steps": [
+    {
+      "title": "Continuous function: non-uniform continuous example",
+      "detail": "Interactive JSXGraph construction: Continuous function: non-uniform continuous example. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

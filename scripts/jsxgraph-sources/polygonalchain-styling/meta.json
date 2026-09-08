@@ -1,0 +1,32 @@
+{
+  "id": "polygonalchain-styling",
+  "title": "PolygonalChain styling",
+  "summary": "A polygonal chains is a variation of the polygon element with sub-objects and . Here is a simple example to style a polygonal chain.",
+  "formula": "",
+  "aliases": [
+    "polygonalchain styling",
+    "jsxgraph polygonalchain styling"
+  ],
+  "tags": [
+    "Polygons",
+    "Technical"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/polygonalchain-styling",
+  "steps": [
+    {
+      "title": "PolygonalChain styling",
+      "detail": "A polygonal chains is a variation of the polygon element with sub-objects and . Here is a simple example to style a polygonal chain."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

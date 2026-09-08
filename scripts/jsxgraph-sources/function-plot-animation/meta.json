@@ -1,0 +1,34 @@
+{
+  "id": "function-plot-animation",
+  "title": "Function plot animation",
+  "summary": "For animated plotting of simple function graphs, the turtle object is useful.",
+  "formula": "",
+  "aliases": [
+    "function plot animation",
+    "jsxgraph function plot animation"
+  ],
+  "tags": [
+    "Calculus",
+    "Function plotting",
+    "Technical",
+    "Turtle"
+  ],
+  "boundingBox": [
+    -5,
+    2,
+    5,
+    -2
+  ],
+  "keepAspectRatio": false,
+  "sourceUrl": "https://jsxgraph.org/share/example/function-plot-animation",
+  "steps": [
+    {
+      "title": "Function plot animation",
+      "detail": "For animated plotting of simple function graphs, the turtle object is useful."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

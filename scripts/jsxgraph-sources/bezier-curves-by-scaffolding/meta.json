@@ -1,0 +1,33 @@
+{
+  "id": "bezier-curves-by-scaffolding",
+  "title": "Bezier curves by scaffolding",
+  "summary": "The red points are connected by a cubic Bezier curve. The blue points are the control points.\n\nHere, the Bezier curve together with its scaffolds is shown. The black points are always the midpoints of their line segment. For test purposes, the canvas renderer is used (instead of SVG).",
+  "formula": "",
+  "aliases": [
+    "bezier curves by scaffolding",
+    "jsxgraph bezier curves by scaffolding"
+  ],
+  "tags": [
+    "Curves",
+    "Splines",
+    "Technical"
+  ],
+  "boundingBox": [
+    -4,
+    4,
+    4,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/bezier-curves-by-scaffolding",
+  "steps": [
+    {
+      "title": "Bezier curves by scaffolding",
+      "detail": "The red points are connected by a cubic Bezier curve. The blue points are the control points."
+    },
+    {
+      "title": "Explore further",
+      "detail": "Here, the Bezier curve together with its scaffolds is shown. The black points are always the midpoints of their line segment. For test purposes, the canvas renderer is used (instead of SVG)."
+    }
+  ]
+}

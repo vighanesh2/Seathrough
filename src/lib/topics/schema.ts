@@ -1,24 +1,26 @@
 import { z } from "zod";
 
-/**
- * Wire format for the interactive topic library.
- *
- * Kept free of app imports so `@/lib/visuals/types` can depend on it without a
- * cycle, and so every value here survives a round trip through the visual
- * library cache as plain JSON. Drawing code is looked up by `boardId` on the
- * client — the database never stores anything executable.
- */
-
-export const topicIdSchema = z.enum([
-  "mean-value-theorem",
-  "rolles-theorem",
-  "differential-equations",
-]);
+/** Stable slug for a topic or catalog construction. */
+export const topicIdSchema = z
+  .string()
+  .min(2)
+  .max(64)
+  .regex(
+    /^[a-z][a-z0-9-]*$/,
+    "topic id must be a lowercase slug (a-z, 0-9, hyphen)",
+  );
 
 export type TopicId = z.infer<typeof topicIdSchema>;
 
 /** Several topics can share one interactive board with different parameters. */
-export const topicBoardIdSchema = z.enum(["secant-tangent", "ode-solution"]);
+export const topicBoardIdSchema = z.enum([
+  "secant-tangent",
+  "ode-solution",
+  /** Runs a curated construction from the JSXGraph example catalog. */
+  "construction",
+  /** Plots y = f(x) from a safe expression parsed out of the question. */
+  "function-graph",
+]);
 
 export type TopicBoardId = z.infer<typeof topicBoardIdSchema>;
 
@@ -80,9 +82,41 @@ export const odeSolutionBoardParamsSchema = z.object({
 
 export type OdeSolutionBoardParams = z.infer<typeof odeSolutionBoardParamsSchema>;
 
+/**
+ * Look up a curated construction by id on the client.
+ * Executable source never travels through VisualPlan / the database.
+ */
+export const constructionBoardParamsSchema = z.object({
+  boardKind: z.literal("construction"),
+  boundingBox: boundingBoxSchema,
+  constructionId: topicIdSchema,
+  keepAspectRatio: z.boolean().optional(),
+});
+
+export type ConstructionBoardParams = z.infer<
+  typeof constructionBoardParamsSchema
+>;
+
+/** Parameters for plotting an arbitrary (safe) y = f(x). */
+export const functionGraphBoardParamsSchema = z.object({
+  boardKind: z.literal("function-graph"),
+  boundingBox: boundingBoxSchema,
+  /** JessieCode expression in x, e.g. "x^4" or "sin(x)+x". */
+  expression: z.string().min(1).max(80),
+  showTangent: z.boolean().default(true),
+  xMin: z.number().finite(),
+  xMax: z.number().finite(),
+});
+
+export type FunctionGraphBoardParams = z.infer<
+  typeof functionGraphBoardParamsSchema
+>;
+
 export const topicBoardParamsSchema = z.discriminatedUnion("boardKind", [
   secantTangentBoardParamsSchema,
   odeSolutionBoardParamsSchema,
+  constructionBoardParamsSchema,
+  functionGraphBoardParamsSchema,
 ]);
 
 export type TopicBoardParams = z.infer<typeof topicBoardParamsSchema>;

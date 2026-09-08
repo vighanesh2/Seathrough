@@ -81,10 +81,20 @@ export function JsxGraphBoard({
         if (cancelled || !hostRef.current) return;
 
         jxg = JXG;
+        const paramsNow = paramsRef.current;
+        const keepAspect =
+          paramsNow.boardKind === "ode-solution"
+            ? false
+            : paramsNow.boardKind === "function-graph"
+              ? false
+              : paramsNow.boardKind === "construction"
+                ? paramsNow.keepAspectRatio !== false
+                : true;
+
         board = JXG.JSXGraph.initBoard(hostRef.current, {
-          boundingbox: paramsRef.current.boundingBox,
+          boundingbox: paramsNow.boundingBox,
           axis: true,
-          keepaspectratio: boardId !== "ode-solution",
+          keepaspectratio: keepAspect,
           showCopyright: false,
           showNavigation: true,
           pan: { enabled: true, needTwoFingers: true },

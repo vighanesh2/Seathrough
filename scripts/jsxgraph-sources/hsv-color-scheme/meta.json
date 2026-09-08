@@ -1,0 +1,32 @@
+{
+  "id": "hsv-color-scheme",
+  "title": "HSV color scheme",
+  "summary": "The HSV color scheme consists of three values:\n\n- Hue (base color): between 0 and 360\n- Saturation (purity): between 0 and 1\n- Value (brightness): between 0 and 1\n\nHere, you can experiment with these values. The outer color is determined by the sliders, the inner color is the complementary color (adding ). Additionally, the (outer) HSV color is converted to RGB.",
+  "formula": "",
+  "aliases": [
+    "hsv color scheme",
+    "jsxgraph hsv color scheme"
+  ],
+  "tags": [
+    "Applications",
+    "Technical"
+  ],
+  "boundingBox": [
+    -4,
+    4,
+    4,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/hsv-color-scheme",
+  "steps": [
+    {
+      "title": "HSV color scheme",
+      "detail": "The HSV color scheme consists of three values:"
+    },
+    {
+      "title": "Explore further",
+      "detail": "- Hue (base color): between 0 and 360 - Saturation (purity): between 0 and 1 - Value (brightness): between 0 and 1"
+    }
+  ]
+}

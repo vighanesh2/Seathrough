@@ -1,0 +1,33 @@
+{
+  "id": "euler-line",
+  "title": "Euler line",
+  "summary": "Euler line — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "euler line",
+    "jsxgraph euler line"
+  ],
+  "tags": [
+    "Euclidean",
+    "Famous theorems",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -6,
+    6,
+    6,
+    -6
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/euler-line",
+  "steps": [
+    {
+      "title": "Euler line",
+      "detail": "Interactive JSXGraph construction: Euler line. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

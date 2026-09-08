@@ -9,12 +9,30 @@ import { ChatSidebar } from "@/components/ChatSidebar";
 import { AccountMenu } from "@/components/lms/AccountMenu";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
+import { AskMeMcqDialog } from "@/components/AskMeMcqDialog";
 import { PaceControls } from "@/components/PaceControls";
+import {
+  latestPipelineEvent,
+  PipelineActivity,
+  pipelineStatusLabel,
+  type PipelineRecords,
+} from "@/components/PipelineActivity";
 import { PromptBar } from "@/components/PromptBar";
+import { SceneAgentRail } from "@/components/scene-explain/SceneAgentRail";
+import { SceneViewport } from "@/components/scene-explain/SceneViewport";
+import { useSceneSession } from "@/components/scene-explain/useSceneSession";
 import { useQuestionAccess } from "@/components/usage/QuestionAccess";
 import { ThinkingLoader } from "@/components/ui/ThinkingLoader";
 import { VisualStage } from "@/components/VisualStage";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { PenCueTracker } from "@/lib/board/penCues";
 import { consumeLessonStream } from "@/lib/client/consumeLessonStream";
 import type { ConversationListItem } from "@/lib/conversations/types";
@@ -23,10 +41,19 @@ import { DrawCommandQueue } from "@/lib/draw-engine/resolve";
 import type { DrawCommand } from "@/lib/draw-engine/commands";
 import { toUserFacingError } from "@/lib/errors/userFacing";
 import { lessonMachine } from "@/lib/lesson/machine";
+import {
+  getSceneExplainSession,
+  migrateAnonSceneExplainSessions,
+  newSceneExplainSessionId,
+  readSceneExplainSessions,
+  sceneExplainSessionsToListItems,
+  upsertSceneExplainSession,
+  type SceneExplainSession,
+} from "@/lib/scene-explain/sessionHistory";
 import { clearPendingPrompt, takePendingPrompt } from "@/lib/usage/pendingPrompt";
 import { visualStableKey } from "@/lib/visuals/router";
 import type { VisualPlan } from "@/lib/visuals/types";
-import type { PaceSpeed, StreamEvent } from "@/types/lesson";
+import type { LessonSource, PaceSpeed, StreamEvent } from "@/types/lesson";
 import {
   threeSceneFromChoiceOrNull,
   type ThreeScenePlan,
@@ -72,8 +99,13 @@ function turnsToNarration(
   turns: Array<{ role: string; content: string }>,
 ): BoardNarrationLine[] {
   const lines: BoardNarrationLine[] = [];
+  const lastStudentIndex = turns.findLastIndex(
+    (turn) => turn.role === "student",
+  );
+  const currentLessonTurns =
+    lastStudentIndex >= 0 ? turns.slice(lastStudentIndex) : turns;
   let i = 0;
-  for (const turn of turns) {
+  for (const turn of currentLessonTurns) {
     i += 1;
     if (turn.role === "student") {
       lines.push({ id: `t-${i}`, text: turn.content, kind: "student" });
@@ -169,6 +201,7 @@ function commandsBottomY(commands: DrawCommand[]): number {
 export function LessonShell() {
   const { user, loading: authLoading, accessToken, logout } = useAuth();
   const { beginQuestion, cancelQuestion, openAuth } = useQuestionAccess();
+  const scene = useSceneSession(accessToken);
   const [prompt, setPrompt] = useState("");
   const [status, setStatus] = useState<LessonStatus>("idle");
   const pendingHandledRef = useRef(false);
@@ -181,9 +214,13 @@ export function LessonShell() {
   const [boardNarration, setBoardNarration] = useState<BoardNarrationLine[]>(
     [],
   );
+  const [lessonSources, setLessonSources] = useState<LessonSource[]>([]);
+  const [pipelineRecords, setPipelineRecords] = useState<PipelineRecords>({});
+  const [pipelineExpanded, setPipelineExpanded] = useState(true);
   const [codeBuffer, setCodeBuffer] = useState("");
+  const [followUpPrompt, setFollowUpPrompt] = useState("");
   const [conversationId, setConversationId] = useState<string | undefined>();
-  const [, setLessonId] = useState<string | undefined>();
+  const [lessonId, setLessonId] = useState<string | undefined>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [conversations, setConversations] = useState<ConversationListItem[]>(
     [],
@@ -221,15 +258,52 @@ export function LessonShell() {
   threeSceneRef.current = threeScene;
   threeSelectedRef.current = threeSelected;
 
-  const canFollowUp =
-    Boolean(conversationId) &&
-    (status === "done" || status === "paused" || status === "error");
+  const [showResumePrompt, setShowResumePrompt] = useState(false);
+  const [showAskMe, setShowAskMe] = useState(false);
+  const [sceneMode, setSceneMode] = useState(false);
+  const [sceneSessionId, setSceneSessionId] = useState(() =>
+    newSceneExplainSessionId(),
+  );
+  const [sceneSessions, setSceneSessions] = useState<SceneExplainSession[]>([]);
+  const sceneSessionIdRef = useRef(sceneSessionId);
+  sceneSessionIdRef.current = sceneSessionId;
+
+  const canAskMe =
+    !sceneMode &&
+    status !== "idle" &&
+    Boolean(conversationId || title || boardNarration.length > 0);
+  const showFollowUp =
+    !sceneMode && Boolean(conversationId && lessonId) && status !== "idle";
+
+  const askMeNarration = useMemo(
+    () =>
+      boardNarration
+        .filter((line) => line.kind !== "error")
+        .map((line) => line.text.trim())
+        .filter(Boolean)
+        .slice(-20),
+    [boardNarration],
+  );
+
+  const sceneListItems: ConversationListItem[] = useMemo(
+    () => sceneExplainSessionsToListItems(sceneSessions),
+    [sceneSessions],
+  );
+
+  const sceneStreaming =
+    scene.status === "building" ||
+    scene.status === "fixing" ||
+    scene.status === "explaining";
 
   const onDrawComplete = useCallback(() => {
     send({ type: "DRAW_DONE" });
   }, [send]);
 
   const abortRef = useRef<AbortController | null>(null);
+  const historyAbortRef = useRef<AbortController | null>(null);
+  const lessonGenerationRef = useRef(0);
+  const lessonSubmitLockedRef = useRef(false);
+  const followUpSubmitLockedRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const speedRef = useRef<PaceSpeed>(1);
   const pausedRef = useRef(false);
@@ -244,6 +318,10 @@ export function LessonShell() {
   const pauseGateRef = useRef<Promise<void>>(Promise.resolve());
   const resumePauseRef = useRef<(() => void) | null>(null);
   const lastVisualKeyRef = useRef<string>("");
+  const statusRef = useRef<LessonStatus>(status);
+  statusRef.current = status;
+  /** True when we auto-paused because the tab/window was hidden. */
+  const pausedByVisibilityRef = useRef(false);
 
   function pushNarration(
     text: string,
@@ -321,19 +399,51 @@ export function LessonShell() {
 
   useEffect(() => {
     if (pendingHandledRef.current) return;
+
+    let startAsScene = false;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("view") === "3d") {
+        startAsScene = true;
+        setSceneMode(true);
+        window.history.replaceState({}, "", "/lessons");
+      }
+    } catch {
+      // ignore
+    }
+
     const pending = takePendingPrompt();
-    if (!pending) return;
+    if (!pending) {
+      if (startAsScene) pendingHandledRef.current = true;
+      return;
+    }
     pendingHandledRef.current = true;
     setPrompt(pending.prompt);
     if (pending.autoStart) {
-      void startLessonWithText(pending.prompt).finally(() => {
-        clearPendingPrompt();
-      });
+      if (startAsScene) {
+        void startSceneWithText(pending.prompt).finally(() => {
+          clearPendingPrompt();
+        });
+      } else {
+        void startLessonWithText(pending.prompt).finally(() => {
+          clearPendingPrompt();
+        });
+      }
     } else {
       clearPendingPrompt();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- one-shot marketing handoff
   }, []);
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      if (user?.id) {
+        setSceneSessions(migrateAnonSceneExplainSessions(user.id));
+        return;
+      }
+      setSceneSessions(readSceneExplainSessions(null));
+    });
+  }, [user?.id]);
 
   useEffect(() => {
     speedRef.current = speed;
@@ -349,6 +459,68 @@ export function LessonShell() {
       penCues.stopWaiting();
     };
   }, [penCues]);
+
+  function pauseLesson(opts?: { fromVisibility?: boolean }) {
+    if (statusRef.current !== "running") return;
+    pausedRef.current = true;
+    audioRef.current?.pause();
+    send({ type: "INTERRUPT" });
+    setStatus("paused");
+    setDrawPlaying(false);
+    pausedByVisibilityRef.current = Boolean(opts?.fromVisibility);
+    if (!opts?.fromVisibility) {
+      setShowResumePrompt(false);
+    }
+  }
+
+  function openAskMe() {
+    if (statusRef.current === "running") {
+      pauseLesson({ fromVisibility: false });
+    }
+    setShowAskMe(true);
+  }
+
+  function resumeLesson() {
+    if (statusRef.current !== "paused" && !pausedRef.current) return;
+    pausedByVisibilityRef.current = false;
+    setShowResumePrompt(false);
+    pausedRef.current = false;
+    send({ type: "RESUME" });
+    setStatus("running");
+    resumePauseRef.current?.();
+    resumePauseRef.current = null;
+    void audioRef.current?.play().catch(() => undefined);
+  }
+
+  function dismissResumePrompt() {
+    pausedByVisibilityRef.current = false;
+    setShowResumePrompt(false);
+  }
+
+  useEffect(() => {
+    function onVisibilityChange() {
+      if (document.visibilityState === "hidden") {
+        if (statusRef.current === "running") {
+          pauseLesson({ fromVisibility: true });
+        }
+        return;
+      }
+      if (document.visibilityState !== "visible") return;
+      if (
+        pausedByVisibilityRef.current &&
+        (statusRef.current === "paused" || pausedRef.current)
+      ) {
+        setShowResumePrompt(true);
+      }
+    }
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+    // pauseLesson closes over send/setState — stable enough for this listener
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [send]);
 
   function waitIfPaused(): Promise<void> {
     if (!pausedRef.current) return Promise.resolve();
@@ -372,16 +544,27 @@ export function LessonShell() {
     });
   }
 
-  async function handleEvent(event: StreamEvent) {
+  async function handleEvent(event: StreamEvent, generation: number) {
     await waitIfPaused();
+    if (generation !== lessonGenerationRef.current) return;
 
     switch (event.type) {
+      case "pipeline_status":
+        setPipelineRecords((previous) => ({
+          ...previous,
+          [event.stage]: event,
+        }));
+        if (event.state === "started") setPipelineExpanded(true);
+        break;
       case "student_message":
         pushNarration(event.text, "student");
         if (event.conversationId) {
           setConversationId(event.conversationId);
           conversationIdRef.current = event.conversationId;
         }
+        break;
+      case "sources":
+        setLessonSources(event.sources);
         break;
       case "plan_meta":
         setTitle(event.title);
@@ -540,6 +723,9 @@ export function LessonShell() {
         break;
       case "clarify":
         sawClarifyRef.current = true;
+        // The clarification stream is terminal, but selecting a chip must be
+        // allowed to start the confirmed lesson as a fresh request.
+        lessonSubmitLockedRef.current = false;
         {
           // Pause: keep the messy draft in the prompt box until they pick a chip.
           const draftKept = event.draftPrompt?.trim() || prompt;
@@ -570,6 +756,7 @@ export function LessonShell() {
         send({ type: "COMPLETE" });
         if (event.conversationId) setConversationId(event.conversationId);
         if (event.lessonId) setLessonId(event.lessonId);
+        setPipelineExpanded(false);
         if (sawClarifyRef.current) {
           sawClarifyRef.current = false;
           setStatus("idle");
@@ -586,12 +773,19 @@ export function LessonShell() {
   }
 
   function resetLesson() {
+    lessonSubmitLockedRef.current = false;
+    followUpSubmitLockedRef.current = false;
+    lessonGenerationRef.current += 1;
+    historyAbortRef.current?.abort();
+    historyAbortRef.current = null;
     abortRef.current?.abort();
     abortRef.current = null;
     audioRef.current?.pause();
     audioRef.current = null;
     penCues.reset();
     pausedRef.current = false;
+    pausedByVisibilityRef.current = false;
+    setShowResumePrompt(false);
     resumePauseRef.current?.();
     resumePauseRef.current = null;
     send({ type: "RESET" });
@@ -603,14 +797,19 @@ export function LessonShell() {
     setBeatOrder(1);
     setTotalBeats(undefined);
     setBoardNarration([]);
+    setLessonSources([]);
+    setPipelineRecords({});
+    setPipelineExpanded(true);
     narrationSeqRef.current = 0;
     setCodeBuffer("");
+    setFollowUpPrompt("");
     setConversationId(undefined);
     conversationIdRef.current = undefined;
     setLessonId(undefined);
     setClarify(null);
     sawClarifyRef.current = false;
     drawQueue.clear();
+    drawClockRef.current = 0;
     setDrawSessionKey((k) => k + 1);
     setBoardCanvasHeight(600);
     setBoardScrollToY(null);
@@ -631,6 +830,27 @@ export function LessonShell() {
     pausedRef.current = false;
     resumePauseRef.current?.();
     resumePauseRef.current = null;
+    setBoardNarration([]);
+    setLessonSources([]);
+    narrationSeqRef.current = 0;
+    setCodeBuffer("");
+    setPipelineRecords({});
+    setPipelineExpanded(true);
+  }
+
+  function prepareFollowUp() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    audioRef.current?.pause();
+    audioRef.current = null;
+    penCues.stopWaiting();
+    pausedRef.current = false;
+    resumePauseRef.current?.();
+    resumePauseRef.current = null;
+    setCodeBuffer("");
+    setDrawSpeech(null);
+    setPipelineRecords({});
+    setPipelineExpanded(true);
   }
 
   async function runStream(
@@ -638,6 +858,7 @@ export function LessonShell() {
     text: string,
     options?: { onAbort?: () => void; confirmedTightAsk?: string },
   ) {
+    const generation = lessonGenerationRef.current;
     const controller = new AbortController();
     abortRef.current = controller;
     streamModeRef.current = mode;
@@ -666,13 +887,19 @@ export function LessonShell() {
         accessToken,
         confirmedTightAsk: options?.confirmedTightAsk,
         onEvent: async (event) => {
+          if (
+            generation !== lessonGenerationRef.current ||
+            abortRef.current !== controller
+          ) {
+            return;
+          }
           if (event.type !== "error") {
             sawProgress = true;
           }
           if (event.type === "error" || event.type === "done") {
             sawTerminal = true;
           }
-          await handleEvent(event);
+          await handleEvent(event, generation);
         },
       });
       if (controller.signal.aborted) {
@@ -709,11 +936,18 @@ export function LessonShell() {
     trimmed: string,
     confirmedTightAsk?: string,
   ) {
-    if (!trimmed) return;
+    if (
+      !trimmed ||
+      statusRef.current !== "idle" ||
+      lessonSubmitLockedRef.current
+    ) {
+      return;
+    }
     if (!beginQuestion()) return;
 
     const visibleAsk = confirmedTightAsk?.trim() || trimmed;
     resetLesson();
+    lessonSubmitLockedRef.current = true;
     setClarify(null);
     // HeyClicky-style: show the tight ask in the prompt box immediately
     // (critical for clarify picks — same as rewrite-and-run).
@@ -730,20 +964,115 @@ export function LessonShell() {
     await startLessonWithText(prompt.trim());
   }
 
-  async function askFollowUp(confirmedTightAsk?: string) {
-    const trimmed = prompt.trim();
-    if (!trimmed || !conversationIdRef.current) return;
+  async function askFollowUp(
+    confirmedTightAsk?: string,
+    draftOverride?: string,
+  ) {
+    const text = (draftOverride ?? followUpPrompt).trim();
+    if (
+      !text ||
+      !conversationIdRef.current ||
+      !lessonId ||
+      followUpSubmitLockedRef.current ||
+      statusRef.current === "running" ||
+      statusRef.current === "paused"
+    ) {
+      return;
+    }
     if (!beginQuestion()) return;
 
-    const visibleAsk = confirmedTightAsk?.trim() || trimmed;
-    prepareSoftContinue();
+    followUpSubmitLockedRef.current = true;
+    lessonGenerationRef.current += 1;
+    const visibleAsk = confirmedTightAsk?.trim() || text;
+    prepareFollowUp();
+    setFollowUpPrompt("");
     setClarify(null);
     setPrompt(visibleAsk);
-    send({ type: "START", title: visibleAsk });
+    send({ type: "RESET" });
+    send({ type: "START", title: title ?? visibleAsk });
     setStatus("running");
-    await runStream("follow_up", trimmed, {
-      onAbort: cancelQuestion,
-      confirmedTightAsk: confirmedTightAsk?.trim() || undefined,
+    try {
+      await runStream("follow_up", text, {
+        onAbort: cancelQuestion,
+        confirmedTightAsk: confirmedTightAsk?.trim() || undefined,
+      });
+    } finally {
+      followUpSubmitLockedRef.current = false;
+    }
+  }
+
+  function persistSceneSnapshot(snapshot: {
+    prompt: string;
+    title: string;
+    program: SceneExplainSession["program"];
+    code: string;
+    reveal: number;
+    logs: SceneExplainSession["logs"];
+    narration: string[];
+  }) {
+    const now = new Date().toISOString();
+    const existing = getSceneExplainSession(sceneSessionIdRef.current, user?.id);
+    const saved: SceneExplainSession = {
+      id: sceneSessionIdRef.current,
+      title: snapshot.title || snapshot.prompt.slice(0, 72),
+      prompt: snapshot.prompt,
+      program: snapshot.program,
+      code: snapshot.code,
+      reveal: snapshot.reveal,
+      logs: snapshot.logs,
+      narration: snapshot.narration,
+      createdAt: existing?.createdAt ?? now,
+      updatedAt: now,
+    };
+    setSceneSessions(upsertSceneExplainSession(saved, user?.id));
+  }
+
+  async function startSceneWithText(trimmed: string) {
+    if (!trimmed || scene.busy) return;
+    if (!beginQuestion()) return;
+
+    if (statusRef.current === "running") {
+      abortRef.current?.abort();
+      pauseLesson({ fromVisibility: false });
+    }
+
+    setSceneMode(true);
+    const result = await scene.run(trimmed);
+    if (result === false) {
+      cancelQuestion();
+      return;
+    }
+    persistSceneSnapshot(result);
+  }
+
+  function startNewScene() {
+    if (scene.busy) return;
+    scene.reset();
+    setSceneSessionId(newSceneExplainSessionId());
+    setPrompt("");
+  }
+
+  function openSceneSession(id: string) {
+    if (scene.busy) return;
+    const saved = getSceneExplainSession(id, user?.id);
+    if (!saved) {
+      if (user?.id) {
+        setSceneSessions(migrateAnonSceneExplainSessions(user.id));
+      } else {
+        setSceneSessions(readSceneExplainSessions(null));
+      }
+      return;
+    }
+    setSceneMode(true);
+    setSceneSessionId(saved.id);
+    setPrompt(saved.prompt);
+    scene.restore({
+      title: saved.title,
+      program: saved.program,
+      code: saved.code,
+      reveal: saved.reveal,
+      logs: saved.logs,
+      narration: saved.narration,
     });
   }
 
@@ -764,7 +1093,7 @@ export function LessonShell() {
     setTitle(option.label.trim() || tightAsk);
 
     if (mode === "follow_up" && conversationIdRef.current) {
-      await askFollowUp(tightAsk);
+      await askFollowUp(tightAsk, draft);
       return;
     }
     // Keep sloppy draft as server `prompt`; confirmedTightAsk drives Pipe A + UI.
@@ -772,8 +1101,8 @@ export function LessonShell() {
   }
 
   function onPromptSubmit() {
-    if (canFollowUp) {
-      void askFollowUp();
+    if (sceneMode) {
+      void startSceneWithText(prompt.trim());
       return;
     }
     void startLesson();
@@ -785,10 +1114,18 @@ export function LessonShell() {
       openAuth("login");
       return;
     }
+    const generation = lessonGenerationRef.current + 1;
+    lessonGenerationRef.current = generation;
+    historyAbortRef.current?.abort();
+    const historyController = new AbortController();
+    historyAbortRef.current = historyController;
+    setSceneMode(false);
+    setFollowUpPrompt("");
     prepareSoftContinue();
     try {
       const res = await fetch(`/api/conversations/${id}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
+        signal: historyController.signal,
       });
       if (!res.ok) return;
       const data = (await res.json()) as {
@@ -797,6 +1134,7 @@ export function LessonShell() {
           rootPrompt: string;
           title?: string | null;
           lessonId?: string;
+          plan?: { sources?: LessonSource[] };
           turns: Array<{ role: string; content: string }>;
         };
         visualPlan?: VisualPlan | null;
@@ -809,6 +1147,13 @@ export function LessonShell() {
           threeScene: ThreeScenePlan | null;
         } | null;
       };
+      if (
+        historyController.signal.aborted ||
+        generation !== lessonGenerationRef.current ||
+        statusRef.current === "running"
+      ) {
+        return;
+      }
       const ctx = data.conversation;
       setConversationId(ctx.conversationId);
       conversationIdRef.current = ctx.conversationId;
@@ -818,6 +1163,7 @@ export function LessonShell() {
       );
       const lines = turnsToNarration(ctx.turns);
       setBoardNarration(lines);
+      setLessonSources(ctx.plan?.sources ?? []);
       narrationSeqRef.current = lines.length;
       setCodeBuffer("");
       setPrompt("");
@@ -901,6 +1247,10 @@ export function LessonShell() {
       send({ type: "RESET" });
     } catch {
       // keep current view
+    } finally {
+      if (historyAbortRef.current === historyController) {
+        historyAbortRef.current = null;
+      }
     }
   }
 
@@ -926,18 +1276,10 @@ export function LessonShell() {
       return;
     }
     if (status === "running") {
-      pausedRef.current = true;
-      audioRef.current?.pause();
-      send({ type: "INTERRUPT" });
-      setStatus("paused");
+      pauseLesson({ fromVisibility: false });
       return;
     }
-    pausedRef.current = false;
-    send({ type: "RESUME" });
-    setStatus("running");
-    resumePauseRef.current?.();
-    resumePauseRef.current = null;
-    void audioRef.current?.play().catch(() => undefined);
+    resumeLesson();
   }
 
   function skipBeat() {
@@ -949,20 +1291,38 @@ export function LessonShell() {
     }
   }
 
-  const busy = status === "running";
+  const busy = sceneMode ? scene.busy : status === "running";
 
   return (
     <AppShell>
       <ChatSidebar
         collapsed={sidebarCollapsed}
         onToggle={toggleSidebar}
-        conversations={conversations}
-        activeId={conversationId}
-        loading={chatsLoading}
+        conversations={sceneMode ? sceneListItems : conversations}
+        activeId={sceneMode ? sceneSessionId : conversationId}
+        loading={sceneMode ? false : chatsLoading}
+        historyEyebrow={sceneMode ? "3D scenes" : ""}
+        historyTitle={sceneMode ? "Your scenes" : undefined}
+        emptyHint={
+          sceneMode
+            ? "Build a process — past scenes will show up here."
+            : "Lessons you start will show up here."
+        }
+        newChatLabel={sceneMode ? "New scene" : undefined}
+        ariaLabel={sceneMode ? "3D scene history" : undefined}
+        showAuth={false}
         onSelect={(id) => {
+          if (sceneMode) {
+            openSceneSession(id);
+            return;
+          }
           void openConversation(id);
         }}
         onNewChat={() => {
+          if (sceneMode) {
+            startNewScene();
+            return;
+          }
           resetLesson();
           setPrompt("");
         }}
@@ -974,37 +1334,98 @@ export function LessonShell() {
           void logout();
           resetLesson();
           setConversations([]);
+          scene.reset();
+          setSceneSessionId(newSceneExplainSessionId());
+          setSceneSessions([]);
         }}
       />
 
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <AppHeader
           current="lessons"
-          eyebrow="Topic explanation"
-          title={title ?? "Ask what you’re stuck on"}
+          title={
+            sceneMode
+              ? (scene.title ?? "Ask for any process")
+              : (title ?? undefined)
+          }
+          brandCompact
+          className="lesson-topbar"
           leading={
             sidebarCollapsed ? (
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 onClick={toggleSidebar}
-                aria-label="Show chats"
+                aria-label={sceneMode ? "Show scenes" : "Show lessons"}
                 aria-expanded={false}
               >
                 <PanelLeft className="size-4" />
               </Button>
             ) : null
           }
-          actions={
-            <PaceControls
-              playing={status === "running"}
-              speed={speed}
-              onTogglePlay={togglePlay}
-              onSpeedChange={setSpeed}
-              onSkip={skipBeat}
-              disabled={status === "idle" && !prompt.trim()}
+          center={
+            <PromptBar
+              value={prompt}
+              onChange={setPrompt}
+              onSubmit={onPromptSubmit}
+              disabled={sceneMode ? busy : status !== "idle"}
+              inputId={sceneMode ? "scene-prompt" : "topic-prompt"}
+              inputLabel={sceneMode ? "3D scene prompt" : "Lesson question"}
+              placeholder={
+                sceneMode
+                  ? "Try “osmosis” or “how a comet orbits the sun”…"
+                  : "What do you want to learn?"
+              }
+              submitLabel={
+                sceneMode
+                  ? scene.program
+                    ? "Rebuild"
+                    : "Build scene"
+                  : "Start lesson"
+              }
             />
+          }
+          actions={
+            <div className="flex items-center gap-1.5">
+              {canAskMe ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-8 max-w-[9.5rem] truncate rounded-lg border-[#d7e3eb] px-2.5 text-[12px] font-medium text-[#17324a] hover:bg-[#eef4f9] sm:max-w-none"
+                  onClick={openAskMe}
+                >
+                  Ask me a question
+                </Button>
+              ) : null}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                aria-pressed={sceneMode}
+                className={
+                  sceneMode
+                    ? "h-8 rounded-lg border-[#1b6ca8]/35 bg-[#e8f2fa] px-2.5 text-[12px] font-medium text-[#1b6ca8]"
+                    : "h-8 rounded-lg border-[#d7e3eb] px-2.5 text-[12px] font-medium text-[#17324a] hover:bg-[#eef4f9]"
+                }
+                onClick={() => {
+                  setSceneMode((on) => !on);
+                }}
+              >
+                3D
+              </Button>
+              {!sceneMode ? (
+                <PaceControls
+                  playing={status === "running"}
+                  speed={speed}
+                  onTogglePlay={togglePlay}
+                  onSpeedChange={setSpeed}
+                  onSkip={skipBeat}
+                  disabled={status === "idle" && !prompt.trim()}
+                />
+              ) : null}
+            </div>
           }
           account={
             <AccountMenu
@@ -1014,24 +1435,20 @@ export function LessonShell() {
                 void logout();
                 resetLesson();
                 setConversations([]);
+                scene.reset();
+                setSceneSessionId(newSceneExplainSessionId());
+                setSceneSessions([]);
               }}
             />
           }
         >
-          <PromptBar
-            value={prompt}
-            onChange={setPrompt}
-            onSubmit={onPromptSubmit}
-            disabled={busy}
-            inputId="topic-prompt"
-            inputLabel="Topic prompt"
-            placeholder={
-              canFollowUp
-                ? "Ask a follow-up about this topic…"
-                : "What should we learn today?"
-            }
-            submitLabel={canFollowUp ? "Ask" : "Start"}
-          />
+          {!sceneMode && status === "running" ? (
+            <PipelineActivity
+              records={pipelineRecords}
+              expanded={pipelineExpanded}
+              onToggle={() => setPipelineExpanded((value) => !value)}
+            />
+          ) : null}
           {clarify ? (
             <div className="mt-3 space-y-2 border-t border-board-edge/40 pt-3">
               <p className="text-sm text-ink/80">{clarify.message}</p>
@@ -1053,51 +1470,136 @@ export function LessonShell() {
           ) : null}
         </AppHeader>
 
-        <div className="relative min-h-0 flex-1">
-          <VisualStage
-            plan={visualPlan}
-            playKey={playKey}
-            title={title}
-            beatOrder={beatOrder}
-            totalBeats={totalBeats}
-            narrationLines={boardNarration}
-            codeBuffer={codeBuffer}
-            streaming={status === "running"}
-            onDrawComplete={onDrawComplete}
-            drawQueue={drawQueue}
-            drawSessionKey={drawSessionKey}
-            drawPlaying={drawPlaying && status !== "paused"}
-            drawSpeed={speed}
-            preferDrawEngine={preferDrawEngine}
-            drawSpeech={drawSpeech}
-            canvasHeight={boardCanvasHeight}
-            scrollToY={boardScrollToY}
-            threeScene={threeScene}
-            threePlaying={status === "running"}
-            threeSpeed={speed}
-            threeSelectedStructure={threeSelected}
-            onThreeSelect={setThreeSelected}
-            onDrawClock={(ms) => {
-              drawClockRef.current = ms;
-            }}
-          />
-          {status === "running" &&
-          !visualPlan &&
-          !threeScene &&
-          !preferDrawEngine &&
-          boardNarration.length === 0 ? (
-            <ThinkingLoader
-              variant="overlay"
-              phrases={[
-                "Tightening the ask",
-                "Planning the explanation",
-                "Cutting Claudish",
-                "Setting up the board",
-              ]}
+        {sceneMode ? (
+          <div className="relative flex min-h-0 flex-1 overflow-hidden">
+            <div className="relative min-h-0 min-w-0 flex-1 bg-ink">
+              <SceneViewport
+                code={scene.code}
+                frameKey={scene.frameKey}
+                reveal={scene.reveal}
+                onReady={scene.onFrameReady}
+                onError={scene.onFrameError}
+              />
+              {scene.status === "building" || scene.status === "fixing" ? (
+                <ThinkingLoader
+                  variant="overlay"
+                  label={
+                    scene.status === "fixing"
+                      ? "Repairing the scene"
+                      : "Designing a detailed 3D scene"
+                  }
+                  className="bg-[radial-gradient(ellipse_at_50%_40%,rgba(26,43,60,0.55),rgba(26,43,60,0.72))] [&_p]:text-white [&_.thinking-shimmer]:bg-white/15 [&_.thinking-shimmer-beam]:via-white/70"
+                />
+              ) : null}
+            </div>
+            <div className="hidden h-full w-[min(26rem,38vw)] shrink-0 sm:block">
+              <SceneAgentRail
+                title={scene.title}
+                streaming={sceneStreaming}
+                logs={scene.logs}
+                narration={scene.narration}
+                emptyHint="As the scene builds, the spoken steps will land here so you can reread them."
+                placement="side"
+              />
+            </div>
+            <div className="absolute inset-x-0 bottom-0 z-30 sm:hidden">
+              <SceneAgentRail
+                title={scene.title}
+                streaming={sceneStreaming}
+                logs={scene.logs}
+                narration={scene.narration}
+                emptyHint="As the scene builds, the spoken steps will land here so you can reread them."
+                placement="bottom"
+              />
+            </div>
+          </div>
+        ) : (
+          <div className="relative min-h-0 flex-1">
+            <VisualStage
+              plan={visualPlan}
+              playKey={playKey}
+              title={title}
+              beatOrder={beatOrder}
+              totalBeats={totalBeats}
+              narrationLines={boardNarration}
+              sources={lessonSources}
+              codeBuffer={codeBuffer}
+              streaming={status === "running"}
+              onDrawComplete={onDrawComplete}
+              drawQueue={drawQueue}
+              drawSessionKey={drawSessionKey}
+              drawPlaying={drawPlaying && status !== "paused"}
+              drawSpeed={speed}
+              preferDrawEngine={preferDrawEngine}
+              drawSpeech={drawSpeech}
+              canvasHeight={boardCanvasHeight}
+              scrollToY={boardScrollToY}
+              threeScene={threeScene}
+              threePlaying={status === "running"}
+              threeSpeed={speed}
+              threeSelectedStructure={threeSelected}
+              onThreeSelect={setThreeSelected}
+              onDrawClock={(ms) => {
+                drawClockRef.current = ms;
+              }}
+              followUpValue={followUpPrompt}
+              onFollowUpChange={setFollowUpPrompt}
+              onFollowUpSubmit={() => {
+                void askFollowUp();
+              }}
+              followUpDisabled={
+                status === "running" || status === "paused"
+              }
+              showFollowUp={showFollowUp}
             />
-          ) : null}
-        </div>
+            {status === "running" &&
+            !visualPlan &&
+            !threeScene &&
+            !preferDrawEngine &&
+            boardNarration.length === 0 ? (
+              <ThinkingLoader
+                variant="overlay"
+                label={pipelineStatusLabel(
+                  latestPipelineEvent(pipelineRecords),
+                )}
+              />
+            ) : null}
+          </div>
+        )}
       </div>
+
+      <Dialog
+        open={showResumePrompt}
+        onOpenChange={(open) => {
+          if (!open) dismissResumePrompt();
+        }}
+      >
+        <DialogContent className="sm:max-w-md" showCloseButton>
+          <DialogHeader>
+            <DialogTitle>Resume lesson?</DialogTitle>
+            <DialogDescription>
+              The lesson paused when you left this tab. Want to pick up where
+              you left off?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={dismissResumePrompt}>
+              Stay paused
+            </Button>
+            <Button type="button" onClick={resumeLesson}>
+              Resume
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <AskMeMcqDialog
+        open={showAskMe}
+        onOpenChange={setShowAskMe}
+        conversationId={conversationId}
+        title={title}
+        narrationLines={askMeNarration}
+      />
     </AppShell>
   );
 }

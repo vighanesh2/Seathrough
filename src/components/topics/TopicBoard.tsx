@@ -6,6 +6,7 @@ import {
   activeTopicStepIndex,
   revealedTopicSteps,
 } from "@/lib/topics/topicLesson";
+import { resolveTopicPresentation } from "@/lib/topics/presentation";
 import { getTopicModule, type TopicBoardParams } from "@/lib/topics";
 import { cn } from "@/lib/utils";
 
@@ -27,9 +28,7 @@ type TopicBoardProps = {
   params?: TopicBoardParams;
   showTitle?: boolean;
   showSteps?: boolean;
-  /** Lesson beat (1-based). Drives which explanation steps are visible. */
   beatOrder?: number;
-  /** Beat 1 shows the graph; steps appear from beat 2 onward. */
   graphFirst?: boolean;
   compact?: boolean;
   className?: string;
@@ -58,24 +57,35 @@ export function TopicBoard({
     return prompt ? topic.deriveParams(prompt) : topic.defaultParams;
   }, [params, prompt, topic]);
 
+  const presentation = useMemo(() => {
+    if (!topic || !resolvedParams) return null;
+    return resolveTopicPresentation(topic, resolvedParams, prompt);
+  }, [topic, resolvedParams, prompt]);
+
+  const stepCount = presentation?.steps.length ?? 0;
+
   const revealedCount = useMemo(() => {
-    if (!topic) return 0;
-    if (showSteps) return topic.steps.length;
-    if (!graphFirst) return Math.min(beatOrder, topic.steps.length);
-    return revealedTopicSteps(beatOrder, topic.steps.length);
-  }, [beatOrder, graphFirst, showSteps, topic]);
+    if (!presentation) return 0;
+    if (showSteps) return stepCount;
+    if (!graphFirst) return Math.min(beatOrder, stepCount);
+    return revealedTopicSteps(beatOrder, stepCount);
+  }, [beatOrder, graphFirst, presentation, showSteps, stepCount]);
 
-  const activeIndex = useMemo(() => {
-    if (!topic) return -1;
-    return activeTopicStepIndex(beatOrder, topic.steps.length);
-  }, [beatOrder, topic]);
+  const activeIndex = useMemo(
+    () => activeTopicStepIndex(beatOrder, stepCount),
+    [beatOrder, stepCount],
+  );
 
-  if (!topic || !resolvedParams) return null;
+  if (!topic || !resolvedParams || !presentation) return null;
 
   const interactionHint =
     topic.boardId === "ode-solution"
       ? "Drag (t₀, y₀) or move the c and N sliders. Shift + scroll to zoom."
-      : "Drag the points to reshape the curve. Shift + scroll to zoom.";
+      : topic.boardId === "function-graph"
+        ? "Drag P along the curve. Shift + scroll to zoom."
+        : topic.boardId === "construction"
+          ? "Drag the free points. Shift + scroll to zoom."
+          : "Drag the points to reshape the curve. Shift + scroll to zoom.";
 
   return (
     <figure
@@ -87,9 +97,9 @@ export function TopicBoard({
     >
       {showTitle ? (
         <figcaption className="shrink-0">
-          <h3 className="font-display text-lg text-ink">{topic.title}</h3>
+          <h3 className="font-display text-lg text-ink">{presentation.title}</h3>
           <p className="mt-0.5 font-sans text-sm leading-5 text-muted">
-            {topic.summary}
+            {presentation.summary}
           </p>
         </figcaption>
       ) : null}
@@ -98,7 +108,7 @@ export function TopicBoard({
         <JsxGraphBoard
           boardId={topic.boardId}
           params={resolvedParams}
-          ariaLabel={`${topic.title} — interactive graph`}
+          ariaLabel={`${presentation.title} — interactive graph`}
           className={cn(
             compact ? "h-[min(320px,42vh)] min-h-[240px]" : "h-full min-h-[280px]",
             boardClassName,
@@ -111,12 +121,12 @@ export function TopicBoard({
 
       {revealedCount > 0 ? (
         <ol className="shrink-0 space-y-2 border-t border-board-edge pt-3">
-          {topic.steps.slice(0, revealedCount).map((step, index) => {
+          {presentation.steps.slice(0, revealedCount).map((step, index) => {
             const isActive = index === activeIndex;
             const isDone = index < activeIndex;
             return (
               <li
-                key={step.title}
+                key={`${step.title}-${index}`}
                 className={cn(
                   "flex gap-3 rounded-lg px-2 py-2 transition-colors",
                   isActive && "bg-accent-soft/40",

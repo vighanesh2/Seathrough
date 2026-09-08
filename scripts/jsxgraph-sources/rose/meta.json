@@ -1,0 +1,31 @@
+{
+  "id": "rose",
+  "title": "Rose",
+  "summary": "A __rose__ or __rhodonea curve__ is a sinusoid plotted in polar coordinates. Up to similarity, these curves can all be expressed by a polar equation of the form\n\nIf is an integer, the curve will be rose shaped with\n\n- petals if is even, and\n- petals if is odd.\n\nWhen is even, the entire graph of the rose will be traced out exactly once when the value of runs from to . When is odd, this will happen…",
+  "formula": "",
+  "aliases": [
+    "rose",
+    "jsxgraph rose"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/rose",
+  "steps": [
+    {
+      "title": "Rose",
+      "detail": "A __rose__ or __rhodonea curve__ is a sinusoid plotted in polar coordinates. Up to similarity, these curves can all be expressed by a polar equation of the form"
+    },
+    {
+      "title": "Explore further",
+      "detail": "If is an integer, the curve will be rose shaped with"
+    }
+  ]
+}

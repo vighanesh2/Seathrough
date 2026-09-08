@@ -2,10 +2,11 @@
 
 import { ArrowRight } from "lucide-react";
 import { useStudioAccess } from "@/components/site/StudioAccess";
+import { stashPendingPrompt } from "@/lib/usage/pendingPrompt";
 
 /**
  * Body section — Gamma visual cards, Notion organization,
- * Brilliant one-liners, Linear polish. Opens Explore the body.
+ * Brilliant one-liners, Linear polish. Opens lessons with 3D on the same page.
  */
 export function MarketingBodySection() {
   const { openStudio } = useStudioAccess();
@@ -21,7 +22,7 @@ export function MarketingBodySection() {
             Turn real anatomy in 3D.
           </h2>
           <p className="mt-3 text-[15px] leading-7 text-[#6a7d90]">
-            Spin a model, tap a part, ask what it does — the same 3D figures as
+            Spin a model, tap a part, ask what it does: the same 3D figures as
             in the app.
           </p>
         </div>
@@ -30,14 +31,26 @@ export function MarketingBodySection() {
           <BodyCard
             title="Heart"
             line="See chambers pump blood, then ask about any part."
-            onOpen={() => openStudio("/3d-figures")}
+            onOpen={() => {
+              stashPendingPrompt(
+                "How does the heart pump blood?",
+                true,
+              );
+              openStudio("/lessons");
+            }}
           >
             <HeartPreview />
           </BodyCard>
           <BodyCard
             title="Eye"
             line="Follow light through the eye to the retina."
-            onOpen={() => openStudio("/3d-figures")}
+            onOpen={() => {
+              stashPendingPrompt(
+                "How does light travel through the eye?",
+                true,
+              );
+              openStudio("/lessons");
+            }}
           >
             <EyePreview />
           </BodyCard>
@@ -46,10 +59,10 @@ export function MarketingBodySection() {
         <div className="mt-6 flex justify-end">
           <button
             type="button"
-            onClick={() => openStudio("/3d-figures")}
+            onClick={() => openStudio("/lessons")}
             className="inline-flex items-center gap-1.5 text-[13.5px] font-medium text-[#1b6ca8] transition hover:text-[#0f4f7c]"
           >
-            Open 3D body
+            Open in lessons
             <ArrowRight className="size-3.5" />
           </button>
         </div>

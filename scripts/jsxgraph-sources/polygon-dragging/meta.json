@@ -1,0 +1,32 @@
+{
+  "id": "polygon-dragging",
+  "title": "Polygon dragging",
+  "summary": "With the attribute a polygon can be dragged around.",
+  "formula": "",
+  "aliases": [
+    "polygon dragging",
+    "jsxgraph polygon dragging"
+  ],
+  "tags": [
+    "Polygons",
+    "Technical"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/polygon-dragging",
+  "steps": [
+    {
+      "title": "Polygon dragging",
+      "detail": "With the attribute a polygon can be dragged around."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

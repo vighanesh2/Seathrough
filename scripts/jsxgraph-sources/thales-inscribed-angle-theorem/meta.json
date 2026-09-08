@@ -1,0 +1,34 @@
+{
+  "id": "thales-inscribed-angle-theorem",
+  "title": "Thales' inscribed angle theorem",
+  "summary": "This example demonstrates Thales' inscribed angle theorem. You can move point the , or and . It also demonstrates how to dynamically display an angle value with object \"smartlabel\".",
+  "formula": "",
+  "aliases": [
+    "thales' inscribed angle theorem",
+    "thales inscribed angle theorem",
+    "jsxgraph thales' inscribed angle theorem"
+  ],
+  "tags": [
+    "Euclidean",
+    "Famous theorems",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -6,
+    6,
+    6,
+    -6
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/thales-inscribed-angle-theorem",
+  "steps": [
+    {
+      "title": "Thales' inscribed angle theorem",
+      "detail": "This example demonstrates Thales' inscribed angle theorem. You can move point the , or and . It also demonstrates how to dynamically display an angle value with object \"smartlabel\"."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

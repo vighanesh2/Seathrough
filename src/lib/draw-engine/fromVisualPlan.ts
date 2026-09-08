@@ -20,6 +20,7 @@ import {
 import { revealUmlPlanCommands } from "@/lib/draw-engine/umlReveal";
 import type { UmlDiagramPlan } from "@/lib/draw-engine/umlSchema";
 import { latexToBoardText } from "@/lib/math/latexToBoardText";
+import { wantsFunctionGraph } from "@/lib/topics/functionParse";
 import { revealThroughStepIndex } from "@/lib/visuals/library/scriptReveal";
 import type { VisualPlan } from "@/lib/visuals/types";
 
@@ -241,7 +242,12 @@ export function commandsForBeat(input: BeatDrawInput): DrawCommand[] {
       ? layout.occupied.some((o) => o.kind === "content" || o.kind === "title")
       : beatOrder > 1);
 
-  if (!cmds.length && !boardCarriesScript) {
+  // Graph lessons own the figure. Writing the spoken transcript on the
+  // Konva board is how "Here is the curve" became five text blocks.
+  const graphOwnsTheBoard =
+    plan?.renderer === "jsxgraph" || wantsFunctionGraph(prompt);
+
+  if (!cmds.length && !boardCarriesScript && !graphOwnsTheBoard) {
     cmds.push(
       ...narrationSentenceCommands({
         beatId,

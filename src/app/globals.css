@@ -485,6 +485,15 @@ body {
   position: relative;
   isolation: isolate;
   background-color: #fafbfc;
+  font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.marketing-shell :is(h1, h2, h3),
+.marketing-shell .font-display,
+.marketing-shell blockquote {
+  font-family: var(--font-newsreader), Newsreader, Georgia, "Times New Roman",
+    serif;
+  font-optical-sizing: auto;
 }
 
 .marketing-aurora {
@@ -604,6 +613,21 @@ html.marketing-page,
 html.marketing-page body {
   background: #fafbfc !important;
   background-image: none !important;
+  --font-sans: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-newsreader), Newsreader, Georgia, "Times New Roman",
+    serif;
+  --font-heading: var(--font-newsreader), Newsreader, Georgia, "Times New Roman",
+    serif;
+}
+
+html.marketing-page .font-display {
+  font-family: var(--font-newsreader), Newsreader, Georgia, "Times New Roman",
+    serif;
+  font-optical-sizing: auto;
+}
+
+.lesson-topbar {
+  background: rgba(255, 255, 255, 0.96);
 }
 
 .board-surface {

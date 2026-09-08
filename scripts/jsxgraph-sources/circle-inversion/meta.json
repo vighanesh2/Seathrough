@@ -1,0 +1,32 @@
+{
+  "id": "circle-inversion",
+  "title": "Circle inversion",
+  "summary": "The point is the result of a circle inversion of point on circle (black circle line).\n\nThe *polar* of and is the dashed blue line The intersection points of the polar with the circle determine the two lines through which are tangent to .",
+  "formula": "",
+  "aliases": [
+    "circle inversion",
+    "jsxgraph circle inversion"
+  ],
+  "tags": [
+    "Euclidean",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/circle-inversion",
+  "steps": [
+    {
+      "title": "Circle inversion",
+      "detail": "The point is the result of a circle inversion of point on circle (black circle line)."
+    },
+    {
+      "title": "Explore further",
+      "detail": "The *polar* of and is the dashed blue line The intersection points of the polar with the circle determine the two lines through which are tangent to ."
+    }
+  ]
+}

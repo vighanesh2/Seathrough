@@ -1,0 +1,32 @@
+{
+  "id": "sequences-of-functions",
+  "title": "Sequences of functions",
+  "summary": "The first example illustrates __pointwise convergence__ with the series of functions , , on \\[0,1] with a slider for .\n\nThe second example illustrates __uniform convergence__ with the series of functions , , on \\[0,1] converging uniformly zero.\n\nThe third example with the series of functions , , converges uniformly to on \\[0,1] .",
+  "formula": "",
+  "aliases": [
+    "sequences of functions",
+    "jsxgraph sequences of functions"
+  ],
+  "tags": [
+    "Calculus",
+    "Sequences and series"
+  ],
+  "boundingBox": [
+    -0.25,
+    1.7,
+    1.25,
+    -0.5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/sequences-of-functions",
+  "steps": [
+    {
+      "title": "Sequences of functions",
+      "detail": "The first example illustrates __pointwise convergence__ with the series of functions , , on \\[0,1] with a slider for ."
+    },
+    {
+      "title": "Explore further",
+      "detail": "The second example illustrates __uniform convergence__ with the series of functions , , on \\[0,1] converging uniformly zero."
+    }
+  ]
+}

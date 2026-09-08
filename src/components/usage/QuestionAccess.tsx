@@ -6,6 +6,7 @@ import {
   useContext,
   useMemo,
   useState,
+  useSyncExternalStore,
 } from "react";
 import { AuthModal } from "@/components/AuthModal";
 import { useAuth } from "@/components/AuthProvider";
@@ -36,6 +37,7 @@ type QuestionAccessValue = {
 };
 
 const QuestionAccessContext = createContext<QuestionAccessValue | null>(null);
+const subscribeHydration = () => () => {};
 
 export function QuestionAccessProvider({
   children,
@@ -46,9 +48,18 @@ export function QuestionAccessProvider({
   const [authMode, setAuthMode] = useState<AuthMode>("signup");
   const [authOpen, setAuthOpen] = useState(false);
   const [authRequired, setAuthRequired] = useState(false);
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
+  const quotaHydrated = useSyncExternalStore(
+    subscribeHydration,
+    () => true,
+    () => false,
+  );
 
-  const remaining = user ? Number.POSITIVE_INFINITY : remainingQuestions();
+  const remaining = user
+    ? Number.POSITIVE_INFINITY
+    : quotaHydrated
+      ? remainingQuestions()
+      : DAILY_QUESTION_LIMIT;
 
   const openAuth = useCallback((mode: AuthMode = "login") => {
     setAuthRequired(false);
@@ -59,7 +70,7 @@ export function QuestionAccessProvider({
   const canAsk = useCallback(() => {
     if (user) return true;
     return canAskAnonymous();
-  }, [user, tick]);
+  }, [user]);
 
   const beginQuestion = useCallback(() => {
     if (user) return true;

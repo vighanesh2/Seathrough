@@ -29,7 +29,13 @@ const DEFAULT_GROQ_MODEL = "openai/gpt-oss-120b";
 
 function resolveGroqModel(requested?: string): string {
   const id = requested?.trim() || DEFAULT_GROQ_MODEL;
-  return GROQ_MODEL_REPLACEMENTS[id] ?? id;
+  const resolved = GROQ_MODEL_REPLACEMENTS[id] ?? id;
+  if (resolved !== id) {
+    console.warn(
+      `[env] GROQ_MODEL "${id}" is retired on Groq; using "${resolved}" instead.`,
+    );
+  }
+  return resolved;
 }
 
 /** Exported for smokes — maps retired Groq ids onto a live model. */
@@ -88,6 +94,12 @@ export function getDeepgramConfig() {
   };
 }
 
+export function getTavilyConfig() {
+  return {
+    apiKey: optional("TAVILY_API_KEY"),
+  };
+}
+
 export function getSupabaseConfig() {
   return {
     url: required("NEXT_PUBLIC_SUPABASE_URL"),
@@ -101,9 +113,11 @@ export function envPresence() {
     LLM_PROVIDER: optional("LLM_PROVIDER") ?? "groq",
     GROQ_API_KEY: Boolean(optional("GROQ_API_KEY")),
     OPENAI_API_KEY: Boolean(optional("OPENAI_API_KEY")),
+    TAVILY_API_KEY: Boolean(optional("TAVILY_API_KEY")),
     DEEPGRAM_API_KEY: Boolean(optional("DEEPGRAM_API_KEY")),
     NEXT_PUBLIC_SUPABASE_URL: Boolean(optional("NEXT_PUBLIC_SUPABASE_URL")),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: Boolean(optional("NEXT_PUBLIC_SUPABASE_ANON_KEY")),
     SUPABASE_SERVICE_ROLE_KEY: Boolean(optional("SUPABASE_SERVICE_ROLE_KEY")),
+    SEETHROUGH_ADMIN_PASSWORD: Boolean(optional("SEETHROUGH_ADMIN_PASSWORD")),
   };
 }

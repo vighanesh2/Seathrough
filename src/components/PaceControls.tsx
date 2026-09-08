@@ -1,7 +1,6 @@
 "use client";
 
 import { Pause, Play, SkipForward } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import type { PaceSpeed } from "@/types/lesson";
 import { cn } from "@/lib/utils";
 
@@ -25,28 +24,31 @@ export function PaceControls({
   disabled,
 }: PaceControlsProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <Button
+    <div className="flex items-center gap-1">
+      <button
         type="button"
         onClick={onTogglePlay}
         disabled={disabled}
-        aria-label={playing ? "Pause lesson" : "Play lesson"}
+        aria-label={playing ? "Pause" : "Play"}
+        className="grid size-8 place-items-center rounded-lg text-[#3d5166] transition hover:bg-[#eef4f9] hover:text-[#17324a] disabled:opacity-40"
       >
-        {playing ? <Pause className="size-3.5" /> : <Play className="size-3.5" />}
-        {playing ? "Pause" : "Play"}
-      </Button>
-      <Button
+        {playing ? (
+          <Pause className="size-3.5" />
+        ) : (
+          <Play className="size-3.5" />
+        )}
+      </button>
+      <button
         type="button"
-        variant="outline"
         onClick={onSkip}
         disabled={disabled}
-        aria-label="Skip to next beat"
+        aria-label="Next step"
+        className="grid size-8 place-items-center rounded-lg text-[#3d5166] transition hover:bg-[#eef4f9] hover:text-[#17324a] disabled:opacity-40"
       >
         <SkipForward className="size-3.5" />
-        Next
-      </Button>
+      </button>
       <div
-        className="flex h-9 items-center gap-0.5 rounded-lg border border-border bg-card p-0.5"
+        className="ml-0.5 flex items-center rounded-lg p-0.5"
         role="group"
         aria-label="Playback speed"
       >
@@ -57,10 +59,10 @@ export function PaceControls({
             disabled={disabled}
             onClick={() => onSpeedChange(s)}
             className={cn(
-              "rounded-md px-2.5 py-1 text-xs font-medium transition disabled:opacity-40",
+              "rounded-md px-1.5 py-1 text-[11px] font-medium transition disabled:opacity-40",
               speed === s
-                ? "bg-accent-soft text-accent-deep"
-                : "text-muted hover:text-ink",
+                ? "text-[#1b6ca8]"
+                : "text-[#8a9aab] hover:text-[#17324a]",
             )}
           >
             {s}×

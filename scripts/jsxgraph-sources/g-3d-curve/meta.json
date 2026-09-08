@@ -1,0 +1,32 @@
+{
+  "id": "g-3d-curve",
+  "title": "3D curve",
+  "summary": "In this example, the function\n\nis plotted.",
+  "formula": "",
+  "aliases": [
+    "3d curve",
+    "jsxgraph 3d curve"
+  ],
+  "tags": [
+    "3D",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -8,
+    8,
+    8,
+    -8
+  ],
+  "keepAspectRatio": false,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-curve",
+  "steps": [
+    {
+      "title": "3D curve",
+      "detail": "In this example, the function"
+    },
+    {
+      "title": "Explore further",
+      "detail": "is plotted."
+    }
+  ]
+}

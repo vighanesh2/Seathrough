@@ -1,0 +1,33 @@
+{
+  "id": "thales-theorem",
+  "title": "Thales' theorem",
+  "summary": "The *affine / simple ratio* of the collinear points , and is defined by . It is also known as *division ratio*. In German, it is called *Teilverhältnis*.\n\nThales's theorem, also known as *intercept theorem*, *basic proportionality theorem* or *side splitter theorem*. It says that\n\n1. The ratio of any two segments on the first ray equals the ratio of the according segments on the second ray.\n2. Th…",
+  "formula": "",
+  "aliases": [
+    "thales' theorem",
+    "thales theorem",
+    "jsxgraph thales' theorem"
+  ],
+  "tags": [
+    "Famous theorems",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/thales-theorem",
+  "steps": [
+    {
+      "title": "Thales' theorem",
+      "detail": "The *affine / simple ratio* of the collinear points , and is defined by . It is also known as *division ratio*. In German, it is called *Teilverhältnis*."
+    },
+    {
+      "title": "Explore further",
+      "detail": "Thales's theorem, also known as *intercept theorem*, *basic proportionality theorem* or *side splitter theorem*. It says that"
+    }
+  ]
+}

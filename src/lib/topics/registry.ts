@@ -1,20 +1,26 @@
+import { catalogTopicModules } from "@/lib/topics/catalog";
 import { differentialEquationsTopic } from "@/lib/topics/modules/differentialEquations";
+import { functionGraphTopic } from "@/lib/topics/modules/functionGraph";
 import { meanValueTheoremTopic } from "@/lib/topics/modules/meanValueTheorem";
 import { rollesTheoremTopic } from "@/lib/topics/modules/rollesTheorem";
 import { topicIdSchema, type TopicId } from "@/lib/topics/schema";
 import type { TopicModule } from "@/lib/topics/types";
 
 /**
- * Every interactive topic the app can teach, most specific first — the first
- * module whose matcher fires wins.
- *
- * To add a topic: write a module, import it here, and give it a board in
- * `@/components/topics/boards` (or reuse an existing `boardId`).
+ * Hand-tuned interactives first (most specific), then the generic function
+ * grapher, then the JSXGraph example catalog.
  */
-export const TOPIC_MODULES: readonly TopicModule[] = [
+const HAND_TUNED_TOPICS: readonly TopicModule[] = [
   differentialEquationsTopic,
   meanValueTheoremTopic,
   rollesTheoremTopic,
+  functionGraphTopic,
+];
+const HAND_TUNED_IDS = new Set(HAND_TUNED_TOPICS.map((topic) => topic.id));
+
+export const TOPIC_MODULES: readonly TopicModule[] = [
+  ...HAND_TUNED_TOPICS,
+  ...catalogTopicModules().filter((topic) => !HAND_TUNED_IDS.has(topic.id)),
 ];
 
 const BY_ID = new Map<TopicId, TopicModule>(
@@ -35,8 +41,18 @@ export function matchTopic(
 ): TopicModule | null {
   if (!prompt.trim() && !conceptKey?.trim()) return null;
 
-  for (const topic of TOPIC_MODULES) {
-    if (topic.matches(prompt, conceptKey)) return topic;
+  // The live question wins. Mixing in a beat concept key / recap used to
+  // poison formula parsers (y = x^4 + "even functions and…").
+  if (prompt.trim()) {
+    for (const topic of TOPIC_MODULES) {
+      if (topic.matches(prompt)) return topic;
+    }
+  }
+
+  if (conceptKey?.trim()) {
+    for (const topic of TOPIC_MODULES) {
+      if (topic.matches(prompt, conceptKey)) return topic;
+    }
   }
   return null;
 }

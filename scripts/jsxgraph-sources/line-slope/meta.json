@@ -1,0 +1,31 @@
+{
+  "id": "line-slope",
+  "title": "Slope of a line",
+  "summary": "Two draggable points define a line; the slope updates as you move them.",
+  "formula": "m = \\frac{y_2 - y_1}{x_2 - x_1}",
+  "aliases": [
+    "slope of a line",
+    "rise over run",
+    "line through two points",
+    "what is slope",
+    "graph a line slope"
+  ],
+  "tags": ["algebra", "line", "slope", "graph"],
+  "boundingBox": [-8, 8, 8, -8],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/wiki/",
+  "steps": [
+    {
+      "title": "Two points",
+      "detail": "A and B are free points. The blue line is the unique straight path through both."
+    },
+    {
+      "title": "Rise over run",
+      "detail": "Slope is (y_B − y_A) / (x_B − x_A). Drag either point and watch the readout change."
+    },
+    {
+      "title": "Special cases",
+      "detail": "Horizontal means slope 0. Nearly vertical means a huge slope. Same x-coordinates make the slope undefined."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "fullscreen-icon",
+  "title": "Fullscreen icon",
+  "summary": "Clicking on the fullscreen icon &#x25a1; in the navigation bar displays the construction in full screen mode.",
+  "formula": "",
+  "aliases": [
+    "fullscreen icon",
+    "jsxgraph fullscreen icon"
+  ],
+  "tags": [
+    "Technical"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/fullscreen-icon",
+  "steps": [
+    {
+      "title": "Fullscreen icon",
+      "detail": "Clicking on the fullscreen icon &#x25a1; in the navigation bar displays the construction in full screen mode."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

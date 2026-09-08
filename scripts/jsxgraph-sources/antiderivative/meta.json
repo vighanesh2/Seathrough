@@ -1,0 +1,32 @@
+{
+  "id": "antiderivative",
+  "title": "Antiderivative",
+  "summary": "Dragging the black point shows that the antiderivative of the parabola looks like a polynomial of degree 3.",
+  "formula": "",
+  "aliases": [
+    "antiderivative",
+    "jsxgraph antiderivative"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus"
+  ],
+  "boundingBox": [
+    -3,
+    10,
+    3,
+    -3
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/antiderivative",
+  "steps": [
+    {
+      "title": "Antiderivative",
+      "detail": "Dragging the black point shows that the antiderivative of the parabola looks like a polynomial of degree 3."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

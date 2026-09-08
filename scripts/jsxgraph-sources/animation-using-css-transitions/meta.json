@@ -1,0 +1,32 @@
+{
+  "id": "animation-using-css-transitions",
+  "title": "Animation using CSS transitions",
+  "summary": "With the attributes and it is possible to use CSS transitions for animations. It is advisable to turn this attribute on only when the animation is started.",
+  "formula": "",
+  "aliases": [
+    "animation using css transitions",
+    "jsxgraph animation using css transitions"
+  ],
+  "tags": [
+    "JSXGraph objects",
+    "Technical"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/animation-using-css-transitions",
+  "steps": [
+    {
+      "title": "Animation using CSS transitions",
+      "detail": "With the attributes and it is possible to use CSS transitions for animations. It is advisable to turn this attribute on only when the animation is started."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "hyperbolic-spiral",
+  "title": "Hyperbolic spiral",
+  "summary": "The hyperbolic spiral can be described in polar coordinates by the equation",
+  "formula": "",
+  "aliases": [
+    "hyperbolic spiral",
+    "jsxgraph hyperbolic spiral"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/hyperbolic-spiral",
+  "steps": [
+    {
+      "title": "Hyperbolic spiral",
+      "detail": "The hyperbolic spiral can be described in polar coordinates by the equation"
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

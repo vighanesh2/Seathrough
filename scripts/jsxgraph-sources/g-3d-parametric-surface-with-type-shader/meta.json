@@ -1,0 +1,33 @@
+{
+  "id": "g-3d-parametric-surface-with-type-shader",
+  "title": "3D parametric surface with type 'shader'",
+  "summary": "Possible types for representing parametric surfaces are:\n\n- ,\n- ,\n- ,\n-\n\nHere is the \"Klein bottle\" as an example for 'shader'. Internally, the shader is realized with a polyhedron3d element. The visual attributes are set inside of the polyhedron sub-attribute.",
+  "formula": "",
+  "aliases": [
+    "3d parametric surface with type 'shader'",
+    "3d parametric surface with type shader",
+    "jsxgraph 3d parametric surface with type 'shader'"
+  ],
+  "tags": [
+    "3D",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -8,
+    8,
+    8,
+    -8
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-parametric-surface-with-type-shader",
+  "steps": [
+    {
+      "title": "3D parametric surface with type 'shader'",
+      "detail": "Possible types for representing parametric surfaces are:"
+    },
+    {
+      "title": "Explore further",
+      "detail": "- , - , - , -"
+    }
+  ]
+}

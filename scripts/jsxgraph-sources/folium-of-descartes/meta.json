@@ -1,0 +1,31 @@
+{
+  "id": "folium-of-descartes",
+  "title": "Folium of Descartes",
+  "summary": "The folium of Descartes can be expressed in polar coordinates as",
+  "formula": "",
+  "aliases": [
+    "folium of descartes",
+    "jsxgraph folium of descartes"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    7,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/folium-of-descartes",
+  "steps": [
+    {
+      "title": "Folium of Descartes",
+      "detail": "The folium of Descartes can be expressed in polar coordinates as"
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

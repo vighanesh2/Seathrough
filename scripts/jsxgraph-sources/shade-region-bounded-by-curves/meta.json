@@ -1,0 +1,33 @@
+{
+  "id": "shade-region-bounded-by-curves",
+  "title": "Shade region bounded by curves",
+  "summary": "Somewhere in the world wide web the question was asked how to shade the region bounded by the following curves, where :\n\nHere is a somewhat *hacky* the solution. The steps are:\n\n1. First, we need the mutual intersections of the curves. However, only one intersection is not obvious. Numerically compute intersection of the first two curves, and .\n2. Plot curves only up to the mutual intersections.…",
+  "formula": "",
+  "aliases": [
+    "shade region bounded by curves",
+    "jsxgraph shade region bounded by curves"
+  ],
+  "tags": [
+    "Calculus",
+    "Curves",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -1,
+    2,
+    2,
+    -1
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/shade-region-bounded-by-curves",
+  "steps": [
+    {
+      "title": "Shade region bounded by curves",
+      "detail": "Somewhere in the world wide web the question was asked how to shade the region bounded by the following curves, where :"
+    },
+    {
+      "title": "Explore further",
+      "detail": "Here is a somewhat *hacky* the solution. The steps are:"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "browser-test-display-agent-and-renderer-type",
+  "title": "Browser test: display agent and renderer type",
+  "summary": "Browser test: display agent and renderer type — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "browser test: display agent and renderer type",
+    "browser test display agent and renderer type",
+    "jsxgraph browser test: display agent and renderer type"
+  ],
+  "tags": [
+    "Technical"
+  ],
+  "boundingBox": [
+    -1,
+    5,
+    5,
+    -1
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/browser-test-display-agent-and-renderer-type",
+  "steps": [
+    {
+      "title": "Browser test: display agent and renderer type",
+      "detail": "Interactive JSXGraph construction: Browser test: display agent and renderer type. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

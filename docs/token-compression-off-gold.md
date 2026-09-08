@@ -1,9 +1,9 @@
 # Token compression — Off-gold set (locked)
 
-> **Rule:** Off-gold = asks **not** on the gold sheet’s ship-shorts.  
-> **Pass:** ship a short that teaches *this* tight ask, **or** refuse the short (ask / longer-clean).  
-> No wording match to gold rows. No invented survey title.  
-> Spec pointer: `docs/token-compression-pipe-b.md` (Off-gold questions).  
+> **Rule:** Off-gold = asks **not** on the gold sheet’s ship-shorts.
+> **Pass:** ship a short that teaches *this* tight ask, **or** refuse the short (ask / longer-clean).
+> No wording match to gold rows. No invented survey title.
+> Spec pointer: `docs/token-compression-pipe-b.md` (Off-gold questions).
 > Code: `OFF_GOLD_ASKS` in `src/lib/token-compression/goldRows.ts`.
 
 ## Table 1 — Off-gold drafts

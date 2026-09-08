@@ -95,4 +95,6 @@ export type VisualAsset = {
   paths: VisualPath[];
   anchors: Record<string, AnchorPoint>;
   tags: string[];
+  /** Provenance for generated external-diagram catalog entries. */
+  sourceCollection?: string;
 };

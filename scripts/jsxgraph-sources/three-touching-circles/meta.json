@@ -1,0 +1,32 @@
+{
+  "id": "three-touching-circles",
+  "title": "Three touching circles",
+  "summary": "This example starts with a given triangle and constructs three mutually touching circles with the triangle's vertices as centers.",
+  "formula": "",
+  "aliases": [
+    "three touching circles",
+    "jsxgraph three touching circles"
+  ],
+  "tags": [
+    "Euclidean",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -2,
+    5,
+    5,
+    -2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/three-touching-circles",
+  "steps": [
+    {
+      "title": "Three touching circles",
+      "detail": "This example starts with a given triangle and constructs three mutually touching circles with the triangle's vertices as centers."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

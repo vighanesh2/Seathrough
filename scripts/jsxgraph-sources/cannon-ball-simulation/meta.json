@@ -1,0 +1,32 @@
+{
+  "id": "cannon-ball-simulation",
+  "title": "Cannon ball simulation",
+  "summary": "Cannon ball simulation — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "cannon ball simulation",
+    "jsxgraph cannon ball simulation"
+  ],
+  "tags": [
+    "Applications",
+    "Physics"
+  ],
+  "boundingBox": [
+    0,
+    10,
+    20,
+    0
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/cannon-ball-simulation",
+  "steps": [
+    {
+      "title": "Cannon ball simulation",
+      "detail": "Interactive JSXGraph construction: Cannon ball simulation. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

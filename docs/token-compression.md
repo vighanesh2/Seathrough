@@ -1,7 +1,7 @@
 # Token compression — Steps 0 & 1 (locked)
 
-> **Cycle:** `mvp2-token-compression-v1`  
-> **Scope of this doc:** freeze the job + define the teaching unit.  
+> **Cycle:** `mvp2-token-compression-v1`
+> **Scope of this doc:** freeze the job + define the teaching unit.
 > **Not in this cycle yet:** Pipe A UX, Pipe B trim, gold set of 20, voice budget number, diagram RAG (Points 2–3), smarter intent (Point 4).
 
 Code source of truth:
@@ -101,7 +101,7 @@ Jiang, H., Wu, Q., Lin, C.-Y., Yang, Y., & Qiu, L. (2023). LLMLingua: Compressin
 
 **One place for the teaching unit: `public.lessons` columns** — not also inside `plan` JSON.
 
-Migration: `docs/supabase/006_lesson_teaching_unit.sql`  
+Migration: `docs/supabase/006_lesson_teaching_unit.sql`
 TS mappers: `src/lib/token-compression/lessonContract.ts`
 
 | Table | Job | Compression fields |

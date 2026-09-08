@@ -1,0 +1,32 @@
+{
+  "id": "inverse-composition-rules",
+  "title": "Inverse composition rules",
+  "summary": "Inverse composition rules — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "inverse composition rules",
+    "jsxgraph inverse composition rules"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus"
+  ],
+  "boundingBox": [
+    -3,
+    3,
+    3,
+    -3
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/inverse-composition-rules",
+  "steps": [
+    {
+      "title": "Inverse composition rules",
+      "detail": "Interactive JSXGraph construction: Inverse composition rules. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "power-series-for-the-exponential-function",
+  "title": "Power series for the exponential function",
+  "summary": "This example illustrates the Taylor series expansion of the exponential function. The gray curve shows the exact function . A slider controls the number of terms in the polynomial approximation. The red curve updates dynamically, and text elements display the current and the corresponding approximation of .",
+  "formula": "",
+  "aliases": [
+    "power series for the exponential function",
+    "jsxgraph power series for the exponential function"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus"
+  ],
+  "boundingBox": [
+    -6,
+    25,
+    6,
+    -15
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/power-series-for-the-exponential-function",
+  "steps": [
+    {
+      "title": "Power series for the exponential function",
+      "detail": "This example illustrates the Taylor series expansion of the exponential function. The gray curve shows the exact function . A slider controls the number of terms in the polynomial approximation. The red curve updates dynamically, and text elements display the current and the corresponding approximation of ."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

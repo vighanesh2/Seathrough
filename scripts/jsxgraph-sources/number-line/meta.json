@@ -1,0 +1,31 @@
+{
+  "id": "number-line",
+  "title": "Number line",
+  "summary": "From wikipedia: \"A number line is a graphical representation of a straight line that serves as spatial representation of numbers, usually graduated like a ruler with a particular origin point representing the number zero and evenly spaced marks in either direction representing integers, imagined to extend infinitely. The association between numbers and points on the line links arithmetical operat…",
+  "formula": "",
+  "aliases": [
+    "number line",
+    "jsxgraph number line"
+  ],
+  "tags": [
+    "Glider"
+  ],
+  "boundingBox": [
+    -5.2,
+    2,
+    5.2,
+    -2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/number-line",
+  "steps": [
+    {
+      "title": "Number line",
+      "detail": "From wikipedia: \"A number line is a graphical representation of a straight line that serves as spatial representation of numbers, usually graduated like a ruler with a particular origin point representing the number zero and evenly spaced marks in either direction representing integers, imagined to extend infinitely. The association between numbers and points on the line links arithmetical operations on numbers to geometric relations between points, and provides a conceptual framework for learn…"
+    },
+    {
+      "title": "Explore further",
+      "detail": "The glider lets users explore positions along the number line."
+    }
+  ]
+}

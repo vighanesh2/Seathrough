@@ -1,0 +1,33 @@
+{
+  "id": "fill-the-intersection-area-of-two-circles",
+  "title": "Fill the intersection area of two circles",
+  "summary": "Fill the intersection area of two circles — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "fill the intersection area of two circles",
+    "jsxgraph fill the intersection area of two circles"
+  ],
+  "tags": [
+    "Circles",
+    "Curves",
+    "Intersection, Union, Difference"
+  ],
+  "boundingBox": [
+    -1,
+    5,
+    5,
+    -1
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/fill-the-intersection-area-of-two-circles",
+  "steps": [
+    {
+      "title": "Fill the intersection area of two circles",
+      "detail": "Interactive JSXGraph construction: Fill the intersection area of two circles. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

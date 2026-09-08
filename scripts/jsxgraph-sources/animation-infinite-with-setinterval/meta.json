@@ -1,0 +1,33 @@
+{
+  "id": "animation-infinite-with-setinterval",
+  "title": "Animation: infinite with setInterval",
+  "summary": "Animation: infinite with setInterval — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "animation: infinite with setinterval",
+    "animation infinite with setinterval",
+    "jsxgraph animation: infinite with setinterval"
+  ],
+  "tags": [
+    "Animation",
+    "Technical"
+  ],
+  "boundingBox": [
+    -1.5,
+    1.5,
+    1.5,
+    -1.5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/animation-infinite-with-setinterval",
+  "steps": [
+    {
+      "title": "Animation: infinite with setInterval",
+      "detail": "Interactive JSXGraph construction: Animation: infinite with setInterval. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -267,7 +267,7 @@ Must not claim: Sun at center of ellipse; picture = college orbital mechanics; g
 
 So the reason its written as A and B is because we are taking two types of Specimen alright, because A is basically rewrite and run, and B is stop and ask. Purposefully included both the types because it perfectly embodies the situation we will encounter while users use the app
 
-# These are Specimen only, do not take them as part of the Gold Set, take only the above pasted set, this is just a reference like Why A and B labeling have been given to each set. 
+# These are Specimen only, do not take them as part of the Gold Set, take only the above pasted set, this is just a reference like Why A and B labeling have been given to each set.
 Specimen A — rewrite and run (this is most of the 20)
 Sloppy draft (what they type)
 

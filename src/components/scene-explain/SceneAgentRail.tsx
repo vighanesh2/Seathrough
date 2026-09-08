@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { ThinkingLoader } from "@/components/ui/ThinkingLoader";
 import type { SceneAgentLine } from "@/lib/scene-explain/types";
 
 type SceneAgentRailProps = {
@@ -10,14 +9,20 @@ type SceneAgentRailProps = {
   logs: SceneAgentLine[];
   narration: string[];
   emptyHint: string;
+  /** side = desktop rail; bottom = mobile sheet */
+  placement?: "side" | "bottom";
 };
 
+/**
+ * Scene notes beside the 3D viewport — matches BoardNarration lesson notes.
+ */
 export function SceneAgentRail({
   title,
   streaming,
   logs,
   narration,
   emptyHint,
+  placement = "side",
 }: SceneAgentRailProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
 
@@ -27,57 +32,89 @@ export function SceneAgentRail({
     el.scrollTop = el.scrollHeight;
   }, [logs, narration]);
 
+  const isSide = placement === "side";
+  const statusLogs = logs.filter((line) => line.kind !== "error");
+  const errorLogs = logs.filter((line) => line.kind === "error");
+
   return (
     <aside
-      className="flex h-full min-h-0 w-full flex-col border-l border-board-edge bg-chalk/95 backdrop-blur-md"
-      aria-label="Scene agent"
+      className={`flex min-h-0 w-full flex-col bg-[#f4f8fb] ${
+        isSide
+          ? "h-full border-l border-[#d7e3eb]"
+          : "h-full max-h-[38dvh] border-t border-[#d7e3eb]"
+      }`}
+      aria-label="Scene notes"
     >
-      <div className="shrink-0 border-b border-board-edge px-5 py-3.5">
-        <div className="flex w-full items-center gap-2">
-          <p className="font-sans text-[11px] font-semibold uppercase tracking-[0.16em] text-accent-deep">
-            Scene agent
-          </p>
-          {streaming ? (
-            <ThinkingLoader variant="inline" label="Working" className="ml-auto" />
-          ) : null}
+      <div className="flex shrink-0 items-start justify-between gap-3 px-5 pt-4 pb-2">
+        <div className="min-w-0">
+          <p className="text-[12px] font-medium text-[#6a7d90]">Notes</p>
+          {title ? (
+            <h2 className="mt-0.5 truncate text-[15px] font-semibold tracking-tight text-[#17324a]">
+              {title}
+            </h2>
+          ) : (
+            <p className="mt-0.5 text-[15px] font-semibold tracking-tight text-[#17324a]">
+              Follow along
+            </p>
+          )}
         </div>
-        <h2 className="mt-1 font-display text-base font-semibold leading-snug text-ink md:text-lg">
-          {title || "3D scene explanation"}
-        </h2>
+        {streaming ? (
+          <span
+            className="mt-1.5 size-1.5 shrink-0 rounded-full bg-[#2a7a5c]"
+            aria-label="Explaining"
+          />
+        ) : null}
       </div>
 
       <div
         ref={scrollerRef}
-        className="min-h-0 flex-1 space-y-3 overflow-y-auto px-5 py-4"
+        className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-3"
       >
         {logs.length === 0 && narration.length === 0 ? (
-          <p className="font-display text-base italic text-muted">{emptyHint}</p>
+          <p className="text-[14px] leading-6 text-[#6a7d90]">{emptyHint}</p>
         ) : null}
 
-        {logs.map((line) => (
+        {errorLogs.map((line) => (
           <p
             key={line.id}
-            className={
-              line.kind === "error"
-                ? "font-sans text-sm text-error"
-                : line.kind === "fix"
-                  ? "font-sans text-sm text-warn"
-                  : line.kind === "ready"
-                    ? "font-sans text-sm text-success"
-                    : "font-sans text-[13px] text-muted"
-            }
+            className="animate-fade-up text-[14px] leading-6 text-error"
           >
             {line.text}
           </p>
         ))}
 
+        {statusLogs.length > 0 && narration.length === 0 ? (
+          <div className="space-y-2">
+            {statusLogs.map((line) => (
+              <p
+                key={line.id}
+                className={
+                  line.kind === "ready"
+                    ? "text-[13px] leading-5 text-[#2a7a5c]"
+                    : line.kind === "fix"
+                      ? "text-[13px] leading-5 text-[#b45309]"
+                      : "text-[13px] leading-5 text-[#6a7d90]"
+                }
+              >
+                {line.text}
+              </p>
+            ))}
+          </div>
+        ) : null}
+
         {narration.map((text, i) => (
-          <p
+          <div
             key={`n-${i}-${text.slice(0, 12)}`}
-            className="animate-fade-up font-display text-[16px] leading-[1.55] text-marker"
+            className="animate-fade-up flex gap-3"
           >
-            {text}
-          </p>
+            <span
+              className="mt-0.5 w-4 shrink-0 font-mono text-[11px] text-[#8a9aab]"
+              aria-hidden
+            >
+              {String(i + 1).padStart(2, "0")}
+            </span>
+            <p className="text-[15px] leading-7 text-[#1e3a5f]">{text}</p>
+          </div>
         ))}
       </div>
     </aside>

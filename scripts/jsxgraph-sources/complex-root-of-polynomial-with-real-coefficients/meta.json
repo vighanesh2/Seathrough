@@ -1,0 +1,32 @@
+{
+  "id": "complex-root-of-polynomial-with-real-coefficients",
+  "title": "Complex roots of polynomial with real coefficients",
+  "summary": "Compute *all* complex roots of a polynomial with real coefficients and display them in the complex plane.\nJSXGraph has its own variant of the Aberth, Ehrlich, Weierstraß algorithm implemented.",
+  "formula": "",
+  "aliases": [
+    "complex roots of polynomial with real coefficients",
+    "complex root of polynomial with real coefficients",
+    "jsxgraph complex roots of polynomial with real coefficients"
+  ],
+  "tags": [
+    "Calculus"
+  ],
+  "boundingBox": [
+    -9,
+    9,
+    9,
+    -9
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/complex-root-of-polynomial-with-real-coefficients",
+  "steps": [
+    {
+      "title": "Complex roots of polynomial with real coefficients",
+      "detail": "Compute *all* complex roots of a polynomial with real coefficients and display them in the complex plane. JSXGraph has its own variant of the Aberth, Ehrlich, Weierstraß algorithm implemented."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

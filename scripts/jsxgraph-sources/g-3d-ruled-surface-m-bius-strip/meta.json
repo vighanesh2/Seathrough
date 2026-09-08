@@ -1,0 +1,32 @@
+{
+  "id": "g-3d-ruled-surface-m-bius-strip",
+  "title": "3D ruled surface: Möbius strip",
+  "summary": "The famous Möbius strip as ruled surface.",
+  "formula": "",
+  "aliases": [
+    "3d ruled surface: möbius strip",
+    "3d ruled surface m bius strip",
+    "jsxgraph 3d ruled surface: möbius strip"
+  ],
+  "tags": [
+    "3D"
+  ],
+  "boundingBox": [
+    -8,
+    8,
+    8,
+    -8
+  ],
+  "keepAspectRatio": false,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-ruled-surface-m-bius-strip",
+  "steps": [
+    {
+      "title": "3D ruled surface: Möbius strip",
+      "detail": "The famous Möbius strip as ruled surface."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

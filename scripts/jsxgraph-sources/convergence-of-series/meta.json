@@ -1,0 +1,32 @@
+{
+  "id": "convergence-of-series",
+  "title": "Convergence of series",
+  "summary": "Compute partial sums of the series .",
+  "formula": "",
+  "aliases": [
+    "convergence of series",
+    "jsxgraph convergence of series"
+  ],
+  "tags": [
+    "Calculus",
+    "Sequences and series"
+  ],
+  "boundingBox": [
+    -3,
+    8,
+    50,
+    -8
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/convergence-of-series",
+  "steps": [
+    {
+      "title": "Convergence of series",
+      "detail": "Compute partial sums of the series ."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

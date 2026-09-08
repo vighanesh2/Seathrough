@@ -1,0 +1,33 @@
+{
+  "id": "conic-section-generic-through-5-points",
+  "title": "Conic section: generic through 5 points",
+  "summary": "Conic section: generic through 5 points — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "conic section: generic through 5 points",
+    "conic section generic through 5 points",
+    "jsxgraph conic section: generic through 5 points"
+  ],
+  "tags": [
+    "Curves",
+    "JSXGraph objects"
+  ],
+  "boundingBox": [
+    -2,
+    3,
+    4,
+    -3
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/conic-section-generic-through-5-points",
+  "steps": [
+    {
+      "title": "Conic section: generic through 5 points",
+      "detail": "Interactive JSXGraph construction: Conic section: generic through 5 points. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

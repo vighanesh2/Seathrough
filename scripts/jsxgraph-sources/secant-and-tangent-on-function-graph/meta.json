@@ -1,0 +1,32 @@
+{
+  "id": "secant-and-tangent-on-function-graph",
+  "title": "Secant and tangent on function graph",
+  "summary": "Secant and tangent on function graph — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "secant and tangent on function graph",
+    "jsxgraph secant and tangent on function graph"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus"
+  ],
+  "boundingBox": [
+    -5,
+    8,
+    15,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/secant-and-tangent-on-function-graph",
+  "steps": [
+    {
+      "title": "Secant and tangent on function graph",
+      "detail": "Interactive JSXGraph construction: Secant and tangent on function graph. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

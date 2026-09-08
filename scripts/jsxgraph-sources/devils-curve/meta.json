@@ -1,0 +1,32 @@
+{
+  "id": "devils-curve",
+  "title": "Devil's curve",
+  "summary": "Equation:\n\nPolar form:",
+  "formula": "",
+  "aliases": [
+    "devil's curve",
+    "devils curve",
+    "jsxgraph devil's curve"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    7,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/devils-curve",
+  "steps": [
+    {
+      "title": "Devil's curve",
+      "detail": "Equation:"
+    },
+    {
+      "title": "Explore further",
+      "detail": "Polar form:"
+    }
+  ]
+}

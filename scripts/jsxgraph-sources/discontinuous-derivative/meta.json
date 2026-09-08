@@ -1,0 +1,32 @@
+{
+  "id": "discontinuous-derivative",
+  "title": "Discontinuous derivative",
+  "summary": "Examples of continuous, differentiable functions with discontinuous derivative.\n\n#### First example\n\nConsider the function (blue curve)\n\n is a continuous and differentiable function.\nThe derivative of is the function (red curve)\n\nWe observe that , but does not exist.\n\nTherefore, is an example of a derivative which is not continuous.\n\n#### Second example\n\nHere, the derivative is not continuous for…",
+  "formula": "",
+  "aliases": [
+    "discontinuous derivative",
+    "jsxgraph discontinuous derivative"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/discontinuous-derivative",
+  "steps": [
+    {
+      "title": "Discontinuous derivative",
+      "detail": "Examples of continuous, differentiable functions with discontinuous derivative."
+    },
+    {
+      "title": "Explore further",
+      "detail": "#### First example"
+    }
+  ]
+}

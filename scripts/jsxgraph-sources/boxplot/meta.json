@@ -1,0 +1,31 @@
+{
+  "id": "boxplot",
+  "title": "Boxplot",
+  "summary": "A few examples how to use JSXGraph boxplots.",
+  "formula": "",
+  "aliases": [
+    "boxplot",
+    "jsxgraph boxplot"
+  ],
+  "tags": [
+    "Statistics"
+  ],
+  "boundingBox": [
+    -8,
+    16,
+    8,
+    -8
+  ],
+  "keepAspectRatio": false,
+  "sourceUrl": "https://jsxgraph.org/share/example/boxplot",
+  "steps": [
+    {
+      "title": "Boxplot",
+      "detail": "A few examples how to use JSXGraph boxplots."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

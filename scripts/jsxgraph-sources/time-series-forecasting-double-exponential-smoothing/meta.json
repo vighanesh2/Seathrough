@@ -1,0 +1,32 @@
+{
+  "id": "time-series-forecasting-double-exponential-smoothing",
+  "title": "Time series forecasting: double exponential smoothing",
+  "summary": "In this example, the time series (a list of numbers) is stored in the array . The dashed curve is a visualization of these (observed) values. Now, we try to forecast the nature of these values.\n\nThe blue curve are the predicted values and it is computed by the following rules:\n\nInitial values:\n\nThe values are iterative computed by\n\nThe values of and can be controlled with the two sliders.",
+  "formula": "",
+  "aliases": [
+    "time series forecasting: double exponential smoothing",
+    "time series forecasting double exponential smoothing",
+    "jsxgraph time series forecasting: double exponential smoothing"
+  ],
+  "tags": [
+    "Statistics"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/time-series-forecasting-double-exponential-smoothing",
+  "steps": [
+    {
+      "title": "Time series forecasting: double exponential smoothing",
+      "detail": "In this example, the time series (a list of numbers) is stored in the array . The dashed curve is a visualization of these (observed) values. Now, we try to forecast the nature of these values."
+    },
+    {
+      "title": "Explore further",
+      "detail": "The blue curve are the predicted values and it is computed by the following rules:"
+    }
+  ]
+}

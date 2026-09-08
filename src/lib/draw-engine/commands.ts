@@ -92,7 +92,17 @@ export const imageCmdSchema = z.object({
   w: z.coerce.number().positive().max(DRAW_CANVAS_WIDTH),
   h: z.coerce.number().positive().max(DRAW_CANVAS_HEIGHT),
   /** data:image/...;base64,... or https URL */
-  src: z.string().min(1).max(6_000_000),
+  src: z
+    .string()
+    .min(1)
+    .max(500_000)
+    .refine(
+      (value) =>
+        /^https:\/\//i.test(value) ||
+        /^data:image\/(?:png|jpeg|webp|gif|svg\+xml);base64,/i.test(value),
+      "Image source must be HTTPS or a supported base64 image",
+    ),
+  alt: z.string().trim().min(1).max(320).optional(),
 });
 
 export const highlightCmdSchema = z.object({

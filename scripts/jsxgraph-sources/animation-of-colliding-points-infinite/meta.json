@@ -1,0 +1,33 @@
+{
+  "id": "animation-of-colliding-points-infinite",
+  "title": "Animation of colliding points (infinite)",
+  "summary": "Animation of colliding points (infinite) — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "animation of colliding points (infinite)",
+    "animation of colliding points infinite",
+    "jsxgraph animation of colliding points (infinite)"
+  ],
+  "tags": [
+    "Animation",
+    "Technical"
+  ],
+  "boundingBox": [
+    -0.2,
+    1.2,
+    1.2,
+    -0.5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/animation-of-colliding-points-infinite",
+  "steps": [
+    {
+      "title": "Animation of colliding points (infinite)",
+      "detail": "Interactive JSXGraph construction: Animation of colliding points (infinite). Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

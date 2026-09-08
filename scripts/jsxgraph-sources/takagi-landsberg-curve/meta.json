@@ -1,0 +1,32 @@
+{
+  "id": "takagi-landsberg-curve",
+  "title": "Takagi-Landsberg (Blancmange) curve",
+  "summary": "The *blancmange* function is defined on the unit interval by\n\nwhere is defined by .\nThat is, is the distance from to the nearest integer. The infinite sum defining converges absolutely for all , but the resulting curve is a fractal. The *blancmange* function is continuous but nowhere differentiable.\n\nThe Takagi–Landsberg curve is a slight generalization, given by\n\nfor a parameter ; thus the *blan…",
+  "formula": "",
+  "aliases": [
+    "takagi-landsberg (blancmange) curve",
+    "takagi landsberg curve",
+    "jsxgraph takagi-landsberg (blancmange) curve"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -0.05,
+    16,
+    1.27,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/takagi-landsberg-curve",
+  "steps": [
+    {
+      "title": "Takagi-Landsberg (Blancmange) curve",
+      "detail": "The *blancmange* function is defined on the unit interval by"
+    },
+    {
+      "title": "Explore further",
+      "detail": "where is defined by . That is, is the distance from to the nearest integer. The infinite sum defining converges absolutely for all , but the resulting curve is a fractal. The *blancmange* function is continuous but nowhere differentiable."
+    }
+  ]
+}

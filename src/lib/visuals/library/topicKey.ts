@@ -1,6 +1,7 @@
 /**
- * Normalize a user prompt / concept into a stable library key.
- * Same topic asked two ways should usually hit the same row.
+ * Normalize a user prompt and concept into a stable, lesson-scoped library key.
+ * The prompt must remain part of the key: planner concept labels such as
+ * "success", "overview", or "definition" are not globally unique topics.
  */
 export function makeTopicKey(input: {
   prompt: string;
@@ -16,7 +17,9 @@ export function makeTopicKey(input: {
 
   const concept = cleanFragment(input.conceptKey ?? "");
   if (concept && concept.length >= 3 && !isNoisePhrase(concept)) {
-    return clampKey(slugify(concept));
+    return clampKey(
+      slugify(`${fromPrompt || "topic"} -- ${concept}`),
+    );
   }
 
   return clampKey(slugify(fromPrompt || "topic"));

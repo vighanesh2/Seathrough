@@ -1,0 +1,36 @@
+var t = board.create('turtle', [4, 3, 70]);
+var s = board.create('slider', [[0, -5], [10, -5], [-5, 0.5, 5]], { name: 's' });
+var alpha = board.create('slider', [[0, -6], [10, -6], [-1, 0.2, 2]], { name: 'α' });
+var e = board.create('functiongraph', [
+      (x) => s.Value() * Math.exp(alpha.Value() * x)
+    ], {
+    strokeColor: 'red',
+    strokeWidth: 2
+});
+
+t.hideTurtle();
+
+var A = 5;
+var tau = 0.3;
+
+function clearturtle() {
+    t.cs();
+    t.ht();
+}
+
+function run() {
+    t.setPos(0, s.Value());
+    t.setPenSize(4);
+    dx = 0.1;   // global
+    x = 0.0;    // global
+    loop();
+}
+
+function loop() {
+    var dy = alpha.Value() * t.Y() * dx;    // Exponential growth model
+    t.moveTo([dx + t.X(), dy + t.Y()]);     // Move to the next iteration
+    x += dx;
+    if (x < 20.0) {
+        setTimeout(loop, 10);
+    }
+}

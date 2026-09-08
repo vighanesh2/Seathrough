@@ -1,0 +1,32 @@
+{
+  "id": "circumcircles-of-subtriangles",
+  "title": "Circumcircles of subtriangles",
+  "summary": "**Theorem:** Let be a triangle and let the incircle intersect , , and at , , and (blue points).\nLet the circumcircles of the triangles , , and intersect the circumcircle (apart from , , and )\nin , , and , respectively (black points).\n\nThen the black lines , , and are concurrent, i.e. meet in one point .",
+  "formula": "",
+  "aliases": [
+    "circumcircles of subtriangles",
+    "jsxgraph circumcircles of subtriangles"
+  ],
+  "tags": [
+    "Euclidean",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -1,
+    4,
+    12,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/circumcircles-of-subtriangles",
+  "steps": [
+    {
+      "title": "Circumcircles of subtriangles",
+      "detail": "**Theorem:** Let be a triangle and let the incircle intersect , , and at , , and (blue points). Let the circumcircles of the triangles , , and intersect the circumcircle (apart from , , and ) in , , and , respectively (black points)."
+    },
+    {
+      "title": "Explore further",
+      "detail": "Then the black lines , , and are concurrent, i.e. meet in one point ."
+    }
+  ]
+}

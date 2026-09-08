@@ -34,8 +34,8 @@ export function MarketingMathSection() {
             Math, drawn one step at a time.
           </h2>
           <p className="mt-3 text-[15px] leading-7 text-[#6a7d90]">
-            Equations and matrices appear on the board as they are explained —
-            so you see each move, not just the final answer.
+            Equations and matrices appear on the board as they are explained, so
+            you see each move, not just the final answer.
           </p>
         </div>
 

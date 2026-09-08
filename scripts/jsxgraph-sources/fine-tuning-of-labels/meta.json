@@ -1,0 +1,32 @@
+{
+  "id": "fine-tuning-of-labels",
+  "title": "Fine tuning of labels",
+  "summary": "The labels are centered of labels and get custom CSS styles / class.",
+  "formula": "",
+  "aliases": [
+    "fine tuning of labels",
+    "jsxgraph fine tuning of labels"
+  ],
+  "tags": [
+    "Technical",
+    "Texts"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -1
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/fine-tuning-of-labels",
+  "steps": [
+    {
+      "title": "Fine tuning of labels",
+      "detail": "The labels are centered of labels and get custom CSS styles / class."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "svg-filter-and-css-classes",
+  "title": "SVG Filter and CSS classes",
+  "summary": "With the help of CSS classes, SVG filters can be applied to JSXGraph elements.",
+  "formula": "",
+  "aliases": [
+    "svg filter and css classes",
+    "jsxgraph svg filter and css classes"
+  ],
+  "tags": [
+    "Euclidean",
+    "Technical"
+  ],
+  "boundingBox": [
+    3,
+    8,
+    10,
+    1
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/svg-filter-and-css-classes",
+  "steps": [
+    {
+      "title": "SVG Filter and CSS classes",
+      "detail": "With the help of CSS classes, SVG filters can be applied to JSXGraph elements."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

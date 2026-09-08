@@ -1,0 +1,33 @@
+{
+  "id": "two-reflections-i-parallel-lines",
+  "title": "Two reflections: parallel lines",
+  "summary": "This JSXGraph example shows reflections of points across two __parallel__ lines. Points ( and ) are mirrored successively on line and its parallel , generating image points: and are the mirror images from line reflection across line . In turn, and are the mirror images of reflecting these points across . Lines and segments illustrate the transformation steps between original and reflected points.…",
+  "formula": "",
+  "aliases": [
+    "two reflections: parallel lines",
+    "two reflections i parallel lines",
+    "jsxgraph two reflections: parallel lines"
+  ],
+  "tags": [
+    "Euclidean",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/two-reflections-i-parallel-lines",
+  "steps": [
+    {
+      "title": "Two reflections: parallel lines",
+      "detail": "This JSXGraph example shows reflections of points across two __parallel__ lines. Points ( and ) are mirrored successively on line and its parallel , generating image points: and are the mirror images from line reflection across line . In turn, and are the mirror images of reflecting these points across . Lines and segments illustrate the transformation steps between original and reflected points."
+    },
+    {
+      "title": "Explore further",
+      "detail": "It can be observed that two reflections across two parallel lines result in a __translation__. To see this, move the defining point of line ."
+    }
+  ]
+}

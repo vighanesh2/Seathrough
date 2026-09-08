@@ -1,0 +1,32 @@
+{
+  "id": "slider-and-function-plot",
+  "title": "Slider and function plot",
+  "summary": "This is a basic example how to manipulate with three sliders, , , and a parabola. That is, changing the sliders dynamically changes the coefficients of the quadratic . The graph updates in real time as you move the sliders, allowing users to see how each coefficient affects the parabola’s shape, position, and orientation.",
+  "formula": "",
+  "aliases": [
+    "slider and function plot",
+    "jsxgraph slider and function plot"
+  ],
+  "tags": [
+    "Calculus",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/slider-and-function-plot",
+  "steps": [
+    {
+      "title": "Slider and function plot",
+      "detail": "This is a basic example how to manipulate with three sliders, , , and a parabola. That is, changing the sliders dynamically changes the coefficients of the quadratic . The graph updates in real time as you move the sliders, allowing users to see how each coefficient affects the parabola’s shape, position, and orientation."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Fraunces, Geist, IBM_Plex_Mono } from "next/font/google";
+import { Fraunces, Geist, IBM_Plex_Mono, Inter, Newsreader } from "next/font/google";
 import { AuthProvider } from "@/components/AuthProvider";
 import { QuestionAccessProvider } from "@/components/usage/QuestionAccess";
 import { PageTransition } from "@/components/site/PageTransition";
@@ -10,6 +10,18 @@ import "./globals.css";
 const geist = Geist({
   subsets: ["latin"],
   variable: "--font-geist",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+});
+
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  variable: "--font-newsreader",
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
 });
 
 const fraunces = Fraunces({
@@ -27,7 +39,7 @@ const ibmPlexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "SeeThrough",
   description:
-    "Type a question. SeeThrough draws it while it explains — on a board, as a system map, or in 3D.",
+    "Type a question. SeeThrough draws it while it explains: on a board, as a system map, or in 3D.",
   icons: {
     icon: [{ url: "/SeeThrough_logo.png", type: "image/png" }],
     apple: [{ url: "/SeeThrough_logo.png", type: "image/png" }],
@@ -45,6 +57,8 @@ export default function RootLayout({
       className={cn(
         "h-full antialiased",
         geist.variable,
+        inter.variable,
+        newsreader.variable,
         fraunces.variable,
         ibmPlexMono.variable,
       )}

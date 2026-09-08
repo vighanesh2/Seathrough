@@ -1,0 +1,32 @@
+{
+  "id": "click-on-element",
+  "title": "Click on element",
+  "summary": "JSXGraph does not watch for events. Instead, the event could be used. With this e.g. a right click event on an element could be realized.",
+  "formula": "",
+  "aliases": [
+    "click on element",
+    "jsxgraph click on element"
+  ],
+  "tags": [
+    "JSXGraph objects",
+    "Technical"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/click-on-element",
+  "steps": [
+    {
+      "title": "Click on element",
+      "detail": "JSXGraph does not watch for events. Instead, the event could be used. With this e.g. a right click event on an element could be realized."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

@@ -35,7 +35,7 @@ export function AccountMenu({
       <div
         className={cn(
           "size-9 animate-pulse rounded-full",
-          marketing ? "bg-white/10" : "bg-secondary",
+          marketing ? "bg-paper-deep" : "bg-secondary",
         )}
         aria-hidden
       />
@@ -45,20 +45,20 @@ export function AccountMenu({
   if (!user) {
     if (marketing) {
       return (
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2.5">
           <Button
-            variant="ghost"
+            variant="outline"
             onClick={onLogin}
-            className="h-8 px-3 text-[13.5px] font-medium text-[#3d5166] hover:bg-[#f2f4f7] hover:text-[#1a2b3c]"
+            className="h-10 rounded-full border-[#1b6ca8] bg-white px-5 text-[14px] font-medium text-[#1b6ca8] shadow-none hover:bg-[#eef5fb] hover:text-[#1b6ca8]"
           >
-            Log in
+            Login
           </Button>
           {onSignup ? (
             <Button
               onClick={onSignup}
-              className="h-8 rounded-full bg-[#1b6ca8] px-3.5 text-[13.5px] font-medium text-white shadow-none hover:bg-[#0f4f7c]"
+              className="h-10 rounded-full bg-[#1b6ca8] px-5 text-[14px] font-medium text-white shadow-none hover:bg-[#155a8f]"
             >
-              Get started
+              Get Started
             </Button>
           ) : null}
         </div>

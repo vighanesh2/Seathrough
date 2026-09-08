@@ -1,0 +1,31 @@
+{
+  "id": "logarithmic-spiral",
+  "title": "Logarithmic spiral",
+  "summary": "It can be described in polar coordinates by the equation\n\nwith real numbers and .",
+  "formula": "",
+  "aliases": [
+    "logarithmic spiral",
+    "jsxgraph logarithmic spiral"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -10,
+    10,
+    10,
+    -10
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/logarithmic-spiral",
+  "steps": [
+    {
+      "title": "Logarithmic spiral",
+      "detail": "It can be described in polar coordinates by the equation"
+    },
+    {
+      "title": "Explore further",
+      "detail": "with real numbers and ."
+    }
+  ]
+}

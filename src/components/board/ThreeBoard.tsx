@@ -233,6 +233,14 @@ export function ThreeBoard({
   }, []);
 
   useEffect(() => {
+    const canvas = mountRef.current?.querySelector("canvas");
+    canvas?.setAttribute(
+      "aria-label",
+      `${plan.title} interactive 3D viewport`,
+    );
+  }, [plan.title]);
+
+  useEffect(() => {
     if (!rendererReady || !sceneRef.current) return;
     const scene = sceneRef.current;
     let cancelled = false;
@@ -328,24 +336,27 @@ export function ThreeBoard({
 
   const availableStructures = useMemo(
     () =>
-      plan.id === "cardiopulmonary" || plan.id === "eye"
-        ? structuresForReveal(
-            plan.reveal,
-            plan.id === "eye" ? "eye" : "cardiopulmonary",
-          )
+      plan.id === "cardiopulmonary" ||
+      plan.id === "eye" ||
+      plan.id === "brain" ||
+      plan.id === "kidney"
+        ? structuresForReveal(plan.reveal, plan.id)
         : [],
     [plan.id, plan.reveal],
   );
 
   return (
     <div
-      className={
+      className={[
+        // Always contain the WebGL canvas — custom className must not drop
+        // `relative` or absolute inset-0 climbs to a page-level ancestor.
+        "relative isolate overflow-hidden",
         className ??
-        "relative h-full min-h-70 w-full overflow-hidden rounded-xl border border-board-edge bg-board"
-      }
+          "h-full min-h-70 w-full rounded-xl border border-board-edge bg-board",
+      ].join(" ")}
       aria-label={`${plan.title} — interactive 3D`}
     >
-      <div ref={mountRef} className="absolute inset-0" />
+      <div ref={mountRef} className="absolute inset-0 overflow-hidden [&>canvas]:block [&>canvas]:h-full [&>canvas]:w-full" />
       <div className="pointer-events-none absolute left-3 top-3 hidden max-w-[46%] truncate rounded-lg border border-border bg-card/85 px-2.5 py-1.5 font-sans text-[11px] text-ink shadow-sm backdrop-blur sm:block">
         <span className="font-semibold text-accent-deep">{plan.title}</span>
         <span className="text-muted">

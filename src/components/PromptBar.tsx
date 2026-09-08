@@ -212,12 +212,12 @@ export function PromptBar({
         if (disabled) return;
         // Voice and typing intentionally share onSubmit. Freeze the visible
         // transcript first so late recognition events cannot overwrite Pipe A's
-        // clarified or rewritten prompt while the lesson stream is running.
+        // clarified or rewritten prompt while the lesson stream or TTS runs.
         stopListening();
         onSubmit();
       }}
     >
-      <div className="flex w-full items-stretch gap-2">
+      <div className="flex w-full items-stretch gap-1.5">
         <div className="relative min-w-0 flex-1">
           <label className="sr-only" htmlFor={inputId}>
             {inputLabel}
@@ -234,7 +234,7 @@ export function PromptBar({
             }}
             disabled={disabled}
             placeholder={placeholder}
-            className="h-11 bg-card pr-12 pl-4"
+            className="h-10 rounded-lg border-[#d7e3eb] bg-[#f7fafc] pr-11 pl-3.5 text-[14px] shadow-none focus-visible:bg-white"
           />
           {speechSupported ? (
             <button
@@ -262,17 +262,14 @@ export function PromptBar({
         </div>
         <Button
           type="submit"
-          size="lg"
           disabled={disabled || !value.trim()}
-          className="shrink-0"
+          className="h-10 shrink-0 rounded-lg px-3.5 text-[13px] font-semibold shadow-none"
         >
           {submitLabel}
         </Button>
       </div>
       {listening ? (
-        <p className="font-sans text-[11px] text-accent">
-          Listening… click the mic when you are done.
-        </p>
+        <p className="text-[11px] text-accent">Listening</p>
       ) : null}
       {micError ? (
         <p className="font-sans text-[11px] text-warn">{micError}</p>

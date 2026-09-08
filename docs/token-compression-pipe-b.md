@@ -112,7 +112,7 @@ Same passes, same critic.
 No whitelist of concepts.
 If the short fails, refuse the short. The 20 rows were the blueprint, not the catalog.
 
-**Locked drafts + eval checklist:** [`docs/token-compression-off-gold.md`](token-compression-off-gold.md)  
+**Locked drafts + eval checklist:** [`docs/token-compression-off-gold.md`](token-compression-off-gold.md)
 **Fixture:** `OFF_GOLD_ASKS` in `src/lib/token-compression/goldRows.ts`
 
 ## Examples of reject (put these next to the gold failure notes)

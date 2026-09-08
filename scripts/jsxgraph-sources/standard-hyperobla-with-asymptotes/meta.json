@@ -1,0 +1,34 @@
+{
+  "id": "standard-hyperobla-with-asymptotes",
+  "title": "Standard hyperbola with asymptotes",
+  "summary": "Static example of standard hyperbola",
+  "formula": "",
+  "aliases": [
+    "standard hyperbola with asymptotes",
+    "standard hyperobla with asymptotes",
+    "jsxgraph standard hyperbola with asymptotes"
+  ],
+  "tags": [
+    "Analytic",
+    "Curves",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/standard-hyperobla-with-asymptotes",
+  "steps": [
+    {
+      "title": "Standard hyperbola with asymptotes",
+      "detail": "Static example of standard hyperbola"
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

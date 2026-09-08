@@ -1,0 +1,32 @@
+{
+  "id": "g-3d-subdivided-icosahedron",
+  "title": "3D subdivided icosahedron",
+  "summary": "Iterating the icosahedron construction quickly approximates a sphere. The small dips are by purpose, i.e. the wrong choice of the distance of the initial vertices, to demonstrate the shading effect.\n\nThe dips can be remove by uncommenting line 48:",
+  "formula": "",
+  "aliases": [
+    "3d subdivided icosahedron",
+    "jsxgraph 3d subdivided icosahedron"
+  ],
+  "tags": [
+    "3D",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -7,
+    7,
+    7,
+    -7
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-subdivided-icosahedron",
+  "steps": [
+    {
+      "title": "3D subdivided icosahedron",
+      "detail": "Iterating the icosahedron construction quickly approximates a sphere. The small dips are by purpose, i.e. the wrong choice of the distance of the initial vertices, to demonstrate the shading effect."
+    },
+    {
+      "title": "Explore further",
+      "detail": "The dips can be remove by uncommenting line 48:"
+    }
+  ]
+}

@@ -107,4 +107,9 @@ export async function consumeLessonStream(
       }
     }
   }
+
+  await options.onEvent({
+    type: "error",
+    message: "Lesson stream ended before completion. Please try again.",
+  });
 }

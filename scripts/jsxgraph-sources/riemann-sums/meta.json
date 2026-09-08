@@ -1,0 +1,31 @@
+{
+  "id": "riemann-sums",
+  "title": "Riemann sums",
+  "summary": "Approximate the integral of the sine function over a configurable interval controlled by sliders for the start and end points. A Riemann sum with a selectable number of subdivisions and sum type is drawn under the curve, and its computed value is displayed dynamically.\n\nFor the given interval the exact value is",
+  "formula": "",
+  "aliases": [
+    "riemann sums",
+    "jsxgraph riemann sums"
+  ],
+  "tags": [
+    "Calculus"
+  ],
+  "boundingBox": [
+    -8,
+    4,
+    8,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/riemann-sums",
+  "steps": [
+    {
+      "title": "Riemann sums",
+      "detail": "Approximate the integral of the sine function over a configurable interval controlled by sliders for the start and end points. A Riemann sum with a selectable number of subdivisions and sum type is drawn under the curve, and its computed value is displayed dynamically."
+    },
+    {
+      "title": "Explore further",
+      "detail": "For the given interval the exact value is"
+    }
+  ]
+}

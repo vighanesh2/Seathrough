@@ -1,0 +1,33 @@
+{
+  "id": "g-3d-parametric-surface-with-type-colormap",
+  "title": "3D parametric surface with type 'colormap'",
+  "summary": "Possible types for representing parametric surfaces are:\n\n- ,\n- ,\n- ,\n-\n\nHere is an example for 'colormap'. Internally, the color map is realized with a polyhedron3d element. The visual attributes are set inside of the polyhedron sub-attribute.",
+  "formula": "",
+  "aliases": [
+    "3d parametric surface with type 'colormap'",
+    "3d parametric surface with type colormap",
+    "jsxgraph 3d parametric surface with type 'colormap'"
+  ],
+  "tags": [
+    "3D",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -8,
+    8,
+    8,
+    -8
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/3d-parametric-surface-with-type-colormap",
+  "steps": [
+    {
+      "title": "3D parametric surface with type 'colormap'",
+      "detail": "Possible types for representing parametric surfaces are:"
+    },
+    {
+      "title": "Explore further",
+      "detail": "- , - , - , -"
+    }
+  ]
+}

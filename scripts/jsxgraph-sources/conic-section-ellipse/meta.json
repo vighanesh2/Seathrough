@@ -1,0 +1,33 @@
+{
+  "id": "conic-section-ellipse",
+  "title": "Conic section: ellipse",
+  "summary": "The input elements for an ellipse are either\n\n- three points: the two foci and a point on the ellipse\n- two point and a number: the two foci and the length of the major axis (may be a function, too).",
+  "formula": "",
+  "aliases": [
+    "conic section: ellipse",
+    "conic section ellipse",
+    "jsxgraph conic section: ellipse"
+  ],
+  "tags": [
+    "Curves",
+    "JSXGraph objects"
+  ],
+  "boundingBox": [
+    -3,
+    3,
+    3,
+    -3
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/conic-section-ellipse",
+  "steps": [
+    {
+      "title": "Conic section: ellipse",
+      "detail": "The input elements for an ellipse are either"
+    },
+    {
+      "title": "Explore further",
+      "detail": "- three points: the two foci and a point on the ellipse - two point and a number: the two foci and the length of the major axis (may be a function, too)."
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "id": "fullscreen-mode",
+  "title": "Fullscreen mode",
+  "summary": "This feature maybe useful in classrooms: the teacher wants to show the whole class a JSXGraph construction from an eLearning platform like moodle.\n\nBy clicking either on the *fullscreen icon* in the JSXGraph navigation bar or on the external fullscreen button, the construction is shown fullscreen mode.",
+  "formula": "",
+  "aliases": [
+    "fullscreen mode",
+    "jsxgraph fullscreen mode"
+  ],
+  "tags": [
+    "Technical"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/fullscreen-mode",
+  "steps": [
+    {
+      "title": "Fullscreen mode",
+      "detail": "This feature maybe useful in classrooms: the teacher wants to show the whole class a JSXGraph construction from an eLearning platform like moodle."
+    },
+    {
+      "title": "Explore further",
+      "detail": "By clicking either on the *fullscreen icon* in the JSXGraph navigation bar or on the external fullscreen button, the construction is shown fullscreen mode."
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "surface-plot",
+  "title": "Surface plot",
+  "summary": "JSXGraph supports the visualization of surface plots, including features such as tangent planes.",
+  "formula": "",
+  "aliases": [
+    "surface plot",
+    "jsxgraph surface plot"
+  ],
+  "tags": [
+    "3D",
+    "Calculus"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/surface-plot",
+  "steps": [
+    {
+      "title": "Surface plot",
+      "detail": "JSXGraph supports the visualization of surface plots, including features such as tangent planes."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

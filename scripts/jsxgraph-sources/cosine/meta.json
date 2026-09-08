@@ -1,0 +1,32 @@
+{
+  "id": "cosine",
+  "title": "Cosine",
+  "summary": "The cosine is a projection of the complex number (which is a point on the unit circle in the complex plane) to the real axis on the complex plane. In the following interactive figure, you can drag the point on the real axis and observe the behavior of the complex number and the varying value of .",
+  "formula": "",
+  "aliases": [
+    "jsxgraph cosine"
+  ],
+  "tags": [
+    "Analytic",
+    "Calculus",
+    "Euclidean"
+  ],
+  "boundingBox": [
+    -10,
+    1.5,
+    10,
+    -1.5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/cosine",
+  "steps": [
+    {
+      "title": "Cosine",
+      "detail": "The cosine is a projection of the complex number (which is a point on the unit circle in the complex plane) to the real axis on the complex plane. In the following interactive figure, you can drag the point on the real axis and observe the behavior of the complex number and the varying value of ."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

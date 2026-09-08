@@ -1,0 +1,32 @@
+{
+  "id": "barycenter",
+  "title": "Barycenter",
+  "summary": "Barycenter — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "barycenter",
+    "jsxgraph barycenter"
+  ],
+  "tags": [
+    "Analytic",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -2,
+    7,
+    7,
+    -2
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/barycenter",
+  "steps": [
+    {
+      "title": "Barycenter",
+      "detail": "Interactive JSXGraph construction: Barycenter. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

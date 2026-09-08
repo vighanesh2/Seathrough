@@ -1,0 +1,33 @@
+{
+  "id": "hyperbola-principal-axis-transformation",
+  "title": "Hyperbola: principal axis transformation",
+  "summary": "Example and visualization for principal axis transformation.\n\n1. step: rotate the quadric (i.e. move the slider to ) to canonical form\n2. step: translate the quadric to move the center of the quadric to the origin, i.e. move slider",
+  "formula": "",
+  "aliases": [
+    "hyperbola: principal axis transformation",
+    "hyperbola principal axis transformation",
+    "jsxgraph hyperbola: principal axis transformation"
+  ],
+  "tags": [
+    "Analytic",
+    "Geometry"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/hyperbola-principal-axis-transformation",
+  "steps": [
+    {
+      "title": "Hyperbola: principal axis transformation",
+      "detail": "Example and visualization for principal axis transformation."
+    },
+    {
+      "title": "Explore further",
+      "detail": "1. step: rotate the quadric (i.e. move the slider to ) to canonical form 2. step: translate the quadric to move the center of the quadric to the origin, i.e. move slider"
+    }
+  ]
+}

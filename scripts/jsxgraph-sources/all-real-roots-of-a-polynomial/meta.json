@@ -1,0 +1,33 @@
+{
+  "id": "all-real-roots-of-a-polynomial",
+  "title": "All real roots of a polynomial",
+  "summary": "The method computes all (complex) roots of a polynomial with real coefficients. We can use this method to filter out the real roots of that polynomial. Here is an example for the quartic polynomial\n\nThe values of , , , and can be adjusted with the sliders.",
+  "formula": "",
+  "aliases": [
+    "all real roots of a polynomial",
+    "jsxgraph all real roots of a polynomial"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus",
+    "Function plotting"
+  ],
+  "boundingBox": [
+    -9,
+    9,
+    9,
+    -9
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/all-real-roots-of-a-polynomial",
+  "steps": [
+    {
+      "title": "All real roots of a polynomial",
+      "detail": "The method computes all (complex) roots of a polynomial with real coefficients. We can use this method to filter out the real roots of that polynomial. Here is an example for the quartic polynomial"
+    },
+    {
+      "title": "Explore further",
+      "detail": "The values of , , , and can be adjusted with the sliders."
+    }
+  ]
+}

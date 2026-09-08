@@ -1,0 +1,33 @@
+{
+  "id": "cardinal-splines",
+  "title": "Cardinal splines",
+  "summary": "Cardinal splines — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "cardinal splines",
+    "jsxgraph cardinal splines"
+  ],
+  "tags": [
+    "Curves",
+    "Interpolation",
+    "Splines"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/cardinal-splines",
+  "steps": [
+    {
+      "title": "Cardinal splines",
+      "detail": "Interactive JSXGraph construction: Cardinal splines. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

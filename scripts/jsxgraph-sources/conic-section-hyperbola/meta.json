@@ -1,0 +1,33 @@
+{
+  "id": "conic-section-hyperbola",
+  "title": "Conic section: hyperbola",
+  "summary": "The input elements for a hyperbola are either\n\n- three points: the two foci and a point on the hyperbola\n- two point and a number: the two foci and the length of the major axis (may be a function, too).",
+  "formula": "",
+  "aliases": [
+    "conic section: hyperbola",
+    "conic section hyperbola",
+    "jsxgraph conic section: hyperbola"
+  ],
+  "tags": [
+    "Curves",
+    "JSXGraph objects"
+  ],
+  "boundingBox": [
+    -3,
+    3,
+    3,
+    -3
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/conic-section-hyperbola",
+  "steps": [
+    {
+      "title": "Conic section: hyperbola",
+      "detail": "The input elements for a hyperbola are either"
+    },
+    {
+      "title": "Explore further",
+      "detail": "- three points: the two foci and a point on the hyperbola - two point and a number: the two foci and the length of the major axis (may be a function, too)."
+    }
+  ]
+}

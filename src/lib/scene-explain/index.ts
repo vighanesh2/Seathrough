@@ -5,7 +5,7 @@ export {
   SCENE_LOAD_TIMEOUT_MS,
 } from "@/lib/scene-explain/types";
 export { inspectSceneCode } from "@/lib/scene-explain/inspectCode";
-export { parseSceneProgram, parseRepairedCode } from "@/lib/scene-explain/parseProgram";
+export { parseSceneProgram, parseScenePlan, parseRepairedCode } from "@/lib/scene-explain/parseProgram";
 export { generateSceneProgram } from "@/lib/scene-explain/generateScene";
 export { repairSceneCode } from "@/lib/scene-explain/repairScene";
 export { buildSceneIframeSrc } from "@/lib/scene-explain/iframeRuntime";

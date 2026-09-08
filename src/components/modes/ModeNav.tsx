@@ -26,11 +26,13 @@ function ModeItem({
   icon: Icon,
   label,
   current,
+  badge,
 }: {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   current?: boolean;
+  badge?: "new" | "beta" | "lab";
 }) {
   const navigate = useSmoothNavigate();
   return (
@@ -44,11 +46,16 @@ function ModeItem({
     >
       <Icon className="size-4" />
       {label}
+      {badge ? (
+        <span className="ml-auto rounded-full bg-success-soft px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] text-success uppercase">
+          {badge}
+        </span>
+      ) : null}
     </DropdownMenuItem>
   );
 }
 
-/** Switch between tools — compact control for workspace chrome. */
+/** Switch what you’re learning — compact control for workspace chrome. */
 export function StudyMenu({ current, className = "" }: StudyMenuProps) {
   const studios = listModesByGroup("studio");
   const more = listModesByGroup("more");
@@ -59,11 +66,10 @@ export function StudyMenu({ current, className = "" }: StudyMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
-          className={cn("gap-1.5 font-medium", className)}
-          aria-label="Switch tool"
+          variant="ghost"
+          className={cn("h-8 gap-1 px-2 text-[13px] font-medium", className)}
+          aria-label="Start learning"
         >
-          <span className="text-muted">Tools</span>
           <span className="text-ink">{active?.navLabel ?? "Home"}</span>
           <ChevronDown className="size-3.5 text-muted" />
         </Button>
@@ -71,14 +77,15 @@ export function StudyMenu({ current, className = "" }: StudyMenuProps) {
       <DropdownMenuContent align="end" className="min-w-64">
         <ModeItem href="/" icon={House} label="Home" />
         <DropdownMenuSeparator />
-        <DropdownMenuLabel>Tools</DropdownMenuLabel>
+        <DropdownMenuLabel>Start learning</DropdownMenuLabel>
         {studios.map((mode) => (
           <ModeItem
             key={mode.id}
             href={mode.href}
             icon={MODE_UI[mode.id].icon}
-            label={mode.title}
+            label={mode.navLabel}
             current={mode.id === current}
+            badge={mode.badge}
           />
         ))}
         {more.length > 0 ? (
@@ -92,6 +99,7 @@ export function StudyMenu({ current, className = "" }: StudyMenuProps) {
                 icon={MODE_UI[mode.id].icon}
                 label={mode.title}
                 current={mode.id === current}
+                badge={mode.badge}
               />
             ))}
           </>
@@ -107,6 +115,7 @@ export function StudyMenu({ current, className = "" }: StudyMenuProps) {
                 icon={MODE_UI[mode.id].icon}
                 label={mode.title}
                 current={mode.id === current}
+                badge={mode.badge}
               />
             ))}
           </>

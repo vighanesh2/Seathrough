@@ -9,11 +9,11 @@ export const sceneGenerateRequestSchema = z.object({
 export const sceneRepairRequestSchema = z.object({
   prompt: z.string().trim().min(1).max(600),
   title: z.string().trim().min(1).max(80),
-  code: z.string().trim().min(1).max(20_000),
+  code: z.string().trim().min(1).max(60_000),
   error: z.string().trim().min(1).max(1200),
   attempt: z.coerce.number().int().min(1).max(6).default(1),
 });
 
 export const sceneSpeakRequestSchema = z.object({
-  text: z.string().trim().min(1).max(400),
+  text: z.string().trim().min(1).max(900),
 });

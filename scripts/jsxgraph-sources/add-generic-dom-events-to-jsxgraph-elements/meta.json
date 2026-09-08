@@ -1,0 +1,31 @@
+{
+  "id": "add-generic-dom-events-to-jsxgraph-elements",
+  "title": "Add generic DOM events to JSXGraph elements",
+  "summary": "*Please note:* Adding generic DOM events works only if SVG renderer is used. Nearly all JSXGraph elements have a subobject which is a pointer to its SVG element in the DOM. This element can be supplied with event listeners.",
+  "formula": "",
+  "aliases": [
+    "add generic dom events to jsxgraph elements",
+    "jsxgraph add generic dom events to jsxgraph elements"
+  ],
+  "tags": [
+    "JSXGraph objects"
+  ],
+  "boundingBox": [
+    -4,
+    4,
+    4,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/add-generic-dom-events-to-jsxgraph-elements",
+  "steps": [
+    {
+      "title": "Add generic DOM events to JSXGraph elements",
+      "detail": "*Please note:* Adding generic DOM events works only if SVG renderer is used. Nearly all JSXGraph elements have a subobject which is a pointer to its SVG element in the DOM. This element can be supplied with event listeners."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

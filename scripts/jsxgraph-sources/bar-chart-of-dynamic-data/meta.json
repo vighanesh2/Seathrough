@@ -1,0 +1,33 @@
+{
+  "id": "bar-chart-of-dynamic-data",
+  "title": "Charts of dynamic data",
+  "summary": "Dynamic bar charts, i.e. data is given by functions depending on a slider, as well as line and point charts with shadows and legend.",
+  "formula": "",
+  "aliases": [
+    "charts of dynamic data",
+    "bar chart of dynamic data",
+    "jsxgraph charts of dynamic data"
+  ],
+  "tags": [
+    "Charts",
+    "Charts and data"
+  ],
+  "boundingBox": [
+    -1,
+    9,
+    13,
+    -3
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/bar-chart-of-dynamic-data",
+  "steps": [
+    {
+      "title": "Charts of dynamic data",
+      "detail": "Dynamic bar charts, i.e. data is given by functions depending on a slider, as well as line and point charts with shadows and legend."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

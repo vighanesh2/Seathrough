@@ -1,0 +1,31 @@
+{
+  "id": "inverse-mapping-of-the-power-function",
+  "title": "Inverse mapping of the power function",
+  "summary": "Inverse mapping of the power function — interactive JSXGraph example (CC BY-SA 4.0, jsxgraph.org/share).",
+  "formula": "",
+  "aliases": [
+    "inverse mapping of the power function",
+    "jsxgraph inverse mapping of the power function"
+  ],
+  "tags": [
+    "Calculus"
+  ],
+  "boundingBox": [
+    -5.5,
+    7.5,
+    9.5,
+    -2.5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/inverse-mapping-of-the-power-function",
+  "steps": [
+    {
+      "title": "Inverse mapping of the power function",
+      "detail": "Interactive JSXGraph construction: Inverse mapping of the power function. Drag points and controls to explore."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

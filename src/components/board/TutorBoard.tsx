@@ -18,8 +18,10 @@ import type { DrawCommandQueue } from "@/lib/draw-engine/resolve";
 import type { AnatomyStructureId } from "@/lib/anatomy/types";
 import type { SceneRecipe } from "@/lib/schemas/sceneRecipe";
 import type { ThreeScenePlan } from "@/lib/three-scenes/decide";
+import { getVisualAsset } from "@/lib/visuals/assets/catalog";
 import type { VisualPlan } from "@/lib/visuals/types";
 import { visualStableKey } from "@/lib/visuals/router";
+import type { LessonSource } from "@/types/lesson";
 
 const KonvaDrawStage = dynamic(
   () =>
@@ -56,6 +58,7 @@ type TutorBoardProps = {
   beatOrder?: number;
   totalBeats?: number;
   narrationLines?: BoardNarrationLine[];
+  sources?: LessonSource[];
   codeBuffer?: string;
   streaming?: boolean;
   onDrawComplete?: () => void;
@@ -73,6 +76,11 @@ type TutorBoardProps = {
   threeSelectedStructure?: AnatomyStructureId | null;
   onThreeSelect?: (structure: AnatomyStructureId | null) => void;
   onDrawClock?: (ms: number) => void;
+  followUpValue?: string;
+  onFollowUpChange?: (value: string) => void;
+  onFollowUpSubmit?: () => void;
+  followUpDisabled?: boolean;
+  showFollowUp?: boolean;
 };
 
 /**
@@ -85,6 +93,7 @@ export function TutorBoard({
   beatOrder = 1,
   totalBeats,
   narrationLines = [],
+  sources = [],
   codeBuffer,
   streaming,
   onDrawComplete,
@@ -102,6 +111,11 @@ export function TutorBoard({
   threeSelectedStructure = null,
   onThreeSelect,
   onDrawClock,
+  followUpValue,
+  onFollowUpChange,
+  onFollowUpSubmit,
+  followUpDisabled,
+  showFollowUp,
 }: TutorBoardProps) {
   const onDoneRef = useRef(onDrawComplete);
   useEffect(() => {
@@ -117,7 +131,33 @@ export function TutorBoard({
     Boolean(plan.topicId && plan.topicParams);
   const useDrawEngine =
     !showThree && !showTopicBoard && Boolean(preferDrawEngine && drawQueue);
-  const showTemplate = !showThree && !useDrawEngine && plan?.renderer === "template";
+  const companionAsset =
+    plan?.assetId && !showThree && !showTopicBoard
+      ? getVisualAsset(plan.assetId)
+      : undefined;
+  const companionTemplatePlan: VisualPlan | null =
+    companionAsset && plan
+      ? {
+          ...plan,
+          renderer: "template",
+          assetId: companionAsset.id,
+          actions:
+            plan.actions?.some((a) => a.type === "draw")
+              ? plan.actions
+              : [
+                  { type: "draw" },
+                  {
+                    type: "label",
+                    anchor: "center",
+                    text: companionAsset.title,
+                  },
+                ],
+        }
+      : null;
+  const showTemplate =
+    !showThree &&
+    !useDrawEngine &&
+    (plan?.renderer === "template" || Boolean(companionTemplatePlan));
   const showKatexOnly = !showThree && !useDrawEngine && plan?.renderer === "katex";
   const showMafs = !showThree && !useDrawEngine && plan?.renderer === "mafs";
   const showRough =
@@ -138,7 +178,8 @@ export function TutorBoard({
       showRough ||
       showKatexOnly ||
       showBoardScript ||
-      showTopicBoard,
+      showTopicBoard ||
+      companionTemplatePlan,
   );
   const formula = plan?.formula ?? (showKatexOnly ? plan?.source : undefined);
   const topicBoardKey =
@@ -156,7 +197,6 @@ export function TutorBoard({
           <div className="absolute inset-0 flex flex-col bg-chalk">
             {drawSpeech ? (
               <p className="shrink-0 border-b border-board-edge/60 bg-accent-soft/30 px-4 py-2 font-sans text-sm text-ink">
-                <span className="font-semibold text-accent-deep">Tutor: </span>
                 {drawSpeech}
               </p>
             ) : null}
@@ -182,7 +222,6 @@ export function TutorBoard({
           <div className="absolute inset-0 flex flex-col bg-chalk">
             {drawSpeech ? (
               <p className="shrink-0 border-b border-board-edge/60 bg-accent-soft/30 px-4 py-2 font-sans text-sm text-ink">
-                <span className="font-semibold text-accent-deep">Tutor: </span>
                 {drawSpeech}
               </p>
             ) : null}
@@ -192,17 +231,28 @@ export function TutorBoard({
               </div>
             ) : null}
             <div className="relative min-h-0 flex-1 p-2 md:p-3">
-              <KonvaDrawStage
-                queue={drawQueue}
-                sessionKey={drawSessionKey}
-                playing={drawPlaying}
-                speed={drawSpeed}
-                onClock={onDrawClock}
-                onComplete={onDrawComplete}
-                canvasHeight={canvasHeight}
-                scrollToY={scrollToY}
-                className="h-full min-h-[280px] w-full overflow-auto rounded-xl border border-board-edge bg-chalk"
-              />
+              <div className="relative h-full min-h-0 min-w-0">
+                <KonvaDrawStage
+                  queue={drawQueue}
+                  sessionKey={drawSessionKey}
+                  playing={drawPlaying}
+                  speed={drawSpeed}
+                  onClock={onDrawClock}
+                  onComplete={onDrawComplete}
+                  canvasHeight={canvasHeight}
+                  scrollToY={scrollToY}
+                  className="h-full min-h-[280px] w-full overflow-auto rounded-xl border border-board-edge bg-chalk"
+                />
+                {companionTemplatePlan ? (
+                  <div className="pointer-events-none absolute top-5 right-5 z-20 aspect-4/3 w-[min(36%,320px)] overflow-hidden rounded-xl bg-white/88 p-3 shadow-[0_8px_28px_-14px_rgba(26,43,60,0.28)] backdrop-blur-sm">
+                    <TemplateStage
+                      plan={companionTemplatePlan}
+                      playKey={playKey}
+                      className="h-full max-h-none w-full max-w-none"
+                    />
+                  </div>
+                ) : null}
+              </div>
             </div>
           </div>
         ) : showMermaid && plan?.source ? (
@@ -215,7 +265,6 @@ export function TutorBoard({
           <InfiniteCanvas resetKey={`${playKey}-${plan?.renderer ?? "idle"}`}>
             {drawSpeech ? (
               <p className="mb-4 max-w-[min(640px,92vw)] rounded-lg border border-board-edge/60 bg-accent-soft/30 px-4 py-2 font-sans text-sm text-ink">
-                <span className="font-semibold text-accent-deep">Tutor: </span>
                 {drawSpeech}
               </p>
             ) : null}
@@ -241,9 +290,9 @@ export function TutorBoard({
                   />
                 ) : null}
 
-                {showTemplate && plan ? (
+                {showTemplate && (companionTemplatePlan || plan) ? (
                   <TemplateStage
-                    plan={plan}
+                    plan={companionTemplatePlan ?? plan!}
                     playKey={playKey}
                     onDrawComplete={() => onDoneRef.current?.()}
                   />
@@ -276,27 +325,17 @@ export function TutorBoard({
                   />
                 ) : null}
 
-                {showKatexOnly &&
-                !showTemplate &&
-                !showMafs &&
-                !showRough &&
-                !showBoardScript ? (
-                  <div className="font-sans text-sm font-semibold uppercase tracking-[0.16em] text-muted">
-                    equation
-                  </div>
-                ) : null}
-
                 {formula && !showTopicBoard ? (
                   <FormulaStrip source={formula} playKey={playKey} />
                 ) : null}
               </>
             ) : (
-              <div className="flex flex-col items-center gap-2 text-center">
-                <p className="font-display text-2xl text-marker-soft md:text-3xl">
-                  Ask anything to begin
+              <div className="flex flex-col items-center text-center">
+                <p className="text-[1.25rem] font-semibold tracking-tight text-[#17324a]">
+                  This is the board
                 </p>
-                <p className="max-w-sm font-sans text-sm text-muted">
-                  Pan and zoom freely — drawings appear on this infinite board.
+                <p className="mt-2 max-w-[16rem] text-[14px] leading-6 text-[#6a7d90]">
+                  Ask above. Figures appear here. Notes stay on the right.
                 </p>
               </div>
             )}
@@ -304,23 +343,35 @@ export function TutorBoard({
         )}
       </div>
 
-      <div className="hidden h-full w-[min(380px,34vw)] shrink-0 md:block">
+      <div className="hidden h-full w-[min(26rem,38vw)] shrink-0 sm:block">
         <BoardNarration
           lines={narrationLines}
+          sources={sources}
           codeBuffer={codeBuffer}
           streaming={streaming}
           title={title}
           placement="side"
+          followUpValue={followUpValue}
+          onFollowUpChange={onFollowUpChange}
+          onFollowUpSubmit={onFollowUpSubmit}
+          followUpDisabled={followUpDisabled}
+          showFollowUp={showFollowUp}
         />
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 z-30 md:hidden">
+      <div className="absolute inset-x-0 bottom-0 z-30 sm:hidden">
         <BoardNarration
           lines={narrationLines}
+          sources={sources}
           codeBuffer={codeBuffer}
           streaming={streaming}
           title={title}
           placement="bottom"
+          followUpValue={followUpValue}
+          onFollowUpChange={onFollowUpChange}
+          onFollowUpSubmit={onFollowUpSubmit}
+          followUpDisabled={followUpDisabled}
+          showFollowUp={showFollowUp}
         />
       </div>
     </section>

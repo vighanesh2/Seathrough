@@ -1,0 +1,1551 @@
+{
+  "generatedAt": "2026-09-04T02:38:13.520Z",
+  "stats": {
+    "imported": 240,
+    "skipped": 19,
+    "preserved": 0,
+    "multiTruncated": 16,
+    "reasons": {
+      "forbidden": 10,
+      "empty after strip initBoard": 7,
+      "no board.create after transform": 2
+    }
+  },
+  "report": [
+    {
+      "slug": "3d-cube-transformations",
+      "id": "g-3d-cube-transformations",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-net-of-cube",
+      "id": "g-3d-net-of-cube",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-curve",
+      "id": "g-3d-curve",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-parametric-surface-klein-bottle",
+      "id": "g-3d-parametric-surface-klein-bottle",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-function-graph-with-gradient-plane",
+      "id": "g-3d-function-graph-with-gradient-plane",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-function-graph-with-tangent-plane-ii",
+      "id": "g-3d-function-graph-with-tangent-plane-ii",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-function-graph",
+      "status": "skip",
+      "reason": "forbidden /\\bwindow\\s*\\./"
+    },
+    {
+      "slug": "3d-parametric-surface-with-colorarray",
+      "id": "g-3d-parametric-surface-with-colorarray",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-parametric-surface-with-type-colormap",
+      "id": "g-3d-parametric-surface-with-type-colormap",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-mirror-mirror-on-the-wall",
+      "id": "g-3d-mirror-mirror-on-the-wall",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-function-graph-assessment",
+      "id": "g-3d-function-graph-assessment",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-curve-assessment",
+      "id": "g-3d-curve-assessment",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-parametric-surface-with-type-shader",
+      "id": "g-3d-parametric-surface-with-type-shader",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-point",
+      "id": "g-3d-point",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-ruled-surface-m-bius-strip",
+      "id": "g-3d-ruled-surface-m-bius-strip",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-ruled-surface-hyperboloid",
+      "id": "g-3d-ruled-surface-hyperboloid",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-rubiks-cube",
+      "id": "g-3d-rubiks-cube",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-subdivided-icosahedron",
+      "id": "g-3d-subdivided-icosahedron",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "3d-vector-field",
+      "id": "g-3d-vector-field",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "a-5-circle-incidence-theorem",
+      "id": "a-5-circle-incidence-theorem",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "add-generic-dom-events-to-jsxgraph-elements",
+      "id": "add-generic-dom-events-to-jsxgraph-elements",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "add-points-on-click",
+      "id": "add-points-on-click",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "adding-jsxgraph-events",
+      "id": "adding-jsxgraph-events",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "affine-ratio",
+      "id": "affine-ratio",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "aligning-texts",
+      "id": "aligning-texts",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "angles",
+      "id": "angles",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "all-real-roots-of-a-polynomial",
+      "id": "all-real-roots-of-a-polynomial",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "animation-moveto-and-visit",
+      "id": "animation-moveto-and-visit",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "animation-infinite-with-setinterval",
+      "id": "animation-infinite-with-setinterval",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "animation-of-colliding-points-infinite",
+      "id": "animation-of-colliding-points-infinite",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "animation-using-css-transitions",
+      "id": "animation-using-css-transitions",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "animation-of-lines",
+      "id": "animation-of-lines",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "animation-with-requestanimationframe",
+      "status": "skip",
+      "reason": "forbidden /\\bwindow\\s*\\./"
+    },
+    {
+      "slug": "animation-with-setinterval",
+      "id": "animation-with-setinterval",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "antiderivative",
+      "id": "antiderivative",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "apollonian-circle-packing",
+      "id": "apollonian-circle-packing",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "approximate-length-of-curve",
+      "id": "approximate-length-of-curve",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "approximate-circular-arc-by-a-b-zier-curve",
+      "id": "approximate-circular-arc-by-a-b-zier-curve",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "approximation-of-e",
+      "id": "approximation-of-e",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "approximate-pi-pi-with-monte-carlo-method",
+      "id": "approximate-pi-pi-with-monte-carlo-method",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "approximation-of-the-circle-area",
+      "id": "approximation-of-the-circle-area",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "archimedian-circle-approximation",
+      "id": "archimedian-circle-approximation",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "archimedean-spiral",
+      "id": "archimedean-spiral",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "area-of-a-triangle",
+      "id": "area-of-a-triangle",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "autocatalytic-process",
+      "id": "autocatalytic-process",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "arrows-for-technical-drawings",
+      "id": "arrows-for-technical-drawings",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "axes-configuration",
+      "status": "skip",
+      "reason": "empty after strip initBoard"
+    },
+    {
+      "slug": "axis-logarithmic-scale",
+      "id": "axis-logarithmic-scale",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "axis-labels",
+      "status": "skip",
+      "reason": "empty after strip initBoard"
+    },
+    {
+      "slug": "b-splines",
+      "id": "b-splines",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "bar-chart-of-dynamic-data",
+      "id": "bar-chart-of-dynamic-data",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "bearing-bidirectional-communication",
+      "id": "bearing-bidirectional-communication",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "bezier-curves",
+      "id": "bezier-curves",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "bezier-curves-by-scaffolding",
+      "id": "bezier-curves-by-scaffolding",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "barycenter",
+      "id": "barycenter",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "binomial-distribution",
+      "id": "binomial-distribution",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "board-attribute-cssstyle",
+      "id": "board-attribute-cssstyle",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "bounding-box",
+      "status": "skip",
+      "reason": "empty after strip initBoard"
+    },
+    {
+      "slug": "boxplot",
+      "id": "boxplot",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "cardinal-splines",
+      "id": "cardinal-splines",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "centroid-of-triangle",
+      "id": "centroid-of-triangle",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "cannon-ball-simulation",
+      "id": "cannon-ball-simulation",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "browser-test-display-agent-and-renderer-type",
+      "id": "browser-test-display-agent-and-renderer-type",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "catmull-rom-splines",
+      "id": "catmull-rom-splines",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "cevas-theorem",
+      "id": "cevas-theorem",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "chart-assessment",
+      "id": "chart-assessment",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "chart-styles",
+      "status": "skip",
+      "reason": "no board.create after transform"
+    },
+    {
+      "slug": "click-on-element",
+      "id": "click-on-element",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "circles",
+      "id": "circles",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "circle-with-ticks",
+      "id": "circle-with-ticks",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "chemical-molecules",
+      "id": "chemical-molecules",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "circle-inversion",
+      "id": "circle-inversion",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "circumcircles-of-subtriangles",
+      "id": "circumcircles-of-subtriangles",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "colorful-points",
+      "id": "colorful-points",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "complex-maps",
+      "status": "skip",
+      "reason": "empty after strip initBoard"
+    },
+    {
+      "slug": "complex-numbers-arithmetics",
+      "id": "complex-numbers-arithmetics",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "complex-root-of-polynomial-with-real-coefficients",
+      "id": "complex-root-of-polynomial-with-real-coefficients",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "complex-root-of-polynomial-with-real-coefficients-dynamic",
+      "id": "complex-root-of-polynomial-with-real-coefficients-dynamic",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "conic-section-ellipse",
+      "id": "conic-section-ellipse",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "conic-section-generic-through-5-points",
+      "id": "conic-section-generic-through-5-points",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "conic-section-hyperbola",
+      "id": "conic-section-hyperbola",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "conic-section-parabola",
+      "id": "conic-section-parabola",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "conic-sections-in-polar-form",
+      "id": "conic-sections-in-polar-form",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "convergence-of-sequence",
+      "id": "convergence-of-sequence",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "continuous-function-epsilon-delta-criterium",
+      "id": "continuous-function-epsilon-delta-criterium",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "continuous-function-non-uniform-continuous-example",
+      "id": "continuous-function-non-uniform-continuous-example",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "convergence-of-series",
+      "id": "convergence-of-series",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "cosine",
+      "id": "cosine",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "convex-hull-of-points",
+      "id": "convex-hull-of-points",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "continuity",
+      "id": "continuity",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "cubic-spline-interpolation",
+      "id": "cubic-spline-interpolation",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "cube-and-projection",
+      "id": "cube-and-projection",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "cycloid",
+      "id": "cycloid",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "curly-brackets",
+      "id": "curly-brackets",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "curve-interpolation-nevilles-algorithm",
+      "id": "curve-interpolation-nevilles-algorithm",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "devils-curve",
+      "id": "devils-curve",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "desarguess-theorem",
+      "id": "desarguess-theorem",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "differentiability",
+      "id": "differentiability",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "discontinuous-derivative",
+      "id": "discontinuous-derivative",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "differential-equations",
+      "id": "differential-equations",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "draggable-exponential-function",
+      "id": "draggable-exponential-function",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "dragon-curve",
+      "status": "skip",
+      "reason": "forbidden /\\beval\\s*\\(/"
+    },
+    {
+      "slug": "dual-lattice",
+      "id": "dual-lattice",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "elements-as-checkboxes",
+      "id": "elements-as-checkboxes",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "elements-as-checkboxes-functions",
+      "id": "elements-as-checkboxes-functions",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "elements-as-radio-buttons-triangles",
+      "id": "elements-as-radio-buttons-triangles",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "ellipse-pin-and-string-method",
+      "id": "ellipse-pin-and-string-method",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "elliptic-curves",
+      "id": "elliptic-curves",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "elliptic-curves-1",
+      "id": "elliptic-curves-1",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "elliptic-curves-group-law",
+      "id": "elliptic-curves-group-law",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "elements-as-checkboxes-angles",
+      "id": "elements-as-checkboxes-angles",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "emulate-color-blindness",
+      "id": "emulate-color-blindness",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "epicycloid-circles-rotating-on-circles",
+      "id": "epicycloid-circles-rotating-on-circles",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "epicycloid-circles-rotating-on-circles-in-opposite-direction",
+      "id": "epicycloid-circles-rotating-on-circles-in-opposite-direction",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "epicycloid-export-svg",
+      "id": "epicycloid-export-svg",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "epidemiology-seir-model",
+      "id": "epidemiology-seir-model",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "epidemiology-sir-model",
+      "id": "epidemiology-sir-model",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "euler-line",
+      "id": "euler-line",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "euler-line-jessiecode",
+      "status": "skip",
+      "reason": "empty after strip initBoard"
+    },
+    {
+      "slug": "eulers-spiral-clothoid",
+      "id": "eulers-spiral-clothoid",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "exploring-functions-assessment",
+      "id": "exploring-functions-assessment",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "exploring-functions",
+      "id": "exploring-functions",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "extended-mean-value-theorem",
+      "id": "extended-mean-value-theorem",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "fermats-spiral",
+      "id": "fermats-spiral",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "fill-the-intersection-area-of-three-circles",
+      "id": "fill-the-intersection-area-of-three-circles",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "fine-tuning-of-labels",
+      "id": "fine-tuning-of-labels",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "fill-the-intersection-area-of-two-circles",
+      "id": "fill-the-intersection-area-of-two-circles",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "five-circle-theorem",
+      "id": "five-circle-theorem",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "folium-of-descartes",
+      "id": "folium-of-descartes",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "fullscreen-mode",
+      "id": "fullscreen-mode",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "fullscreen-icon",
+      "id": "fullscreen-icon",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "function-plotter",
+      "id": "function-plotter",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "function-plot-animation",
+      "id": "function-plot-animation",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "glider-on-axes",
+      "id": "glider-on-axes",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "function-composer-assessment",
+      "id": "function-composer-assessment",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "highlight-curve-via-slider",
+      "id": "highlight-curve-via-slider",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "hippopede",
+      "id": "hippopede",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "hsl-color-scheme",
+      "id": "hsl-color-scheme",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "hyperbola-as-function-graph",
+      "id": "hyperbola-as-function-graph",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "hyperbola-principal-axis-transformation",
+      "id": "hyperbola-principal-axis-transformation",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "hsv-color-scheme",
+      "id": "hsv-color-scheme",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "hyperbolic-spiral",
+      "id": "hyperbolic-spiral",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "hypotrochoid",
+      "id": "hypotrochoid",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "implicit-curve-plotter",
+      "status": "skip",
+      "reason": "forbidden /\\bwindow\\s*\\./"
+    },
+    {
+      "slug": "import-jsxgraph-as-es6-module",
+      "status": "skip",
+      "reason": "empty after strip initBoard"
+    },
+    {
+      "slug": "inequalities-function-graphs",
+      "id": "inequalities-function-graphs",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "inequalities-half-planes",
+      "id": "inequalities-half-planes",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "infinity",
+      "id": "infinity",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "heat-map",
+      "id": "heat-map",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "intersection-of-curves",
+      "id": "intersection-of-curves",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "intersection-of-function-graphs",
+      "id": "intersection-of-function-graphs",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "intersection-path-polygon",
+      "id": "intersection-path-polygon",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "inverse-composition-rules",
+      "id": "inverse-composition-rules",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "inverse-mapping-of-the-power-function",
+      "id": "inverse-mapping-of-the-power-function",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "iterated-icosahedron",
+      "id": "iterated-icosahedron",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "lagrange-interpolation-show-term",
+      "id": "lagrange-interpolation-show-term",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "lagrange-interpolation",
+      "id": "lagrange-interpolation",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "lemniscate-of-bernoulli",
+      "id": "lemniscate-of-bernoulli",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "least-squares-circle-fitting",
+      "id": "least-squares-circle-fitting",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "least-squares-line-fitting",
+      "id": "least-squares-line-fitting",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "lattices",
+      "id": "lattices",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "limacon",
+      "id": "limacon",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "linear-function-parameters",
+      "id": "linear-function-parameters",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "lissajous-curves",
+      "id": "lissajous-curves",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "lituus",
+      "id": "lituus",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "logging-of-user-activity",
+      "id": "logging-of-user-activity",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "logarithmic-spiral",
+      "id": "logarithmic-spiral",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "logistic-process",
+      "id": "logistic-process",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "matrix-multiplication",
+      "id": "matrix-multiplication",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "matrix-multiplication-ii",
+      "id": "matrix-multiplication-ii",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "menelaus-theorem",
+      "id": "menelaus-theorem",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "mean-value-theorem",
+      "id": "mean-value-theorem",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "move-to",
+      "id": "move-to",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "multiple-logarithmic-spirals",
+      "id": "multiple-logarithmic-spirals",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "multiple-turtles",
+      "id": "multiple-turtles",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "n-gones",
+      "status": "skip",
+      "reason": "forbidden /\\beval\\s*\\(/"
+    },
+    {
+      "slug": "mutually-dependent-line-and-gliders",
+      "id": "mutually-dependent-line-and-gliders",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "n-gones-slow-version",
+      "status": "skip",
+      "reason": "forbidden /\\beval\\s*\\(/"
+    },
+    {
+      "slug": "orthogonal-axis-affinity",
+      "id": "orthogonal-axis-affinity",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "n-th-root",
+      "id": "n-th-root",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "number-line",
+      "id": "number-line",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "oscillator",
+      "id": "oscillator",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "p-norm",
+      "id": "p-norm",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "pappus-hexagon-theorem",
+      "id": "pappus-hexagon-theorem",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "parabola",
+      "id": "parabola",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "parabola-ii",
+      "id": "parabola-ii",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "point-fixed-in-one-direction",
+      "id": "point-fixed-in-one-direction",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "polar-grid",
+      "id": "polar-grid",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "polygonalchain-styling",
+      "id": "polygonalchain-styling",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "polygon-dragging",
+      "id": "polygon-dragging",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "polygon-through-ordered-set-of-gliders",
+      "id": "polygon-through-ordered-set-of-gliders",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "population-growth-models",
+      "id": "population-growth-models",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "power-functions",
+      "id": "power-functions",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "power-series-for-sine",
+      "id": "power-series-for-sine",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "projectile-motion",
+      "id": "projectile-motion",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "power-series-for-the-exponential-function",
+      "id": "power-series-for-the-exponential-function",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "power-series-pointwise",
+      "id": "power-series-pointwise",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "power-series-for-sine-and-cosine",
+      "id": "power-series-for-sine-and-cosine",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "radio-button-used-in-function-graph",
+      "status": "skip",
+      "reason": "forbidden /\\bwindow\\s*\\./"
+    },
+    {
+      "slug": "radio-buttons",
+      "status": "skip",
+      "reason": "forbidden /\\bwindow\\s*\\./"
+    },
+    {
+      "slug": "random-walks",
+      "id": "random-walks",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "random-points",
+      "status": "skip",
+      "reason": "no board.create after transform"
+    },
+    {
+      "slug": "reflection-of-a-triangle-with-respect-to-a-line-assessment",
+      "id": "reflection-of-a-triangle-with-respect-to-a-line-assessment",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "riemann-sums",
+      "id": "riemann-sums",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "riemann-sum-iii",
+      "id": "riemann-sum-iii",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "rose",
+      "id": "rose",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "screen-reader",
+      "id": "screen-reader",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "secant-and-tangent",
+      "id": "secant-and-tangent",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "restrict-points-to-limited-area",
+      "id": "restrict-points-to-limited-area",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "secant-and-tangent-on-function-graph",
+      "id": "secant-and-tangent-on-function-graph",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "self-contained-function-plotting",
+      "id": "self-contained-function-plotting",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "shadows",
+      "id": "shadows",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "shade-region-bounded-by-curves",
+      "id": "shade-region-bounded-by-curves",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "sequences-of-functions",
+      "id": "sequences-of-functions",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "simple-function-plotter",
+      "status": "skip",
+      "reason": "forbidden /\\beval\\s*\\(/"
+    },
+    {
+      "slug": "sine",
+      "id": "sine",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "sine-and-cosine",
+      "status": "skip",
+      "reason": "forbidden /\\bwindow\\s*\\./"
+    },
+    {
+      "slug": "sketch-curve",
+      "id": "sketch-curve",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "sketch-curve-1",
+      "id": "sketch-curve-1",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "sketch-polynomial",
+      "id": "sketch-polynomial",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "sketch-polynomial-1",
+      "id": "sketch-polynomial-1",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "snells-law",
+      "id": "snells-law",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "sketchcurve-element",
+      "id": "sketchcurve-element",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "slider-and-function-plot",
+      "id": "slider-and-function-plot",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "soccer-offside-line",
+      "status": "skip",
+      "reason": "empty after strip initBoard"
+    },
+    {
+      "slug": "spirograph",
+      "id": "spirograph",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "spirograph-geometric-construction",
+      "id": "spirograph-geometric-construction",
+      "status": "ok",
+      "multi": true
+    },
+    {
+      "slug": "step-function",
+      "id": "step-function",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "step-function-ii",
+      "id": "step-function-ii",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "svg-filter-and-css-classes",
+      "id": "svg-filter-and-css-classes",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "surface-plot",
+      "id": "surface-plot",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "standard-hyperobla-with-asymptotes",
+      "id": "standard-hyperobla-with-asymptotes",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "systems-of-differential-equations",
+      "id": "systems-of-differential-equations",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "takagi-landsberg-curve",
+      "id": "takagi-landsberg-curve",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "tangents-on-circle",
+      "id": "tangents-on-circle",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "tangent-line-to-two-circles",
+      "id": "tangent-line-to-two-circles",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "thales-inscribed-angle-theorem",
+      "id": "thales-inscribed-angle-theorem",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "thales-theorem",
+      "id": "thales-theorem",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "time-series",
+      "id": "time-series",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "three-value-button",
+      "id": "three-value-button",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "three-touching-circles",
+      "id": "three-touching-circles",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "time-series-forecasting-double-exponential-smoothing",
+      "id": "time-series-forecasting-double-exponential-smoothing",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "trace-curve",
+      "id": "trace-curve",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "trace-curve-1",
+      "id": "trace-curve-1",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "trigonometric-functions",
+      "id": "trigonometric-functions",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "trigonometric-function-assessment",
+      "id": "trigonometric-function-assessment",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "trisectrix-of-maclaurin",
+      "id": "trisectrix-of-maclaurin",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "trochoid",
+      "id": "trochoid",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "tschirnhausen-cubic-catacaustic",
+      "id": "tschirnhausen-cubic-catacaustic",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "two-reflections-i-parallel-lines",
+      "id": "two-reflections-i-parallel-lines",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "two-reflections-ii-intersecting-lines",
+      "id": "two-reflections-ii-intersecting-lines",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "two-squares",
+      "id": "two-squares",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "type-of-a-triangle-assessment",
+      "id": "type-of-a-triangle-assessment",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "update-defining-term-of-function-graph-1",
+      "id": "update-defining-term-of-function-graph-1",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "versiera-di-agnesi",
+      "id": "versiera-di-agnesi",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "using-mathjax",
+      "id": "using-mathjax",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "using-css-styles",
+      "id": "using-css-styles",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "video-embedding",
+      "id": "video-embedding",
+      "status": "ok",
+      "multi": false
+    },
+    {
+      "slug": "waveforms-pulse-and-sawtooth",
+      "id": "waveforms-pulse-and-sawtooth",
+      "status": "ok",
+      "multi": false
+    }
+  ]
+}

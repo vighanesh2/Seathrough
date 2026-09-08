@@ -1,0 +1,32 @@
+{
+  "id": "glider-on-axes",
+  "title": "Glider on axes",
+  "summary": "The default axes of a object can be accessed with and .",
+  "formula": "",
+  "aliases": [
+    "glider on axes",
+    "jsxgraph glider on axes"
+  ],
+  "tags": [
+    "Axes",
+    "Technical"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    5,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/glider-on-axes",
+  "steps": [
+    {
+      "title": "Glider on axes",
+      "detail": "The default axes of a object can be accessed with and ."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

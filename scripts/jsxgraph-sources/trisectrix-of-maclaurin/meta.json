@@ -1,0 +1,31 @@
+{
+  "id": "trisectrix-of-maclaurin",
+  "title": "Trisectrix of Maclaurin",
+  "summary": "Equation:\n\nPolar form:",
+  "formula": "",
+  "aliases": [
+    "trisectrix of maclaurin",
+    "jsxgraph trisectrix of maclaurin"
+  ],
+  "tags": [
+    "Curves"
+  ],
+  "boundingBox": [
+    -5,
+    5,
+    7,
+    -5
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/trisectrix-of-maclaurin",
+  "steps": [
+    {
+      "title": "Trisectrix of Maclaurin",
+      "detail": "Equation:"
+    },
+    {
+      "title": "Explore further",
+      "detail": "Polar form:"
+    }
+  ]
+}

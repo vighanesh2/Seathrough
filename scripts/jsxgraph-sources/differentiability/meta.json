@@ -1,0 +1,32 @@
+{
+  "id": "differentiability",
+  "title": "Differentiability",
+  "summary": "If the function is *differentiable* in then there is a function\n that is continuous in such that\n\nThis means:\n\nDrag the point to see the function .",
+  "formula": "",
+  "aliases": [
+    "differentiability",
+    "jsxgraph differentiability"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus"
+  ],
+  "boundingBox": [
+    -5,
+    10,
+    7,
+    -6
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/differentiability",
+  "steps": [
+    {
+      "title": "Differentiability",
+      "detail": "If the function is *differentiable* in then there is a function  that is continuous in such that"
+    },
+    {
+      "title": "Explore further",
+      "detail": "This means:"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "point-fixed-in-one-direction",
+  "title": "Point 'fixed' in one direction",
+  "summary": "and are free points. Whenever the board is updated, e.g.\nafter a drag event, the x-coordinate of is set to and\nthe y-coordinate of is set to . Therefore, moves\non the vertical line through , moves on the horizontal line through .",
+  "formula": "",
+  "aliases": [
+    "point 'fixed' in one direction",
+    "point fixed in one direction",
+    "jsxgraph point 'fixed' in one direction"
+  ],
+  "tags": [
+    "Geometry",
+    "Point"
+  ],
+  "boundingBox": [
+    -1,
+    2,
+    2,
+    -1
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/point-fixed-in-one-direction",
+  "steps": [
+    {
+      "title": "Point 'fixed' in one direction",
+      "detail": "and are free points. Whenever the board is updated, e.g. after a drag event, the x-coordinate of is set to and the y-coordinate of is set to . Therefore, moves on the vertical line through , moves on the horizontal line through ."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}

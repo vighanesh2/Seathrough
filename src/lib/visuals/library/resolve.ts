@@ -15,6 +15,10 @@ import {
   makeTopicKey,
 } from "@/lib/visuals/library/topicKey";
 import { topicVisualPlanFor } from "@/lib/topics/plan";
+import {
+  strongFigurePlan,
+  withCompanionFigure,
+} from "@/lib/visuals/companionFigure";
 import { decideVisual, type VisualTriggerResult } from "@/lib/triggers/visualTrigger";
 import { visualStableKey } from "@/lib/visuals/router";
 import { visualPlanSchema, type VisualPlan } from "@/lib/visuals/types";
@@ -24,6 +28,8 @@ export type ResolveVisualInput = {
   beat: LessonBeatParsed;
   activeVisualKey?: string;
   hasVisual: boolean;
+  /** Prior lesson / root prompt so follow-ups can rematch the same topic. */
+  topicHint?: string;
 };
 
 /**
@@ -43,13 +49,44 @@ export async function resolveVisualWithLibrary(
   const topicPlan = topicVisualPlanFor(
     input.prompt,
     input.beat.conceptKey,
-    input.beat.narration,
+    input.topicHint,
   );
   if (topicPlan) {
     return keepIfSame(
       input.activeVisualKey,
       topicPlan,
       `topic:${topicPlan.topicId}`,
+    );
+  }
+
+  // A later beat's concept key / LLM visual must not replace a live
+  // interactive with the generic function icon.
+  if (input.hasVisual && input.activeVisualKey?.startsWith("jsxgraph:")) {
+    const locked = topicVisualPlanFor(input.prompt);
+    if (locked) {
+      return keepIfSame(
+        input.activeVisualKey,
+        locked,
+        `topic-lock:${locked.topicId}`,
+      );
+    }
+    return {
+      action: "keep",
+      plan: null,
+      reason: "keep-jsxgraph-board",
+    };
+  }
+
+  // Offline diagram pack (janosh / Commons / curated SVGs) before pen-only.
+  const figure = strongFigurePlan(
+    input.prompt,
+    input.beat.highlight ?? input.beat.conceptKey,
+  );
+  if (figure) {
+    return keepIfSame(
+      input.activeVisualKey,
+      figure,
+      `figure:${figure.assetId}`,
     );
   }
 
@@ -60,7 +97,10 @@ export async function resolveVisualWithLibrary(
   );
   if (heuristic) {
     const parsedH = visualPlanSchema.safeParse(heuristic);
-    const plan = parsedH.success ? parsedH.data : heuristic;
+    const plan = withCompanionFigure(
+      parsedH.success ? parsedH.data : heuristic,
+      input.prompt,
+    );
     await rememberVisualLibrary({
       topicKey,
       displayLabel:
@@ -87,7 +127,11 @@ export async function resolveVisualWithLibrary(
   const quality = classifyVisualPlan(base.plan);
 
   if (quality === "curated") {
-    return keepIfSame(input.activeVisualKey, base.plan, `curated:${base.reason}`);
+    return keepIfSame(
+      input.activeVisualKey,
+      withCompanionFigure(base.plan, input.prompt),
+      `curated:${base.reason}`,
+    );
   }
 
   const cached = await lookupVisualLibrary(topicKey);
@@ -126,6 +170,8 @@ export async function resolveVisualWithLibrary(
         routed: base.plan,
       });
   }
+
+  plan = withCompanionFigure(plan, input.prompt);
 
   const parsedLearned = visualPlanSchema.safeParse(plan);
   if (parsedLearned.success) plan = parsedLearned.data;

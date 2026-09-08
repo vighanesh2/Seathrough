@@ -1,0 +1,34 @@
+{
+  "id": "binomial-distribution",
+  "title": "Binomial distribution",
+  "summary": "In general, if the random variable follows the binomial distribution with parameters and , we write . The probability of getting exactly successes in n independent Bernoulli trials is given by the probability mass function:\n\nfor and else.\n\nFrom a technical point of view, this example uses two boards which are connected by .",
+  "formula": "",
+  "aliases": [
+    "binomial distribution",
+    "jsxgraph binomial distribution"
+  ],
+  "tags": [
+    "Calculus",
+    "Charts and data",
+    "Statistics",
+    "Technical"
+  ],
+  "boundingBox": [
+    -0.3,
+    0,
+    1.3,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/binomial-distribution",
+  "steps": [
+    {
+      "title": "Binomial distribution",
+      "detail": "In general, if the random variable follows the binomial distribution with parameters and , we write . The probability of getting exactly successes in n independent Bernoulli trials is given by the probability mass function:"
+    },
+    {
+      "title": "Explore further",
+      "detail": "for and else."
+    }
+  ]
+}

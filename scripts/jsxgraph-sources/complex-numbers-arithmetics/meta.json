@@ -1,0 +1,32 @@
+{
+  "id": "complex-numbers-arithmetics",
+  "title": "Complex numbers arithmetics",
+  "summary": "Using the anonymous functions capsules the variables to that anonymous functions. This allows us to use the same variable names in one page for multiple boards.",
+  "formula": "",
+  "aliases": [
+    "complex numbers arithmetics",
+    "jsxgraph complex numbers arithmetics"
+  ],
+  "tags": [
+    "Basic calculus",
+    "Calculus"
+  ],
+  "boundingBox": [
+    -6,
+    6,
+    8,
+    -4
+  ],
+  "keepAspectRatio": true,
+  "sourceUrl": "https://jsxgraph.org/share/example/complex-numbers-arithmetics",
+  "steps": [
+    {
+      "title": "Complex numbers arithmetics",
+      "detail": "Using the anonymous functions capsules the variables to that anonymous functions. This allows us to use the same variable names in one page for multiple boards."
+    },
+    {
+      "title": "Interact",
+      "detail": "Drag free points, gliders, and sliders on the board to see how the figure updates."
+    }
+  ]
+}
