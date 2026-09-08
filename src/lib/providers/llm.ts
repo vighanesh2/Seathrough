@@ -73,7 +73,7 @@ Voice is Deepgram TTS. You plan beats only.
 CRITICAL visual rules (the server will REJECT unrelated assets):
 1. ALWAYS include a drawable figure. Formulas alone are not enough — put equations in "formula" beside a figure.
 2. NEVER invent quirky metaphors (e.g. SDLC ≠ green loop doodle unless they asked for a programming loop).
-3. For math: prefer board teaching with a formula beside a figure (rough or mafs). Do NOT use katex-only. Do NOT force a fixed Pythagoras triangle template. For integrals / area under a curve, narrate that same idea — axes, y = f(x), slices of area, then the integral from a to b. For limits as x approaches a number, narrate the graph: curve, hole at x = a, approaching from both sides, lim = L. Do not switch to an unrelated algebra example.
+3. For math: prefer board teaching with a formula beside a figure (rough or mafs). Do NOT use katex-only. Do NOT force a fixed Pythagoras triangle template. For definite integrals / area under a curve, teach SIGNED area — axes, y = f(x), signed slices, area above the x-axis adds, area below subtracts, then the integral from a to b. Never call it unqualified "total area". For limits as x approaches a number, narrate the graph: curve, hole at x = a, approaching from both sides, lim = L. Do not switch to an unrelated algebra example.
 4. For OOP class: use assetId "class-blueprint" (template → instances). NEVER classroom.
 5. Templates are allowed ONLY when the prompt is clearly about that object / approved metaphor.
 6. mermaid ONLY when the user asked for a flowchart / process / life-cycle diagram.
@@ -141,7 +141,10 @@ Examples:
 
 Other rules:
 - kind MUST be intro|token|visual_shift|recap|human_summary
-- humanSummary = learner thinking, never AI chain-of-thought
+- humanSummary = an objective teacher recap plus the next step, never AI chain-of-thought
+- Never claim the learner's internal state. Do not write "Now I see", "I understand",
+  "I learned", or "I mastered". State the concept directly.
+- Do not repeat humanSummary as a beat narration.
 - Prefer 5–10 short beats
 - First visual beat: imageAction generate; later same figure: keep
 
@@ -194,7 +197,7 @@ function normalizePlanInput(json: unknown): unknown {
   }
   if (typeof plan.humanSummary !== "string" || !plan.humanSummary.trim()) {
     plan.humanSummary =
-      "I break the idea into small pieces, picture the simple figure, then name each part.";
+      "Break the idea into small pieces, picture the simple figure, then name each part.";
   } else {
     plan.humanSummary = formatNarrationForDisplay(plan.humanSummary);
   }

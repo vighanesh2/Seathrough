@@ -5,6 +5,7 @@ import type { VisualAction } from "@/lib/visuals/types";
  * Not art — decides WHICH asset or process diagram to show for abstract prompts.
  * Grow by adding rows; do not hardcode topics in the router.
  */
+
 export type MetaphorEntry = {
   id: string;
   /** Phrases matched against the user prompt (case-insensitive) */

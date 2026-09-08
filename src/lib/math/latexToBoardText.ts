@@ -3,6 +3,13 @@
  * The draw engine cannot render KaTeX; this keeps equations legible.
  */
 
+const KATEX_UNSUPPORTED_SPACES = /[\u00a0\u202f\u2009\u200a\u200b\ufeff]/g;
+
+/** Remove Unicode spacing characters that KaTeX warns about or cannot measure. */
+export function normalizeKatexSource(input: string): string {
+  return input.replace(KATEX_UNSUPPORTED_SPACES, " ").replace(/\s+/g, " ").trim();
+}
+
 const SIMPLE_MACROS: Record<string, string> = {
   lim: "lim",
   int: "∫",

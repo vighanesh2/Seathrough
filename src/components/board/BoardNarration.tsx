@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { formatNarrationForDisplay } from "@/lib/math/formatNarrationForDisplay";
+import {
+  formatNarrationForDisplay,
+  sameNarrationText,
+} from "@/lib/math/formatNarrationForDisplay";
 
 export type BoardNarrationLine = {
   id: string;
@@ -42,8 +45,23 @@ export function BoardNarration({
     el.scrollTop = el.scrollHeight;
   }, [lines, codeBuffer]);
 
-  const empty = lines.length === 0 && !codeBuffer?.trim();
   const isSide = placement === "side";
+  const visibleLines = lines.reduce<BoardNarrationLine[]>((kept, line) => {
+    const text = displayText(line.text);
+    if (!text) return kept;
+    if (line.kind === "summary") {
+      const duplicateIndex = kept.findIndex(
+        (prior) =>
+          prior.kind !== "student" &&
+          prior.kind !== "error" &&
+          sameNarrationText(prior.text, text),
+      );
+      if (duplicateIndex >= 0) kept.splice(duplicateIndex, 1);
+    }
+    kept.push({ ...line, text });
+    return kept;
+  }, []);
+  const empty = visibleLines.length === 0 && !codeBuffer?.trim();
 
   return (
     <aside
@@ -82,8 +100,8 @@ export function BoardNarration({
           </p>
         ) : null}
 
-        {lines.map((line) => {
-          const text = displayText(line.text);
+        {visibleLines.map((line) => {
+          const text = line.text;
 
           if (line.kind === "error") {
             return (

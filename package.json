@@ -15,7 +15,9 @@
     "smoke:modes": "npx --yes esbuild scripts/smoke-modes.ts --bundle --platform=node --outfile=/tmp/smoke-modes.js && node /tmp/smoke-modes.js",
     "smoke:tutor-sync": "npx --yes esbuild scripts/smoke-tutor-sync.ts --bundle --platform=node --outfile=/tmp/smoke-tutor-sync.js && node /tmp/smoke-tutor-sync.js",
     "smoke:scene-explain": "npx --yes esbuild scripts/smoke-scene-explain.ts --bundle --platform=node --outfile=/tmp/smoke-scene.js && node /tmp/smoke-scene.js",
-    "smoke:topics": "npx --yes esbuild scripts/smoke-topics.ts --bundle --platform=node --outfile=/tmp/smoke-topics.js && node /tmp/smoke-topics.js"
+    "smoke:topics": "npx --yes esbuild scripts/smoke-topics.ts --bundle --platform=node --outfile=/tmp/smoke-topics.js && node /tmp/smoke-topics.js",
+    "smoke:token-compression": "npx --yes esbuild scripts/smoke-token-compression.ts --bundle --platform=node --outfile=/tmp/smoke-token-compression.js && node /tmp/smoke-token-compression.js",
+    "eval:token-compression-gold": "npx --yes esbuild scripts/eval-token-compression-gold.ts --bundle --platform=node --outfile=/tmp/eval-token-compression-gold.js && node --env-file=.env.local /tmp/eval-token-compression-gold.js"
   },
   "dependencies": {
     "@excalidraw/excalidraw": "^0.18.1",

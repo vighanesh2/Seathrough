@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import katex from "katex";
 import "katex/dist/katex.min.css";
+import { normalizeKatexSource } from "@/lib/math/latexToBoardText";
 import {
   BoardNarration,
   type BoardNarrationLine,
@@ -413,13 +414,14 @@ function FormulaStrip({
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!ref.current) return;
+    const normalizedSource = normalizeKatexSource(source);
     try {
-      katex.render(source, ref.current, {
+      katex.render(normalizedSource, ref.current, {
         throwOnError: false,
         displayMode: true,
       });
     } catch {
-      ref.current.textContent = source;
+      ref.current.textContent = normalizedSource;
     }
   }, [source, playKey]);
 

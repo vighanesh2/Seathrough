@@ -168,19 +168,19 @@ function heuristicBoardScript(
       renderer: "board_script",
       formula: "\\int_a^b f(x) dx",
       boardScript: {
-        title: "Area under the curve",
-        misconception: "An integral is only a formula to memorize",
+        title: "Signed area from a to b",
+        misconception: "A definite integral always adds ordinary area",
         steps: [
           {
             type: "write",
             id: "e1",
-            text: "An integral measures the area under a curve.",
+            text: "A definite integral measures signed area.",
             style: "plain",
             beat: 1,
           },
           {
             type: "note",
-            text: "Look at the region from x = a to x = b.",
+            text: "Look between the curve and x-axis, from x = a to x = b.",
             beat: 1,
           },
           {
@@ -204,25 +204,25 @@ function heuristicBoardScript(
           },
           {
             type: "note",
-            text: "Each slice has area f(x) times a little dx.",
+            text: "Each slice contributes signed area f(x) times a little dx.",
             beat: 3,
           },
           {
             type: "write",
             id: "e4",
-            text: "Add the slices to get the total area.",
+            text: "Above the x-axis adds; below the x-axis subtracts.",
             style: "plain",
             beat: 4,
           },
           {
             type: "note",
-            text: "Thinner slices get closer to the true area.",
+            text: "Thinner slices approach the signed-area sum.",
             beat: 4,
           },
           {
             type: "write",
             id: "e5",
-            text: "integral from a to b of f(x) dx = that area",
+            text: "integral from a to b of f(x) dx = signed area",
             style: "emphasis",
             beat: 5,
           },

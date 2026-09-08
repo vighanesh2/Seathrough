@@ -209,7 +209,12 @@ export function PromptBar({
       className="flex w-full flex-col gap-1.5"
       onSubmit={(e) => {
         e.preventDefault();
-        if (!disabled) onSubmit();
+        if (disabled) return;
+        // Voice and typing intentionally share onSubmit. Freeze the visible
+        // transcript first so late recognition events cannot overwrite Pipe A's
+        // clarified or rewritten prompt while the lesson stream is running.
+        stopListening();
+        onSubmit();
       }}
     >
       <div className="flex w-full items-stretch gap-2">

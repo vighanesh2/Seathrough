@@ -14,6 +14,8 @@ type Body = {
   conversationId?: string;
   visualSummary?: string;
   boardBottomY?: number;
+  /** When the user picked a Pipe A clarify option (or confirmed a rewrite). */
+  confirmedTightAsk?: string;
 };
 
 function sseEncode(event: StreamEvent): string {
@@ -94,6 +96,7 @@ export async function POST(request: Request) {
               ? Math.max(0, body.boardBottomY)
               : undefined,
           userId: user?.id ?? null,
+          confirmedTightAsk: body.confirmedTightAsk?.trim() || undefined,
         })) {
           send(event);
           if (event.type === "error" || event.type === "done") {
