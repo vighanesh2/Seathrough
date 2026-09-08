@@ -189,6 +189,14 @@ export function LessonShell() {
     [],
   );
   const [chatsLoading, setChatsLoading] = useState(true);
+  const [clarify, setClarify] = useState<{
+    message: string;
+    options: Array<{ id: string; label: string; tightAsk: string }>;
+    draftPrompt: string;
+    mode: "new" | "follow_up";
+  } | null>(null);
+  const sawClarifyRef = useRef(false);
+  const streamModeRef = useRef<"new" | "follow_up">("new");
   const [, send] = useMachine(lessonMachine);
   const narrationSeqRef = useRef(0);
   const visualPlanRef = useRef<VisualPlan | null>(null);
@@ -514,6 +522,43 @@ export function LessonShell() {
       case "human_summary":
         pushNarration(event.text, "summary");
         break;
+      case "tight_ask":
+        // Pipe A output is internal contract — do not dump it into the teacher pane.
+        // Surface the rewrite in the prompt box (heyClicky) + title as content name.
+        setClarify(null);
+        {
+          const rewritten = (
+            event.displayRewrite ?? event.tightAsk
+          ).trim();
+          if (rewritten) {
+            setPrompt(rewritten);
+          }
+          if (event.contentName.trim()) {
+            setTitle(event.contentName.trim());
+          }
+        }
+        break;
+      case "clarify":
+        sawClarifyRef.current = true;
+        {
+          // Pause: keep the messy draft in the prompt box until they pick a chip.
+          const draftKept = event.draftPrompt?.trim() || prompt;
+          setClarify({
+            message: event.message,
+            options: event.options,
+            draftPrompt: draftKept,
+            mode: streamModeRef.current,
+          });
+          setPrompt(draftKept);
+          pushNarration(event.message, "narration");
+          if (event.conversationId) {
+            setConversationId(event.conversationId);
+            conversationIdRef.current = event.conversationId;
+          }
+        }
+        // No lesson ran — refund the quota slot for this attempt.
+        cancelQuestion();
+        break;
       case "error": {
         const friendly = toUserFacingError(event.message);
         send({ type: "ERROR", message: friendly });
@@ -525,8 +570,14 @@ export function LessonShell() {
         send({ type: "COMPLETE" });
         if (event.conversationId) setConversationId(event.conversationId);
         if (event.lessonId) setLessonId(event.lessonId);
-        setStatus("done");
-        setPrompt("");
+        if (sawClarifyRef.current) {
+          sawClarifyRef.current = false;
+          setStatus("idle");
+        } else {
+          setStatus("done");
+          // Keep Pipe A's rewritten ask in the prompt box (wow factor).
+          // User can edit it for a follow-up.
+        }
         void refreshConversations();
         break;
       default:
@@ -557,6 +608,8 @@ export function LessonShell() {
     setConversationId(undefined);
     conversationIdRef.current = undefined;
     setLessonId(undefined);
+    setClarify(null);
+    sawClarifyRef.current = false;
     drawQueue.clear();
     setDrawSessionKey((k) => k + 1);
     setBoardCanvasHeight(600);
@@ -583,10 +636,12 @@ export function LessonShell() {
   async function runStream(
     mode: "new" | "follow_up",
     text: string,
-    options?: { onAbort?: () => void },
+    options?: { onAbort?: () => void; confirmedTightAsk?: string },
   ) {
     const controller = new AbortController();
     abortRef.current = controller;
+    streamModeRef.current = mode;
+    sawClarifyRef.current = false;
     let sawTerminal = false;
     let sawProgress = false;
 
@@ -609,6 +664,7 @@ export function LessonShell() {
         boardBottomY:
           mode === "follow_up" ? boardBottomYRef.current : undefined,
         accessToken,
+        confirmedTightAsk: options?.confirmedTightAsk,
         onEvent: async (event) => {
           if (event.type !== "error") {
             sawProgress = true;
@@ -649,29 +705,70 @@ export function LessonShell() {
     }
   }
 
-  async function startLessonWithText(trimmed: string) {
+  async function startLessonWithText(
+    trimmed: string,
+    confirmedTightAsk?: string,
+  ) {
     if (!trimmed) return;
     if (!beginQuestion()) return;
 
+    const visibleAsk = confirmedTightAsk?.trim() || trimmed;
     resetLesson();
-    send({ type: "START", title: trimmed });
+    setClarify(null);
+    // HeyClicky-style: show the tight ask in the prompt box immediately
+    // (critical for clarify picks — same as rewrite-and-run).
+    setPrompt(visibleAsk);
+    send({ type: "START", title: visibleAsk });
     setStatus("running");
-    await runStream("new", trimmed, { onAbort: cancelQuestion });
+    await runStream("new", trimmed, {
+      onAbort: cancelQuestion,
+      confirmedTightAsk: confirmedTightAsk?.trim() || undefined,
+    });
   }
 
   async function startLesson() {
     await startLessonWithText(prompt.trim());
   }
 
-  async function askFollowUp() {
+  async function askFollowUp(confirmedTightAsk?: string) {
     const trimmed = prompt.trim();
     if (!trimmed || !conversationIdRef.current) return;
     if (!beginQuestion()) return;
 
+    const visibleAsk = confirmedTightAsk?.trim() || trimmed;
     prepareSoftContinue();
-    send({ type: "START", title: trimmed });
+    setClarify(null);
+    setPrompt(visibleAsk);
+    send({ type: "START", title: visibleAsk });
     setStatus("running");
-    await runStream("follow_up", trimmed, { onAbort: cancelQuestion });
+    await runStream("follow_up", trimmed, {
+      onAbort: cancelQuestion,
+      confirmedTightAsk: confirmedTightAsk?.trim() || undefined,
+    });
+  }
+
+  async function pickClarifyOption(option: {
+    id: string;
+    label: string;
+    tightAsk: string;
+  }) {
+    if (!clarify) return;
+    const draft = clarify.draftPrompt.trim() || option.tightAsk;
+    const mode = clarify.mode;
+    const tightAsk = option.tightAsk.trim() || option.label.trim();
+    if (!tightAsk) return;
+
+    setClarify(null);
+    // Same UX as Java-class rewrite: prompt box shows the chosen tight ask now.
+    setPrompt(tightAsk);
+    setTitle(option.label.trim() || tightAsk);
+
+    if (mode === "follow_up" && conversationIdRef.current) {
+      await askFollowUp(tightAsk);
+      return;
+    }
+    // Keep sloppy draft as server `prompt`; confirmedTightAsk drives Pipe A + UI.
+    await startLessonWithText(draft, tightAsk);
   }
 
   function onPromptSubmit() {
@@ -935,6 +1032,25 @@ export function LessonShell() {
             }
             submitLabel={canFollowUp ? "Ask" : "Start"}
           />
+          {clarify ? (
+            <div className="mt-3 space-y-2 border-t border-board-edge/40 pt-3">
+              <p className="text-sm text-ink/80">{clarify.message}</p>
+              <div className="flex flex-wrap gap-2">
+                {clarify.options.map((option) => (
+                  <Button
+                    key={option.id}
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => void pickClarifyOption(option)}
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </AppHeader>
 
         <div className="relative min-h-0 flex-1">
@@ -973,10 +1089,10 @@ export function LessonShell() {
             <ThinkingLoader
               variant="overlay"
               phrases={[
-                "Thinking",
+                "Tightening the ask",
                 "Planning the explanation",
+                "Cutting Claudish",
                 "Setting up the board",
-                "Almost ready",
               ]}
             />
           ) : null}
