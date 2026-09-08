@@ -48,7 +48,7 @@ export const MODE_UI: Record<ModeId, ModeUi> = {
   },
   "figures-3d": {
     icon: HeartPulse,
-    hint: "Explore the heart and human eye in 3D.",
+    hint: "Explore the heart, eye, brain, and kidney in 3D.",
     tone: "teal",
   },
   "automatic-drawing": {

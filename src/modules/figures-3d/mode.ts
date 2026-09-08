@@ -1,18 +1,20 @@
 import type { ModeDefinition } from "@/modes/types";
 
-/** Interactive 3D heart and eye anatomy. */
+/** Interactive procedural anatomy figures. */
 export const figures3dMode: ModeDefinition = {
   id: "figures-3d",
   href: "/3d-figures",
   navLabel: "Human anatomy",
   title: "Human anatomy",
-  description: "Explore the heart and the human eye in 3D, then ask what a part does.",
+  description:
+    "Explore the heart, eye, brain, and kidney in 3D, then ask what a part does.",
   kind: "learning",
   group: "studio",
   order: 20,
   enabled: true,
+  badge: "beta",
   usesWhiteboard: false,
   metaTitle: "Human anatomy | SeeThrough",
   metaDescription:
-    "Explore animated heart and eye models with clear answers.",
+    "Explore animated heart, eye, brain, and kidney models with clear answers.",
 };

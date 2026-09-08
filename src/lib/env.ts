@@ -94,6 +94,12 @@ export function getDeepgramConfig() {
   };
 }
 
+export function getTavilyConfig() {
+  return {
+    apiKey: optional("TAVILY_API_KEY"),
+  };
+}
+
 export function getSupabaseConfig() {
   return {
     url: required("NEXT_PUBLIC_SUPABASE_URL"),
@@ -107,6 +113,7 @@ export function envPresence() {
     LLM_PROVIDER: optional("LLM_PROVIDER") ?? "groq",
     GROQ_API_KEY: Boolean(optional("GROQ_API_KEY")),
     OPENAI_API_KEY: Boolean(optional("OPENAI_API_KEY")),
+    TAVILY_API_KEY: Boolean(optional("TAVILY_API_KEY")),
     DEEPGRAM_API_KEY: Boolean(optional("DEEPGRAM_API_KEY")),
     NEXT_PUBLIC_SUPABASE_URL: Boolean(optional("NEXT_PUBLIC_SUPABASE_URL")),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: Boolean(optional("NEXT_PUBLIC_SUPABASE_ANON_KEY")),

@@ -233,6 +233,14 @@ export function ThreeBoard({
   }, []);
 
   useEffect(() => {
+    const canvas = mountRef.current?.querySelector("canvas");
+    canvas?.setAttribute(
+      "aria-label",
+      `${plan.title} interactive 3D viewport`,
+    );
+  }, [plan.title]);
+
+  useEffect(() => {
     if (!rendererReady || !sceneRef.current) return;
     const scene = sceneRef.current;
     let cancelled = false;
@@ -328,11 +336,11 @@ export function ThreeBoard({
 
   const availableStructures = useMemo(
     () =>
-      plan.id === "cardiopulmonary" || plan.id === "eye"
-        ? structuresForReveal(
-            plan.reveal,
-            plan.id === "eye" ? "eye" : "cardiopulmonary",
-          )
+      plan.id === "cardiopulmonary" ||
+      plan.id === "eye" ||
+      plan.id === "brain" ||
+      plan.id === "kidney"
+        ? structuresForReveal(plan.reveal, plan.id)
         : [],
     [plan.id, plan.reveal],
   );

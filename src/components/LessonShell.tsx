@@ -11,6 +11,12 @@ import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
 import { AskMeMcqDialog } from "@/components/AskMeMcqDialog";
 import { PaceControls } from "@/components/PaceControls";
+import {
+  latestPipelineEvent,
+  PipelineActivity,
+  pipelineStatusLabel,
+  type PipelineRecords,
+} from "@/components/PipelineActivity";
 import { PromptBar } from "@/components/PromptBar";
 import { SceneAgentRail } from "@/components/scene-explain/SceneAgentRail";
 import { SceneViewport } from "@/components/scene-explain/SceneViewport";
@@ -47,7 +53,7 @@ import {
 import { clearPendingPrompt, takePendingPrompt } from "@/lib/usage/pendingPrompt";
 import { visualStableKey } from "@/lib/visuals/router";
 import type { VisualPlan } from "@/lib/visuals/types";
-import type { PaceSpeed, StreamEvent } from "@/types/lesson";
+import type { LessonSource, PaceSpeed, StreamEvent } from "@/types/lesson";
 import {
   threeSceneFromChoiceOrNull,
   type ThreeScenePlan,
@@ -93,8 +99,13 @@ function turnsToNarration(
   turns: Array<{ role: string; content: string }>,
 ): BoardNarrationLine[] {
   const lines: BoardNarrationLine[] = [];
+  const lastStudentIndex = turns.findLastIndex(
+    (turn) => turn.role === "student",
+  );
+  const currentLessonTurns =
+    lastStudentIndex >= 0 ? turns.slice(lastStudentIndex) : turns;
   let i = 0;
-  for (const turn of turns) {
+  for (const turn of currentLessonTurns) {
     i += 1;
     if (turn.role === "student") {
       lines.push({ id: `t-${i}`, text: turn.content, kind: "student" });
@@ -203,9 +214,13 @@ export function LessonShell() {
   const [boardNarration, setBoardNarration] = useState<BoardNarrationLine[]>(
     [],
   );
+  const [lessonSources, setLessonSources] = useState<LessonSource[]>([]);
+  const [pipelineRecords, setPipelineRecords] = useState<PipelineRecords>({});
+  const [pipelineExpanded, setPipelineExpanded] = useState(true);
   const [codeBuffer, setCodeBuffer] = useState("");
+  const [followUpPrompt, setFollowUpPrompt] = useState("");
   const [conversationId, setConversationId] = useState<string | undefined>();
-  const [, setLessonId] = useState<string | undefined>();
+  const [lessonId, setLessonId] = useState<string | undefined>();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [conversations, setConversations] = useState<ConversationListItem[]>(
     [],
@@ -245,15 +260,12 @@ export function LessonShell() {
   const sceneSessionIdRef = useRef(sceneSessionId);
   sceneSessionIdRef.current = sceneSessionId;
 
-  const canFollowUp =
-    !sceneMode &&
-    Boolean(conversationId) &&
-    (status === "done" || status === "paused" || status === "error");
-
   const canAskMe =
     !sceneMode &&
     status !== "idle" &&
     Boolean(conversationId || title || boardNarration.length > 0);
+  const showFollowUp =
+    !sceneMode && Boolean(conversationId && lessonId) && status !== "idle";
 
   const askMeNarration = useMemo(
     () =>
@@ -280,6 +292,10 @@ export function LessonShell() {
   }, [send]);
 
   const abortRef = useRef<AbortController | null>(null);
+  const historyAbortRef = useRef<AbortController | null>(null);
+  const lessonGenerationRef = useRef(0);
+  const lessonSubmitLockedRef = useRef(false);
+  const followUpSubmitLockedRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const speedRef = useRef<PaceSpeed>(1);
   const pausedRef = useRef(false);
@@ -520,16 +536,27 @@ export function LessonShell() {
     });
   }
 
-  async function handleEvent(event: StreamEvent) {
+  async function handleEvent(event: StreamEvent, generation: number) {
     await waitIfPaused();
+    if (generation !== lessonGenerationRef.current) return;
 
     switch (event.type) {
+      case "pipeline_status":
+        setPipelineRecords((previous) => ({
+          ...previous,
+          [event.stage]: event,
+        }));
+        if (event.state === "started") setPipelineExpanded(true);
+        break;
       case "student_message":
         pushNarration(event.text, "student");
         if (event.conversationId) {
           setConversationId(event.conversationId);
           conversationIdRef.current = event.conversationId;
         }
+        break;
+      case "sources":
+        setLessonSources(event.sources);
         break;
       case "plan_meta":
         setTitle(event.title);
@@ -682,6 +709,7 @@ export function LessonShell() {
         if (event.conversationId) setConversationId(event.conversationId);
         if (event.lessonId) setLessonId(event.lessonId);
         setStatus("done");
+        setPipelineExpanded(false);
         setPrompt("");
         void refreshConversations();
         break;
@@ -691,6 +719,11 @@ export function LessonShell() {
   }
 
   function resetLesson() {
+    lessonSubmitLockedRef.current = false;
+    followUpSubmitLockedRef.current = false;
+    lessonGenerationRef.current += 1;
+    historyAbortRef.current?.abort();
+    historyAbortRef.current = null;
     abortRef.current?.abort();
     abortRef.current = null;
     audioRef.current?.pause();
@@ -710,12 +743,17 @@ export function LessonShell() {
     setBeatOrder(1);
     setTotalBeats(undefined);
     setBoardNarration([]);
+    setLessonSources([]);
+    setPipelineRecords({});
+    setPipelineExpanded(true);
     narrationSeqRef.current = 0;
     setCodeBuffer("");
+    setFollowUpPrompt("");
     setConversationId(undefined);
     conversationIdRef.current = undefined;
     setLessonId(undefined);
     drawQueue.clear();
+    drawClockRef.current = 0;
     setDrawSessionKey((k) => k + 1);
     setBoardCanvasHeight(600);
     setBoardScrollToY(null);
@@ -736,6 +774,27 @@ export function LessonShell() {
     pausedRef.current = false;
     resumePauseRef.current?.();
     resumePauseRef.current = null;
+    setBoardNarration([]);
+    setLessonSources([]);
+    narrationSeqRef.current = 0;
+    setCodeBuffer("");
+    setPipelineRecords({});
+    setPipelineExpanded(true);
+  }
+
+  function prepareFollowUp() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+    audioRef.current?.pause();
+    audioRef.current = null;
+    penCues.stopWaiting();
+    pausedRef.current = false;
+    resumePauseRef.current?.();
+    resumePauseRef.current = null;
+    setCodeBuffer("");
+    setDrawSpeech(null);
+    setPipelineRecords({});
+    setPipelineExpanded(true);
   }
 
   async function runStream(
@@ -743,6 +802,7 @@ export function LessonShell() {
     text: string,
     options?: { onAbort?: () => void },
   ) {
+    const generation = lessonGenerationRef.current;
     const controller = new AbortController();
     abortRef.current = controller;
     let sawTerminal = false;
@@ -768,13 +828,19 @@ export function LessonShell() {
           mode === "follow_up" ? boardBottomYRef.current : undefined,
         accessToken,
         onEvent: async (event) => {
+          if (
+            generation !== lessonGenerationRef.current ||
+            abortRef.current !== controller
+          ) {
+            return;
+          }
           if (event.type !== "error") {
             sawProgress = true;
           }
           if (event.type === "error" || event.type === "done") {
             sawTerminal = true;
           }
-          await handleEvent(event);
+          await handleEvent(event, generation);
         },
       });
       if (controller.signal.aborted) {
@@ -808,10 +874,17 @@ export function LessonShell() {
   }
 
   async function startLessonWithText(trimmed: string) {
-    if (!trimmed) return;
+    if (
+      !trimmed ||
+      statusRef.current !== "idle" ||
+      lessonSubmitLockedRef.current
+    ) {
+      return;
+    }
     if (!beginQuestion()) return;
 
     resetLesson();
+    lessonSubmitLockedRef.current = true;
     send({ type: "START", title: trimmed });
     setStatus("running");
     await runStream("new", trimmed, { onAbort: cancelQuestion });
@@ -822,14 +895,31 @@ export function LessonShell() {
   }
 
   async function askFollowUp() {
-    const trimmed = prompt.trim();
-    if (!trimmed || !conversationIdRef.current) return;
+    const text = followUpPrompt.trim();
+    if (
+      !text ||
+      !conversationIdRef.current ||
+      !lessonId ||
+      followUpSubmitLockedRef.current ||
+      statusRef.current === "running" ||
+      statusRef.current === "paused"
+    ) {
+      return;
+    }
     if (!beginQuestion()) return;
 
-    prepareSoftContinue();
-    send({ type: "START", title: trimmed });
+    followUpSubmitLockedRef.current = true;
+    lessonGenerationRef.current += 1;
+    prepareFollowUp();
+    setFollowUpPrompt("");
+    send({ type: "RESET" });
+    send({ type: "START", title: title ?? text });
     setStatus("running");
-    await runStream("follow_up", trimmed, { onAbort: cancelQuestion });
+    try {
+      await runStream("follow_up", text, { onAbort: cancelQuestion });
+    } finally {
+      followUpSubmitLockedRef.current = false;
+    }
   }
 
   function persistSceneSnapshot(snapshot: {
@@ -912,10 +1002,6 @@ export function LessonShell() {
       void startSceneWithText(prompt.trim());
       return;
     }
-    if (canFollowUp) {
-      void askFollowUp();
-      return;
-    }
     void startLesson();
   }
 
@@ -925,11 +1011,18 @@ export function LessonShell() {
       openAuth("login");
       return;
     }
+    const generation = lessonGenerationRef.current + 1;
+    lessonGenerationRef.current = generation;
+    historyAbortRef.current?.abort();
+    const historyController = new AbortController();
+    historyAbortRef.current = historyController;
     setSceneMode(false);
+    setFollowUpPrompt("");
     prepareSoftContinue();
     try {
       const res = await fetch(`/api/conversations/${id}`, {
         headers: { Authorization: `Bearer ${accessToken}` },
+        signal: historyController.signal,
       });
       if (!res.ok) return;
       const data = (await res.json()) as {
@@ -938,6 +1031,7 @@ export function LessonShell() {
           rootPrompt: string;
           title?: string | null;
           lessonId?: string;
+          plan?: { sources?: LessonSource[] };
           turns: Array<{ role: string; content: string }>;
         };
         visualPlan?: VisualPlan | null;
@@ -950,6 +1044,13 @@ export function LessonShell() {
           threeScene: ThreeScenePlan | null;
         } | null;
       };
+      if (
+        historyController.signal.aborted ||
+        generation !== lessonGenerationRef.current ||
+        statusRef.current === "running"
+      ) {
+        return;
+      }
       const ctx = data.conversation;
       setConversationId(ctx.conversationId);
       conversationIdRef.current = ctx.conversationId;
@@ -959,6 +1060,7 @@ export function LessonShell() {
       );
       const lines = turnsToNarration(ctx.turns);
       setBoardNarration(lines);
+      setLessonSources(ctx.plan?.sources ?? []);
       narrationSeqRef.current = lines.length;
       setCodeBuffer("");
       setPrompt("");
@@ -1042,6 +1144,10 @@ export function LessonShell() {
       send({ type: "RESET" });
     } catch {
       // keep current view
+    } finally {
+      if (historyAbortRef.current === historyController) {
+        historyAbortRef.current = null;
+      }
     }
   }
 
@@ -1160,24 +1266,20 @@ export function LessonShell() {
               value={prompt}
               onChange={setPrompt}
               onSubmit={onPromptSubmit}
-              disabled={busy}
+              disabled={sceneMode ? busy : status !== "idle"}
               inputId={sceneMode ? "scene-prompt" : "topic-prompt"}
               inputLabel={sceneMode ? "3D scene prompt" : "Lesson question"}
               placeholder={
                 sceneMode
                   ? "Try “osmosis” or “how a comet orbits the sun”…"
-                  : canFollowUp
-                    ? "Ask a follow-up"
-                    : "What do you want to learn?"
+                  : "What do you want to learn?"
               }
               submitLabel={
                 sceneMode
                   ? scene.program
                     ? "Rebuild"
                     : "Build scene"
-                  : canFollowUp
-                    ? "Ask"
-                    : "Start lesson"
+                  : "Start lesson"
               }
             />
           }
@@ -1236,7 +1338,15 @@ export function LessonShell() {
               }}
             />
           }
-        />
+        >
+          {!sceneMode && status === "running" ? (
+            <PipelineActivity
+              records={pipelineRecords}
+              expanded={pipelineExpanded}
+              onToggle={() => setPipelineExpanded((value) => !value)}
+            />
+          ) : null}
+        </AppHeader>
 
         {sceneMode ? (
           <div className="relative flex min-h-0 flex-1 overflow-hidden">
@@ -1290,6 +1400,7 @@ export function LessonShell() {
               beatOrder={beatOrder}
               totalBeats={totalBeats}
               narrationLines={boardNarration}
+              sources={lessonSources}
               codeBuffer={codeBuffer}
               streaming={status === "running"}
               onDrawComplete={onDrawComplete}
@@ -1309,6 +1420,15 @@ export function LessonShell() {
               onDrawClock={(ms) => {
                 drawClockRef.current = ms;
               }}
+              followUpValue={followUpPrompt}
+              onFollowUpChange={setFollowUpPrompt}
+              onFollowUpSubmit={() => {
+                void askFollowUp();
+              }}
+              followUpDisabled={
+                status === "running" || status === "paused"
+              }
+              showFollowUp={showFollowUp}
             />
             {status === "running" &&
             !visualPlan &&
@@ -1317,12 +1437,9 @@ export function LessonShell() {
             boardNarration.length === 0 ? (
               <ThinkingLoader
                 variant="overlay"
-                phrases={[
-                  "Thinking",
-                  "Planning the explanation",
-                  "Setting up the board",
-                  "Almost ready",
-                ]}
+                label={pipelineStatusLabel(
+                  latestPipelineEvent(pipelineRecords),
+                )}
               />
             ) : null}
           </div>

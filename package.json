@@ -21,6 +21,9 @@
     "smoke:modes": "npx --yes esbuild scripts/smoke-modes.ts --bundle --platform=node --outfile=/tmp/smoke-modes.js && node /tmp/smoke-modes.js",
     "smoke:tutor-sync": "npx --yes esbuild scripts/smoke-tutor-sync.ts --bundle --platform=node --outfile=/tmp/smoke-tutor-sync.js && node /tmp/smoke-tutor-sync.js",
     "smoke:scene-explain": "npx --yes esbuild scripts/smoke-scene-explain.ts --bundle --platform=node --outfile=/tmp/smoke-scene.js && node /tmp/smoke-scene.js",
+    "smoke:grounding": "npx --yes esbuild scripts/smoke-grounding.ts --bundle --platform=node --outfile=/tmp/smoke-grounding.js && node /tmp/smoke-grounding.js",
+    "smoke:generated-visual": "npx --yes esbuild scripts/smoke-generated-visual.ts --bundle --platform=node --outfile=/tmp/smoke-generated-visual.js && node /tmp/smoke-generated-visual.js",
+    "smoke:pipeline-status": "npx --yes esbuild scripts/smoke-pipeline-status.ts --bundle --platform=node --outfile=/tmp/smoke-pipeline-status.js && node /tmp/smoke-pipeline-status.js",
     "smoke:topics": "npx --yes esbuild scripts/smoke-topics.ts --bundle --platform=node --outfile=/tmp/smoke-topics.js && node /tmp/smoke-topics.js"
   },
   "dependencies": {
@@ -48,6 +51,7 @@
     "react-dom": "19.2.4",
     "react-konva": "^19.2.5",
     "roughjs": "^4.6.6",
+    "sanitize-html": "^2.17.7",
     "shadcn": "^4.18.0",
     "tailwind-merge": "^3.6.0",
     "tesseract.js": "^7.0.0",
@@ -63,6 +67,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/sanitize-html": "^2.16.1",
     "@types/three": "^0.185.3",
     "@types/vivus": "^0.4.7",
     "eslint": "^9",

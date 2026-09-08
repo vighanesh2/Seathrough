@@ -4,12 +4,16 @@ import type {
   AnatomySource,
   AnatomyStructure,
   AnatomyStructureId,
+  BrainAnimationMode,
   CardiopulmonaryAnimationMode,
   EyeAnimationMode,
+  KidneyAnimationMode,
 } from "@/lib/anatomy/types";
 import {
+  BRAIN_ANIMATION_MODES,
   CARDIOPULMONARY_ANIMATION_MODES,
   EYE_ANIMATION_MODES,
+  KIDNEY_ANIMATION_MODES,
 } from "@/lib/anatomy/types";
 
 export const ANATOMY_SOURCES: Record<string, AnatomySource> = {
@@ -72,6 +76,30 @@ export const ANATOMY_SOURCES: Record<string, AnatomySource> = {
     title: "Neuroanatomy, Pupillary Light Reflexes and Pathway",
     publisher: "NCBI Bookshelf / StatPearls",
     url: "https://www.ncbi.nlm.nih.gov/books/NBK553169/",
+  },
+  brainAnatomy: {
+    id: "brain-anatomy",
+    title: "Neuroanatomy, Brain",
+    publisher: "NCBI Bookshelf / StatPearls",
+    url: "https://www.ncbi.nlm.nih.gov/books/NBK551718/",
+  },
+  cerebralLobes: {
+    id: "cerebral-lobes",
+    title: "Neuroanatomy, Cerebral Cortex",
+    publisher: "NCBI Bookshelf / StatPearls",
+    url: "https://www.ncbi.nlm.nih.gov/books/NBK537247/",
+  },
+  kidneyAnatomy: {
+    id: "kidney-anatomy",
+    title: "Anatomy, Abdomen and Pelvis, Kidneys",
+    publisher: "NCBI Bookshelf / StatPearls",
+    url: "https://www.ncbi.nlm.nih.gov/books/NBK482385/",
+  },
+  renalPhysiology: {
+    id: "renal-physiology",
+    title: "Physiology, Renal",
+    publisher: "NCBI Bookshelf / StatPearls",
+    url: "https://www.ncbi.nlm.nih.gov/books/NBK538339/",
   },
 };
 
@@ -137,11 +165,38 @@ export const EYE_STRUCTURES: AnatomyStructure[] = [
   s("visual-cortex", "Visual cortex", "Cortex", "neural", "The occipital cortex that interprets visual signals.", "Constructs the upright perceptual world from inverted retinal input.", 5, ["visual-pathway"]),
 ];
 
+export const BRAIN_STRUCTURES: AnatomyStructure[] = [
+  s("brain", "Brain", "Brain", "neural", "The central organ of the nervous system within the skull.", "Integrates sensory information, coordinates movement, and supports cognition and homeostasis.", 1, ["brain-anatomy"]),
+  s("cerebrum", "Cerebrum", "Cerebrum", "cerebral", "The largest part of the brain, formed by two cerebral hemispheres.", "Supports perception, voluntary action, language, memory, and higher cognition.", 1, ["brain-anatomy", "cerebral-lobes"]),
+  s("frontal-lobe", "Frontal lobe", "Frontal", "cerebral", "The anterior region of each cerebral hemisphere.", "Contributes to executive functions, planning, behavior, speech production, and voluntary motor control.", 2, ["cerebral-lobes"]),
+  s("parietal-lobe", "Parietal lobe", "Parietal", "cerebral", "The upper posterior region of the cerebral cortex.", "Integrates touch and body-position information and supports spatial processing.", 2, ["cerebral-lobes"]),
+  s("temporal-lobe", "Temporal lobe", "Temporal", "cerebral", "The lateral lower region of the cerebral cortex.", "Supports hearing, language comprehension, memory, and object recognition.", 2, ["cerebral-lobes"]),
+  s("occipital-lobe", "Occipital lobe", "Occipital", "cerebral", "The posterior region of the cerebral cortex.", "Contains primary and associated visual-processing regions.", 2, ["cerebral-lobes"]),
+  s("cerebellum", "Cerebellum", "Cerebellum", "neural", "The folded structure behind the brainstem.", "Coordinates timing, precision, balance, and motor learning.", 3, ["brain-anatomy"]),
+  s("brainstem", "Brainstem", "Brainstem", "neural", "The stalk connecting the cerebrum with the spinal cord.", "Relays signals and regulates vital automatic functions including breathing and arousal.", 3, ["brain-anatomy"]),
+  s("spinal-cord", "Spinal cord", "Spinal cord", "neural", "The main neural pathway extending below the brainstem.", "Carries sensory and motor signals between the brain and body.", 4, ["brain-anatomy"]),
+];
+
+export const KIDNEY_STRUCTURES: AnatomyStructure[] = [
+  s("kidney", "Kidney", "Kidney", "renal", "A paired bean-shaped organ in the posterior abdomen.", "Filters plasma, regulates fluid and electrolytes, and produces urine.", 1, ["kidney-anatomy", "renal-physiology"]),
+  s("renal-cortex", "Renal cortex", "Cortex", "renal", "The outer region beneath the kidney capsule.", "Contains renal corpuscles and portions of the nephron where filtration begins.", 2, ["kidney-anatomy"]),
+  s("renal-medulla", "Renal medulla", "Medulla", "renal", "The inner region organized into renal pyramids.", "Establishes concentration gradients and channels tubular fluid toward the papillae.", 2, ["kidney-anatomy", "renal-physiology"]),
+  s("renal-pelvis", "Renal pelvis", "Pelvis", "urinary", "The central funnel-shaped collecting space.", "Receives urine from the calyces and directs it into the ureter.", 3, ["kidney-anatomy"]),
+  s("renal-artery", "Renal artery", "Artery", "vascular", "The arterial supply entering the kidney at the hilum.", "Delivers blood that will be distributed to glomerular capillaries.", 3, ["kidney-anatomy", "renal-physiology"]),
+  s("renal-vein", "Renal vein", "Vein", "vascular", "The vein leaving the kidney at the hilum.", "Returns filtered blood to the inferior vena cava.", 3, ["kidney-anatomy"]),
+  s("ureter", "Ureter", "Ureter", "urinary", "The muscular tube descending from the renal pelvis.", "Propels urine from the kidney toward the bladder.", 3, ["kidney-anatomy"]),
+  s("nephron", "Nephron", "Nephron", "renal", "The microscopic functional unit of the kidney.", "Filters blood and modifies tubular fluid through reabsorption and secretion.", 4, ["renal-physiology"]),
+  s("glomerulus", "Glomerulus", "Glomerulus", "renal", "A tuft of capillaries within a renal corpuscle.", "Produces an ultrafiltrate of plasma across the filtration barrier.", 5, ["renal-physiology"]),
+  s("collecting-duct", "Collecting duct", "Collecting duct", "urinary", "The terminal tubular system receiving fluid from nephrons.", "Adjusts final water handling and carries urine through the medulla.", 5, ["renal-physiology"]),
+];
+
 export const STRUCTURE_BY_ID = Object.fromEntries(
-  [...CARDIOPULMONARY_STRUCTURES, ...EYE_STRUCTURES].map((structure) => [
-    structure.id,
-    structure,
-  ]),
+  [
+    ...CARDIOPULMONARY_STRUCTURES,
+    ...EYE_STRUCTURES,
+    ...BRAIN_STRUCTURES,
+    ...KIDNEY_STRUCTURES,
+  ].map((structure) => [structure.id, structure]),
 ) as Record<AnatomyStructureId, AnatomyStructure>;
 
 export const ANATOMY_MODE_LABELS: Record<AnatomyAnimationMode, string> = {
@@ -156,6 +211,11 @@ export const ANATOMY_MODE_LABELS: Record<AnatomyAnimationMode, string> = {
   "pupil-reflex": "Pupil reflex",
   photoreceptors: "Rods & cones",
   "neural-signal": "Signal to brain",
+  "sensory-processing": "Sensory processing",
+  "motor-control": "Motor control",
+  filtration: "Blood filtration",
+  reabsorption: "Tubular reabsorption",
+  "urine-flow": "Urine flow",
 };
 
 export const SCENE_MODE_SETS: Record<
@@ -164,16 +224,22 @@ export const SCENE_MODE_SETS: Record<
 > = {
   cardiopulmonary: CARDIOPULMONARY_ANIMATION_MODES,
   eye: EYE_ANIMATION_MODES,
+  brain: BRAIN_ANIMATION_MODES,
+  kidney: KIDNEY_ANIMATION_MODES,
 };
 
 export const SCENE_STRUCTURES: Record<AnatomySceneId, AnatomyStructure[]> = {
   cardiopulmonary: CARDIOPULMONARY_STRUCTURES,
   eye: EYE_STRUCTURES,
+  brain: BRAIN_STRUCTURES,
+  kidney: KIDNEY_STRUCTURES,
 };
 
 export const SCENE_TITLES: Record<AnatomySceneId, string> = {
   cardiopulmonary: "Heart and lungs",
   eye: "Eye and vision",
+  brain: "Brain and nervous system",
+  kidney: "Kidney and filtration",
 };
 
 export function isCardiopulmonaryMode(
@@ -186,6 +252,18 @@ export function isEyeMode(
   mode: AnatomyAnimationMode,
 ): mode is EyeAnimationMode {
   return (EYE_ANIMATION_MODES as readonly string[]).includes(mode);
+}
+
+export function isBrainMode(
+  mode: AnatomyAnimationMode,
+): mode is BrainAnimationMode {
+  return (BRAIN_ANIMATION_MODES as readonly string[]).includes(mode);
+}
+
+export function isKidneyMode(
+  mode: AnatomyAnimationMode,
+): mode is KidneyAnimationMode {
+  return (KIDNEY_ANIMATION_MODES as readonly string[]).includes(mode);
 }
 
 export function structuresForReveal(

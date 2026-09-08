@@ -7,6 +7,7 @@ import type { DrawCommandQueue } from "@/lib/draw-engine/resolve";
 import type { AnatomyStructureId } from "@/lib/anatomy/types";
 import type { ThreeScenePlan } from "@/lib/three-scenes/decide";
 import type { VisualPlan } from "@/lib/visuals/types";
+import type { LessonSource } from "@/types/lesson";
 
 const TutorBoard = dynamic(
   () => import("@/components/board/TutorBoard").then((m) => m.TutorBoard),
@@ -31,6 +32,7 @@ type VisualStageProps = {
   beatOrder?: number;
   totalBeats?: number;
   narrationLines?: BoardNarrationLine[];
+  sources?: LessonSource[];
   codeBuffer?: string;
   streaming?: boolean;
   onDrawComplete?: () => void;
@@ -48,6 +50,11 @@ type VisualStageProps = {
   threeSelectedStructure?: AnatomyStructureId | null;
   onThreeSelect?: (structure: AnatomyStructureId | null) => void;
   onDrawClock?: (ms: number) => void;
+  followUpValue?: string;
+  onFollowUpChange?: (value: string) => void;
+  onFollowUpSubmit?: () => void;
+  followUpDisabled?: boolean;
+  showFollowUp?: boolean;
 };
 
 export function VisualStage({
@@ -57,6 +64,7 @@ export function VisualStage({
   beatOrder,
   totalBeats,
   narrationLines,
+  sources,
   codeBuffer,
   streaming,
   onDrawComplete,
@@ -74,6 +82,11 @@ export function VisualStage({
   threeSelectedStructure,
   onThreeSelect,
   onDrawClock,
+  followUpValue,
+  onFollowUpChange,
+  onFollowUpSubmit,
+  followUpDisabled,
+  showFollowUp,
 }: VisualStageProps) {
   return (
     <TutorBoard
@@ -83,6 +96,7 @@ export function VisualStage({
       beatOrder={beatOrder}
       totalBeats={totalBeats}
       narrationLines={narrationLines}
+      sources={sources}
       codeBuffer={codeBuffer}
       streaming={streaming}
       onDrawComplete={onDrawComplete}
@@ -100,6 +114,11 @@ export function VisualStage({
       threeSelectedStructure={threeSelectedStructure}
       onThreeSelect={onThreeSelect}
       onDrawClock={onDrawClock}
+      followUpValue={followUpValue}
+      onFollowUpChange={onFollowUpChange}
+      onFollowUpSubmit={onFollowUpSubmit}
+      followUpDisabled={followUpDisabled}
+      showFollowUp={showFollowUp}
     />
   );
 }

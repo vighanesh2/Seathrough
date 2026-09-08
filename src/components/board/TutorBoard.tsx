@@ -20,6 +20,7 @@ import type { ThreeScenePlan } from "@/lib/three-scenes/decide";
 import { getVisualAsset } from "@/lib/visuals/assets/catalog";
 import type { VisualPlan } from "@/lib/visuals/types";
 import { visualStableKey } from "@/lib/visuals/router";
+import type { LessonSource } from "@/types/lesson";
 
 const KonvaDrawStage = dynamic(
   () =>
@@ -56,6 +57,7 @@ type TutorBoardProps = {
   beatOrder?: number;
   totalBeats?: number;
   narrationLines?: BoardNarrationLine[];
+  sources?: LessonSource[];
   codeBuffer?: string;
   streaming?: boolean;
   onDrawComplete?: () => void;
@@ -73,6 +75,11 @@ type TutorBoardProps = {
   threeSelectedStructure?: AnatomyStructureId | null;
   onThreeSelect?: (structure: AnatomyStructureId | null) => void;
   onDrawClock?: (ms: number) => void;
+  followUpValue?: string;
+  onFollowUpChange?: (value: string) => void;
+  onFollowUpSubmit?: () => void;
+  followUpDisabled?: boolean;
+  showFollowUp?: boolean;
 };
 
 /**
@@ -85,6 +92,7 @@ export function TutorBoard({
   beatOrder = 1,
   totalBeats,
   narrationLines = [],
+  sources = [],
   codeBuffer,
   streaming,
   onDrawComplete,
@@ -102,6 +110,11 @@ export function TutorBoard({
   threeSelectedStructure = null,
   onThreeSelect,
   onDrawClock,
+  followUpValue,
+  onFollowUpChange,
+  onFollowUpSubmit,
+  followUpDisabled,
+  showFollowUp,
 }: TutorBoardProps) {
   const onDoneRef = useRef(onDrawComplete);
   useEffect(() => {
@@ -216,16 +229,8 @@ export function TutorBoard({
                 <FormulaStrip source={formula} playKey={playKey} />
               </div>
             ) : null}
-            <div className="relative flex min-h-0 flex-1 flex-col gap-2 p-2 md:flex-row md:p-3">
-              {companionTemplatePlan ? (
-                <div className="min-h-[200px] shrink-0 overflow-hidden rounded-xl border border-board-edge bg-chalk md:w-[min(42%,420px)]">
-                  <TemplateStage
-                    plan={companionTemplatePlan}
-                    playKey={playKey}
-                  />
-                </div>
-              ) : null}
-              <div className="relative min-h-0 min-w-0 flex-1">
+            <div className="relative min-h-0 flex-1 p-2 md:p-3">
+              <div className="relative h-full min-h-0 min-w-0">
                 <KonvaDrawStage
                   queue={drawQueue}
                   sessionKey={drawSessionKey}
@@ -237,6 +242,15 @@ export function TutorBoard({
                   scrollToY={scrollToY}
                   className="h-full min-h-[280px] w-full overflow-auto rounded-xl border border-board-edge bg-chalk"
                 />
+                {companionTemplatePlan ? (
+                  <div className="pointer-events-none absolute top-5 right-5 z-20 aspect-4/3 w-[min(36%,320px)] overflow-hidden rounded-xl bg-white/88 p-3 shadow-[0_8px_28px_-14px_rgba(26,43,60,0.28)] backdrop-blur-sm">
+                    <TemplateStage
+                      plan={companionTemplatePlan}
+                      playKey={playKey}
+                      className="h-full max-h-none w-full max-w-none"
+                    />
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -331,20 +345,32 @@ export function TutorBoard({
       <div className="hidden h-full w-[min(26rem,38vw)] shrink-0 sm:block">
         <BoardNarration
           lines={narrationLines}
+          sources={sources}
           codeBuffer={codeBuffer}
           streaming={streaming}
           title={title}
           placement="side"
+          followUpValue={followUpValue}
+          onFollowUpChange={onFollowUpChange}
+          onFollowUpSubmit={onFollowUpSubmit}
+          followUpDisabled={followUpDisabled}
+          showFollowUp={showFollowUp}
         />
       </div>
 
       <div className="absolute inset-x-0 bottom-0 z-30 sm:hidden">
         <BoardNarration
           lines={narrationLines}
+          sources={sources}
           codeBuffer={codeBuffer}
           streaming={streaming}
           title={title}
           placement="bottom"
+          followUpValue={followUpValue}
+          onFollowUpChange={onFollowUpChange}
+          onFollowUpSubmit={onFollowUpSubmit}
+          followUpDisabled={followUpDisabled}
+          showFollowUp={showFollowUp}
         />
       </div>
     </section>

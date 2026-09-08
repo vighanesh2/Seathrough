@@ -36,7 +36,12 @@ function storageKey(userId?: string | null): string {
 }
 
 function isSceneId(value: unknown): value is AnatomySceneId {
-  return value === "eye" || value === "cardiopulmonary";
+  return (
+    value === "eye" ||
+    value === "cardiopulmonary" ||
+    value === "brain" ||
+    value === "kidney"
+  );
 }
 
 function sanitizeSession(raw: unknown): AnatomySession | null {
@@ -160,6 +165,8 @@ export function anatomySessionsToListItems(
 const SCENE_LABEL: Record<AnatomySceneId, string> = {
   eye: "Eye exploration",
   cardiopulmonary: "Heart & lungs",
+  brain: "Brain exploration",
+  kidney: "Kidney exploration",
 };
 
 export function migrateAnonAnatomySessions(userId: string): AnatomySession[] {

@@ -223,6 +223,18 @@ export const lessonPlanSchema = z.object({
   language: z.string().min(1).default("general"),
   beats: z.array(lessonBeatSchema).min(1).max(40),
   humanSummary: z.string().min(1),
+  sources: z
+    .array(
+      z.object({
+        id: z.string().min(1).max(20),
+        title: z.string().min(1).max(240),
+        url: z.string().url(),
+        publisher: z.string().min(1).max(120),
+        excerpt: z.string().max(800),
+      }),
+    )
+    .max(8)
+    .optional(),
   /**
    * Planner preference for interactive Three.js. The scene resolver may apply
    * narrow safety fallbacks when a supported anatomy lesson was omitted.

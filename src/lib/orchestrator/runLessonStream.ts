@@ -18,9 +18,12 @@ import {
 import {
   layoutExtentY,
   registerUmlOccupancy,
+  reserve,
   SECTION_GAP,
 } from "@/lib/draw-engine/boardLayout";
 import { generateUmlDiagramPlan } from "@/lib/draw-engine/generateUmlPlan";
+import { generatedSvgToDrawCommand } from "@/lib/draw-engine/fromGeneratedSvg";
+import { generateEducationalSvg } from "@/lib/automatic-drawing/svg/generateSvg";
 import {
   revealForBeat,
   threeSceneFromLessonPlan,
@@ -46,11 +49,16 @@ import {
   generateLessonPlan,
 } from "@/lib/providers/llm";
 import {
+  formatWebEvidence,
+  searchLessonSources,
+} from "@/lib/providers/tavily";
+import {
   buildSpeechUnits,
   paceCommandsToNarration,
 } from "@/lib/orchestrator/speechUnits";
 import { synthesizeSpeech } from "@/lib/providers/tts";
 import { getServiceSupabase } from "@/lib/supabase/server";
+import { getTavilyConfig } from "@/lib/env";
 import { resolveVisualWithLibrary } from "@/lib/visuals/library";
 import { topicVisualPlanFor } from "@/lib/topics/plan";
 import { getTopicModule } from "@/lib/topics/registry";
@@ -58,7 +66,7 @@ import { buildTopicLessonPlan } from "@/lib/topics/topicLesson";
 import { visualStableKey } from "@/lib/visuals/router";
 import type { LessonPlanParsed } from "@/lib/schemas/lesson";
 import type { VisualPlan } from "@/lib/visuals/types";
-import type { StreamEvent } from "@/types/lesson";
+import type { LessonSource, StreamEvent } from "@/types/lesson";
 
 export type RunLessonOptions = {
   prompt: string;
@@ -91,6 +99,52 @@ function assertNotAborted(signal?: AbortSignal) {
   }
 }
 
+function priorSources(plan: unknown): LessonSource[] {
+  if (!plan || typeof plan !== "object") return [];
+  const sources = (plan as { sources?: unknown }).sources;
+  if (!Array.isArray(sources)) return [];
+  return sources.filter(
+    (source): source is LessonSource =>
+      Boolean(
+        source &&
+          typeof source === "object" &&
+          typeof (source as LessonSource).id === "string" &&
+          typeof (source as LessonSource).title === "string" &&
+          typeof (source as LessonSource).url === "string",
+      ),
+  );
+}
+
+function mergeSources(
+  existing: LessonSource[],
+  fresh: LessonSource[],
+): LessonSource[] {
+  const merged = new Map<string, LessonSource>();
+  for (const source of [...existing, ...fresh]) merged.set(source.url, source);
+  return [...merged.values()].slice(-8).map((source, index) => ({
+    ...source,
+    id: `S${index + 1}`,
+  }));
+}
+
+async function researchSources(
+  query: string,
+  signal?: AbortSignal,
+): Promise<{ sources: LessonSource[]; failed: boolean }> {
+  try {
+    return {
+      sources: await searchLessonSources(query, signal),
+      failed: false,
+    };
+  } catch (error) {
+    console.warn(
+      "[lesson-stream] web research unavailable",
+      error instanceof Error ? error.message : "search failed",
+    );
+    return { sources: [], failed: true };
+  }
+}
+
 /**
  * Clean pipeline: Groq plan → visual trigger + library grow → Deepgram → SSE.
  * Follow-ups reuse conversation history and prefer keeping the current board.
@@ -106,7 +160,7 @@ export async function* runLessonStream(
 
   const withAudio = options.withAudio !== false;
   const isFollowUp =
-    options.mode === "follow_up" || Boolean(options.conversationId);
+    options.mode === "follow_up" && Boolean(options.conversationId);
   let lessonId: string | undefined;
   let conversationId: string | undefined = options.conversationId;
   const supabase = getServiceSupabase();
@@ -115,6 +169,7 @@ export async function* runLessonStream(
     assertNotAborted(options.signal);
 
     let plan: LessonPlanParsed;
+    let sources: LessonSource[] = [];
     let topicHint = "";
     if (isFollowUp && conversationId) {
       const ctx = await loadConversationContext(conversationId);
@@ -137,12 +192,49 @@ export async function* runLessonStream(
       }
 
       topicHint = [ctx.rootPrompt, ctx.title].filter(Boolean).join(" ");
-
       yield {
         type: "student_message",
         text: prompt,
         conversationId,
       };
+
+      let freshSources: LessonSource[] = [];
+      if (getTavilyConfig().apiKey) {
+        yield {
+          type: "pipeline_status",
+          stage: "research",
+          state: "started",
+        };
+        const research = await researchSources(
+          [ctx.title || ctx.rootPrompt, prompt].filter(Boolean).join(": "),
+          options.signal,
+        );
+        freshSources = research.sources;
+        yield research.failed
+          ? {
+              type: "pipeline_status",
+              stage: "research",
+              state: "failed",
+              reason: "upstream_error",
+              recoverable: true,
+            }
+          : {
+              type: "pipeline_status",
+              stage: "research",
+              state: "completed",
+              reason: freshSources.length ? undefined : "no_results",
+              completed: freshSources.length,
+              total: freshSources.length,
+            };
+      } else {
+        yield {
+          type: "pipeline_status",
+          stage: "research",
+          state: "skipped",
+          reason: "not_configured",
+        };
+      }
+      sources = mergeSources(priorSources(ctx.plan), freshSources);
 
       await appendTurn({
         conversationId,
@@ -152,6 +244,11 @@ export async function* runLessonStream(
         meta: { kind: "follow_up" },
       });
 
+      yield {
+        type: "pipeline_status",
+        stage: "lesson_plan",
+        state: "started",
+      };
       plan = await generateFollowUpPlan(prompt, {
         rootPrompt: ctx.rootPrompt,
         priorTitle: ctx.title,
@@ -167,7 +264,13 @@ export async function* runLessonStream(
           },
         ]),
         visualSummary: options.visualSummary,
+        webEvidence: formatWebEvidence(freshSources),
       });
+      yield {
+        type: "pipeline_status",
+        stage: "lesson_plan",
+        state: "completed",
+      };
     } else {
       const created = await createConversation({
         rootPrompt: prompt,
@@ -188,7 +291,54 @@ export async function* runLessonStream(
         conversationId,
       };
 
-      plan = await generateLessonPlan(prompt);
+      if (getTavilyConfig().apiKey) {
+        yield {
+          type: "pipeline_status",
+          stage: "research",
+          state: "started",
+        };
+        const research = await researchSources(prompt, options.signal);
+        sources = research.sources;
+        yield research.failed
+          ? {
+              type: "pipeline_status",
+              stage: "research",
+              state: "failed",
+              reason: "upstream_error",
+              recoverable: true,
+            }
+          : {
+              type: "pipeline_status",
+              stage: "research",
+              state: "completed",
+              reason: sources.length ? undefined : "no_results",
+              completed: sources.length,
+              total: sources.length,
+            };
+      } else {
+        yield {
+          type: "pipeline_status",
+          stage: "research",
+          state: "skipped",
+          reason: "not_configured",
+        };
+      }
+      yield {
+        type: "pipeline_status",
+        stage: "lesson_plan",
+        state: "started",
+      };
+      plan = await generateLessonPlan(prompt, formatWebEvidence(sources));
+      yield {
+        type: "pipeline_status",
+        stage: "lesson_plan",
+        state: "completed",
+      };
+    }
+
+    plan = { ...plan, sources };
+    if (sources.length) {
+      yield { type: "sources", sources };
     }
 
     const topicConceptKey =
@@ -204,6 +354,11 @@ export async function* runLessonStream(
       plan = buildTopicLessonPlan(plan, topicModule, topicPrompt);
     }
 
+    yield {
+      type: "pipeline_status",
+      stage: "persistence",
+      state: "started",
+    };
     const { data: lessonRow, error: insertError } = await supabase
       .from("lessons")
       .insert({
@@ -237,6 +392,12 @@ export async function* runLessonStream(
 
       if (retry.error) {
         yield {
+          type: "pipeline_status",
+          stage: "persistence",
+          state: "failed",
+          reason: "upstream_error",
+        };
+        yield {
           type: "error",
           message: `Failed to save lesson: ${retry.error.message}`,
         };
@@ -256,6 +417,11 @@ export async function* runLessonStream(
         humanSummary: plan.humanSummary,
       });
     }
+    yield {
+      type: "pipeline_status",
+      stage: "persistence",
+      state: "completed",
+    };
 
     yield {
       type: "plan_meta",
@@ -265,6 +431,12 @@ export async function* runLessonStream(
       conversationId,
       beatCount: plan.beats.length,
       mode: isFollowUp ? "follow_up" : "new",
+    };
+
+    yield {
+      type: "pipeline_status",
+      stage: "visuals",
+      state: "started",
     };
 
     // UML lessons: generate the FULL diagram JSON once, then reveal beat-by-beat.
@@ -325,15 +497,81 @@ export async function* runLessonStream(
       umlPlan = offsetUmlPlanY(umlPlan, sectionOffsetY);
     }
 
+    // Generic topics have no curated asset or interactive renderer. Generate
+    // sanitized SVG code so literature/history lessons get a real diagram.
+    let generatedVisualCommands: import("@/lib/draw-engine/commands").DrawCommand[] =
+      [];
+    let generatedSvgFailed = false;
+    if (!umlPlan && !threePlan && !usesTopicBoard) {
+      // Generated lesson art is the only 2D visual on this path. Cached or
+      // fetched companion SVGs are not layered over it.
+      const timeout = AbortSignal.timeout(60_000);
+      const visualSignal = options.signal
+        ? AbortSignal.any([options.signal, timeout])
+        : timeout;
+      try {
+        const evidence = (plan.sources ?? [])
+          .slice(0, 3)
+          .map((source) => `${source.title}: ${source.excerpt}`)
+          .join("\n");
+        const generated = await generateEducationalSvg({
+          prompt,
+          lessonTitle: plan.title,
+          lessonSummary: plan.humanSummary,
+          lessonPoints: plan.beats.map((beat) => beat.narration),
+          evidence: evidence || undefined,
+          signal: visualSignal,
+        });
+        generatedVisualCommands = [
+          generatedSvgToDrawCommand({
+            dataUrl: generated.dataUrl,
+            alt: generated.alt,
+            placement: {
+              x: 70,
+              y: sectionOffsetY + 72,
+              width: 760,
+              height: 507,
+            },
+          }),
+        ];
+      } catch (visualError) {
+        if (options.signal?.aborted) throw visualError;
+        generatedSvgFailed = true;
+        console.error(
+          "[lesson-stream] generated SVG failed; using pen fallback",
+          visualError instanceof Error ? visualError.message : visualError,
+        );
+      }
+    }
+    yield {
+      type: "pipeline_status",
+      stage: "visuals",
+      state: "completed",
+      reason: generatedSvgFailed ? "fallback_used" : undefined,
+    };
+
     let hasVisual = false;
     let activeVisualKey: string | undefined;
     let activePlan: VisualPlan | null = null;
-    let drawClockMs = 0;
+    let drawClockMs = generatedVisualCommands.reduce(
+      (end, command) =>
+        Math.max(end, command.t0 + Math.max(0, command.durationMs)),
+      0,
+    );
     let drawSessionStarted = false;
     let boardLayout: BoardLayout = createBoardLayout(sectionOffsetY);
+    let generatedVisualPending = generatedVisualCommands.length > 0;
     const snapshotCommands: import("@/lib/draw-engine/commands").DrawCommand[] =
       [];
     let snapshotCanvasHeight = DRAW_CANVAS_HEIGHT;
+    if (!withAudio) {
+      yield {
+        type: "pipeline_status",
+        stage: "audio",
+        state: "skipped",
+        reason: "disabled",
+      };
+    }
 
     for (const beat of plan.beats) {
       assertNotAborted(options.signal);
@@ -361,6 +599,12 @@ export async function* runLessonStream(
             reason: "Interactive 3D scene owns the visual stage",
             plan: null,
           }
+        : generatedVisualCommands.length
+          ? {
+              action: "keep" as const,
+              reason: "Generated lesson visual owns the visual stage",
+              plan: null,
+            }
         : await resolveVisualWithLibrary({
             // Always route visuals from the CURRENT question only.
             // Including prior lesson text here falsely rematches old assets
@@ -421,6 +665,17 @@ export async function* runLessonStream(
         activePlan = decision.plan;
       }
 
+      const beatScope = {
+        beatId: beat.id,
+        beatOrder: beat.order,
+        totalBeats: plan.beats.length,
+      };
+      yield {
+        type: "pipeline_status",
+        stage: "narration",
+        state: "started",
+        scope: beatScope,
+      };
       const alignedNarration = formatNarrationForDisplay(
         narrationMatchingBoard({
           steps: threePlan ? undefined : activePlan?.boardScript?.steps,
@@ -435,6 +690,16 @@ export async function* runLessonStream(
         if (!drawSessionStarted) {
           drawSessionStarted = true;
           boardLayout = createBoardLayout(sectionOffsetY);
+          if (generatedVisualCommands.length) {
+            reserve(boardLayout, {
+              id: "generated-scene",
+              x: 60,
+              y: sectionOffsetY + 62,
+              w: 780,
+              h: 527,
+              kind: "content",
+            });
+          }
           if (umlPlan?.kind === "class") {
             registerUmlOccupancy(
               boardLayout,
@@ -490,6 +755,10 @@ export async function* runLessonStream(
 
         // Let the writing breathe across the narration instead of racing it.
         beatDrawCmds = paceCommandsToNarration(beatDrawCmds, alignedNarration);
+        if (generatedVisualPending) {
+          beatDrawCmds = [...generatedVisualCommands, ...beatDrawCmds];
+          generatedVisualPending = false;
+        }
 
         if (beatDrawCmds.length) {
           snapshotCommands.push(...beatDrawCmds);
@@ -536,6 +805,12 @@ export async function* runLessonStream(
         t0: speechUnits[0]?.cueT0 ?? Math.max(0, drawClockMs - 200),
         beatId: beat.id,
       };
+      yield {
+        type: "pipeline_status",
+        stage: "narration",
+        state: "completed",
+        scope: beatScope,
+      };
 
       if (conversationId) {
         await appendTurn({
@@ -548,17 +823,47 @@ export async function* runLessonStream(
       }
 
       if (withAudio) {
+        yield {
+          type: "pipeline_status",
+          stage: "audio",
+          state: "started",
+          scope: beatScope,
+          total: speechUnits.length,
+        };
         // Synthesize the whole beat at once so units play back-to-back
         // instead of leaving a TTS gap between sentences.
         const clips = await Promise.allSettled(
           speechUnits.map((unit) => synthesizeSpeech(unit.text)),
         );
 
-        let spoke = false;
+        const completedClips = clips.filter(
+          (clip) => clip.status === "fulfilled",
+        ).length;
+        yield completedClips === 0 && speechUnits.length
+          ? {
+              type: "pipeline_status",
+              stage: "audio",
+              state: "failed",
+              scope: beatScope,
+              reason: "upstream_error",
+              completed: 0,
+              total: speechUnits.length,
+              recoverable: true,
+            }
+          : {
+              type: "pipeline_status",
+              stage: "audio",
+              state: "completed",
+              scope: beatScope,
+              reason:
+                completedClips < speechUnits.length ? "partial" : undefined,
+              completed: completedClips,
+              total: speechUnits.length,
+            };
+
         for (const [i, unit] of speechUnits.entries()) {
           const clip = clips[i];
           if (clip?.status !== "fulfilled") continue;
-          spoke = true;
           yield {
             type: "audio",
             beatId: beat.id,
@@ -570,7 +875,7 @@ export async function* runLessonStream(
         }
 
         // Only call the beat silent when nothing at all came back.
-        if (speechUnits.length && !spoke) {
+        if (speechUnits.length && completedClips === 0) {
           const failure = clips.find((c) => c.status === "rejected");
           const reason =
             failure?.status === "rejected" ? failure.reason : undefined;
@@ -604,6 +909,11 @@ export async function* runLessonStream(
     }
 
     yield { type: "human_summary", text: plan.humanSummary };
+    yield {
+      type: "pipeline_status",
+      stage: "persistence",
+      state: "started",
+    };
 
     if (conversationId) {
       await appendTurn({
@@ -652,12 +962,31 @@ export async function* runLessonStream(
       }
     }
 
-    yield { type: "done", conversationId, lessonId };
-
-    await supabase
+    const completionUpdate = await supabase
       .from("lessons")
       .update({ status: "completed", human_summary: plan.humanSummary })
       .eq("id", lessonId);
+    if (completionUpdate.error) {
+      console.error(
+        "[lesson-stream] lesson completion update failed",
+        completionUpdate.error.message,
+      );
+      yield {
+        type: "pipeline_status",
+        stage: "persistence",
+        state: "failed",
+        reason: "upstream_error",
+        recoverable: true,
+      };
+    } else {
+      yield {
+        type: "pipeline_status",
+        stage: "persistence",
+        state: "completed",
+      };
+    }
+
+    yield { type: "done", conversationId, lessonId };
   } catch (error) {
     const raw =
       error instanceof Error ? error.message : "Unknown lesson pipeline error";

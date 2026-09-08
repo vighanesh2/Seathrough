@@ -3,11 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { getVisualAsset } from "@/lib/visuals/assets/catalog";
 import type { VisualAction, VisualPlan } from "@/lib/visuals/types";
+import { cn } from "@/lib/utils";
 
 type TemplateStageProps = {
   plan: VisualPlan | null;
   playKey: number;
   onDrawComplete?: () => void;
+  className?: string;
 };
 
 type LabelMark = { id: string; x: number; y: number; text: string };
@@ -28,6 +30,7 @@ export function TemplateStage({
   plan,
   playKey,
   onDrawComplete,
+  className,
 }: TemplateStageProps) {
   const onDoneRef = useRef(onDrawComplete);
   useEffect(() => {
@@ -115,7 +118,10 @@ export function TemplateStage({
   return (
     <svg
       viewBox={asset.viewBox}
-      className="h-[min(55vh,400px)] w-full max-w-[560px] animate-sketch-in"
+      className={cn(
+        "h-[min(55vh,400px)] w-full max-w-[560px] animate-sketch-in",
+        className,
+      )}
       role="img"
       aria-label={asset.title}
     >

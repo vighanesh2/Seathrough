@@ -38,12 +38,14 @@ function FeatureRow({
   hint,
   icon: Icon,
   onPick,
+  badge,
 }: {
   href: string;
   title: string;
   hint: string;
   icon: React.ComponentType<{ className?: string }>;
   onPick: (href: string) => void;
+  badge?: "new" | "beta" | "lab";
 }) {
   return (
     <Link
@@ -58,8 +60,13 @@ function FeatureRow({
         <Icon className="size-4" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[14px] font-medium tracking-[-0.01em] text-[#1a2b3c]">
-          {title}
+        <span className="flex items-center gap-2 text-[14px] font-medium tracking-[-0.01em] text-[#1a2b3c]">
+          <span>{title}</span>
+          {badge ? (
+            <span className="rounded-full bg-[#e4f5ee] px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] text-[#2a7a5c] uppercase">
+              {badge}
+            </span>
+          ) : null}
         </span>
         <span className="mt-0.5 block text-[13px] leading-5 text-[#6a7d90]">
           {hint}
@@ -142,6 +149,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
                     hint={MODE_UI[mode.id].hint}
                     icon={MODE_UI[mode.id].icon}
                     onPick={pick}
+                    badge={mode.badge}
                   />
                 ))}
               </div>
@@ -161,6 +169,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
                         hint={MODE_UI[mode.id].hint}
                         icon={MODE_UI[mode.id].icon}
                         onPick={pick}
+                        badge={mode.badge}
                       />
                     ))}
                   </div>
@@ -182,6 +191,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
                         hint={MODE_UI[mode.id].hint}
                         icon={MODE_UI[mode.id].icon}
                         onPick={pick}
+                        badge={mode.badge}
                       />
                     ))}
                   </div>
@@ -223,9 +233,14 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
                         <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#eef4f9] text-[#1b6ca8]">
                           <Icon className="size-4" />
                         </span>
-                        <span>
-                          <span className="block text-[14px] font-medium text-[#1a2b3c]">
-                            {mode.navLabel}
+                        <span className="min-w-0">
+                          <span className="flex items-center gap-2 text-[14px] font-medium text-[#1a2b3c]">
+                            <span>{mode.navLabel}</span>
+                            {mode.badge ? (
+                              <span className="rounded-full bg-[#e4f5ee] px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] text-[#2a7a5c] uppercase">
+                                {mode.badge}
+                              </span>
+                            ) : null}
                           </span>
                           <span className="mt-0.5 block text-[12px] font-normal text-[#6a7d90]">
                             {MODE_UI[mode.id].hint}

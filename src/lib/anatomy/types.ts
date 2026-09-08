@@ -42,9 +42,36 @@ export const EYE_STRUCTURE_IDS = [
   "visual-cortex",
 ] as const;
 
+export const BRAIN_STRUCTURE_IDS = [
+  "brain",
+  "cerebrum",
+  "frontal-lobe",
+  "parietal-lobe",
+  "temporal-lobe",
+  "occipital-lobe",
+  "cerebellum",
+  "brainstem",
+  "spinal-cord",
+] as const;
+
+export const KIDNEY_STRUCTURE_IDS = [
+  "kidney",
+  "renal-cortex",
+  "renal-medulla",
+  "renal-pelvis",
+  "renal-artery",
+  "renal-vein",
+  "ureter",
+  "nephron",
+  "glomerulus",
+  "collecting-duct",
+] as const;
+
 export const ANATOMY_STRUCTURE_IDS = [
   ...CARDIOPULMONARY_STRUCTURE_IDS,
   ...EYE_STRUCTURE_IDS,
+  ...BRAIN_STRUCTURE_IDS,
+  ...KIDNEY_STRUCTURE_IDS,
 ] as const;
 
 export type AnatomyStructureId = (typeof ANATOMY_STRUCTURE_IDS)[number];
@@ -68,6 +95,20 @@ export const EYE_ANIMATION_MODES = [
   "neural-signal",
 ] as const;
 
+export const BRAIN_ANIMATION_MODES = [
+  "overview",
+  "sensory-processing",
+  "motor-control",
+  "neural-signal",
+] as const;
+
+export const KIDNEY_ANIMATION_MODES = [
+  "overview",
+  "filtration",
+  "reabsorption",
+  "urine-flow",
+] as const;
+
 /** Union of all anatomy animation modes (shared "overview" appears once). */
 export const ANATOMY_ANIMATION_MODES = [
   "overview",
@@ -81,14 +122,26 @@ export const ANATOMY_ANIMATION_MODES = [
   "pupil-reflex",
   "photoreceptors",
   "neural-signal",
+  "sensory-processing",
+  "motor-control",
+  "filtration",
+  "reabsorption",
+  "urine-flow",
 ] as const;
 
 export type AnatomyAnimationMode = (typeof ANATOMY_ANIMATION_MODES)[number];
 export type CardiopulmonaryAnimationMode =
   (typeof CARDIOPULMONARY_ANIMATION_MODES)[number];
 export type EyeAnimationMode = (typeof EYE_ANIMATION_MODES)[number];
+export type BrainAnimationMode = (typeof BRAIN_ANIMATION_MODES)[number];
+export type KidneyAnimationMode = (typeof KIDNEY_ANIMATION_MODES)[number];
 
-export const ANATOMY_SCENE_IDS = ["cardiopulmonary", "eye"] as const;
+export const ANATOMY_SCENE_IDS = [
+  "cardiopulmonary",
+  "eye",
+  "brain",
+  "kidney",
+] as const;
 export type AnatomySceneId = (typeof ANATOMY_SCENE_IDS)[number];
 
 export type CardiacPhase =
@@ -122,7 +175,10 @@ export type AnatomyStructure = {
     | "respiratory"
     | "ocular"
     | "optical"
-    | "neural";
+    | "neural"
+    | "cerebral"
+    | "renal"
+    | "urinary";
   description: string;
   function: string;
   reveal: number;

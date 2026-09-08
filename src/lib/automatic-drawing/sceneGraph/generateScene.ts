@@ -124,21 +124,26 @@ Tiny example (structure only — expand for real prompts):
 
 export async function generateSceneGraph(
   brief: string,
+  signal?: AbortSignal,
 ): Promise<SceneGraph> {
   const { client, model } = getDrawingClient();
 
-  const completion = await client.chat.completions.create({
-    model,
-    temperature: 0.55,
-    response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: SYSTEM_PROMPT },
-      {
-        role: "user",
-        content: `Compose a hand-drawn scene graph for this brief:\n${brief}\n\nReturn the full JSON scene now.`,
-      },
-    ],
-  });
+  const completion = await client.chat.completions.create(
+    {
+      model,
+      temperature: 0.45,
+      max_tokens: 3500,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: `Compose a hand-drawn scene graph for this brief:\n${brief}\n\nReturn the full JSON scene now.`,
+        },
+      ],
+    },
+    signal ? { signal } : undefined,
+  );
 
   const content = completion.choices[0]?.message?.content;
   if (!content?.trim()) {

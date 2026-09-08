@@ -58,6 +58,12 @@ const SIDEBAR_KEY = "ve.anatomySidebar.collapsed";
 function sceneFromPrompt(text: string): AnatomySceneId {
   const t = text.toLowerCase();
   if (/\b(eye|retina|cornea|iris|pupil|vision|optic)\b/.test(t)) return "eye";
+  if (/\b(brain|cerebrum|cerebral|cerebellum|brainstem|neural)\b/.test(t)) {
+    return "brain";
+  }
+  if (/\b(kidney|renal|nephron|glomerulus|ureter|urine)\b/.test(t)) {
+    return "kidney";
+  }
   return "cardiopulmonary";
 }
 
@@ -71,6 +77,16 @@ const EXAMPLE_QUESTIONS: Record<AnatomySceneId, string[]> = {
     "How does light travel through the eye?",
     "Why is the image on the retina upside down?",
     "How does the lens focus for near objects?",
+  ],
+  brain: [
+    "What does each cerebral lobe do?",
+    "How does the brain control movement?",
+    "How do sensory signals reach the cortex?",
+  ],
+  kidney: [
+    "How does the kidney filter blood?",
+    "What happens inside a nephron?",
+    "How does urine reach the ureter?",
   ],
 };
 
@@ -87,6 +103,16 @@ const LEGENDS: Record<
     { color: "bg-copper", label: "light rays" },
     { color: "bg-error", label: "inverted retinal image" },
     { color: "bg-accent", label: "neural signal" },
+  ],
+  brain: [
+    { color: "bg-error", label: "cerebral regions" },
+    { color: "bg-accent", label: "sensory signal" },
+    { color: "bg-copper", label: "motor signal" },
+  ],
+  kidney: [
+    { color: "bg-error", label: "renal tissue" },
+    { color: "bg-accent", label: "blood / filtrate" },
+    { color: "bg-copper", label: "urine flow" },
   ],
 };
 
@@ -257,10 +283,7 @@ export function AnatomyWorkspace() {
   const scenePlan = useMemo<ThreeScenePlan>(
     () => ({
       id: sceneId,
-      title:
-        sceneId === "eye"
-          ? "Normal eye and vision physiology"
-          : "Normal cardiopulmonary physiology",
+      title: SCENE_TITLES[sceneId],
       reveal,
       maxReveal: 6,
       params: { animationMode: mode },
@@ -438,6 +461,8 @@ export function AnatomyWorkspace() {
                 [
                   ["cardiopulmonary", "Heart"],
                   ["eye", "Human eye"],
+                  ["brain", "Brain"],
+                  ["kidney", "Kidney"],
                 ] as const
               ).map(([id, label]) => (
                 <button
@@ -629,7 +654,11 @@ export function AnatomyWorkspace() {
                   placeholder={
                     sceneId === "eye"
                       ? "Why is the retinal image upside down?"
-                      : "How does the right ventricle send blood to the lungs?"
+                      : sceneId === "brain"
+                        ? "How does the brain control movement?"
+                        : sceneId === "kidney"
+                          ? "How does a nephron filter blood?"
+                          : "How does the right ventricle send blood to the lungs?"
                   }
                   className="w-full resize-none rounded-xl border border-board-edge bg-paper px-3 py-2.5 font-sans text-sm text-ink outline-none placeholder:text-muted focus:border-accent focus:ring-2 focus:ring-accent-soft"
                 />
@@ -729,7 +758,7 @@ export function AnatomyWorkspace() {
             <footer className="shrink-0 border-t border-board-edge px-4 py-2.5 font-sans text-[9px] leading-4 text-muted">
               {sceneId === "cardiopulmonary"
                 ? "Geometry: NIH 3D Human Reference Atlas, CC BY 4.0. Normal physiology visualization for education; not diagnosis or treatment guidance."
-                : "Procedural educational model grounded in reviewed anatomy sources. Normal vision physiology for education; not diagnosis or treatment guidance."}
+                : `Procedural educational ${sceneId} model grounded in reviewed anatomy sources. For education; not diagnosis or treatment guidance.`}
             </footer>
           </aside>
         </div>

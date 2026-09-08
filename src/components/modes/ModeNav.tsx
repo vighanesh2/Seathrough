@@ -26,11 +26,13 @@ function ModeItem({
   icon: Icon,
   label,
   current,
+  badge,
 }: {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   current?: boolean;
+  badge?: "new" | "beta" | "lab";
 }) {
   const navigate = useSmoothNavigate();
   return (
@@ -44,6 +46,11 @@ function ModeItem({
     >
       <Icon className="size-4" />
       {label}
+      {badge ? (
+        <span className="ml-auto rounded-full bg-success-soft px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] text-success uppercase">
+          {badge}
+        </span>
+      ) : null}
     </DropdownMenuItem>
   );
 }
@@ -78,6 +85,7 @@ export function StudyMenu({ current, className = "" }: StudyMenuProps) {
             icon={MODE_UI[mode.id].icon}
             label={mode.navLabel}
             current={mode.id === current}
+            badge={mode.badge}
           />
         ))}
         {more.length > 0 ? (
@@ -91,6 +99,7 @@ export function StudyMenu({ current, className = "" }: StudyMenuProps) {
                 icon={MODE_UI[mode.id].icon}
                 label={mode.title}
                 current={mode.id === current}
+                badge={mode.badge}
               />
             ))}
           </>
@@ -106,6 +115,7 @@ export function StudyMenu({ current, className = "" }: StudyMenuProps) {
                 icon={MODE_UI[mode.id].icon}
                 label={mode.title}
                 current={mode.id === current}
+                badge={mode.badge}
               />
             ))}
           </>

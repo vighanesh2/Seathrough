@@ -16,6 +16,14 @@ export type DiagramAction = "none" | "generate" | "keep" | "retire";
 /** @deprecated prefer DiagramAction */
 export type ImageAction = DiagramAction;
 
+export type LessonSource = {
+  id: string;
+  title: string;
+  url: string;
+  publisher: string;
+  excerpt: string;
+};
+
 export type LessonBeat = {
   id: string;
   order: number;
@@ -43,6 +51,7 @@ export type LessonPlan = {
   language: string;
   beats: LessonBeat[];
   humanSummary: string;
+  sources?: LessonSource[];
 };
 
 /** @deprecated */
@@ -53,7 +62,44 @@ export type DiagramScene = {
   recipe: SceneRecipe;
 };
 
+export type PipelineStage =
+  | "research"
+  | "lesson_plan"
+  | "visuals"
+  | "narration"
+  | "audio"
+  | "persistence";
+
+export type PipelineStageState =
+  | "started"
+  | "completed"
+  | "skipped"
+  | "failed";
+
+export type PipelineStatusEvent = {
+  type: "pipeline_status";
+  stage: PipelineStage;
+  state: PipelineStageState;
+  scope?: {
+    beatId?: string;
+    beatOrder?: number;
+    totalBeats?: number;
+  };
+  reason?:
+    | "not_configured"
+    | "disabled"
+    | "not_needed"
+    | "no_results"
+    | "partial"
+    | "fallback_used"
+    | "upstream_error";
+  completed?: number;
+  total?: number;
+  recoverable?: boolean;
+};
+
 export type StreamEvent =
+  | PipelineStatusEvent
   | {
       type: "plan_meta";
       title: string;
@@ -68,6 +114,7 @@ export type StreamEvent =
       text: string;
       conversationId?: string;
     }
+  | { type: "sources"; sources: LessonSource[] }
   | { type: "beat_start"; beat: LessonBeat }
   | { type: "code_delta"; text: string }
   | {
