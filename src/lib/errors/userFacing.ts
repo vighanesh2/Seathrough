@@ -27,7 +27,7 @@ export function toUserFacingError(
 
   // Known safe / intentional product messages — keep as-is
   if (
-    /^(Prompt is required|Description is required|Description is too long|Conversation not found|Lesson stream returned an empty body|Add OPENAI_API_KEY|Add GROQ_API_KEY|Enter a topic|Crash details are required|Sign in required|Prompt is too long|The scene planner|The scene agent|Couldn't get a stable 3D scene|Voice is not configured|Nothing to speak|Start a lesson first|Not enough lesson context)/i.test(
+    /^(Prompt is required|Description is required|Description is too long|Conversation not found|Session not found|Lesson stream returned an empty body|Add OPENAI_API_KEY|Add GROQ_API_KEY|Enter a topic|Crash details are required|Sign in required|Prompt is too long|The scene planner|The scene agent|Couldn't get a stable 3D scene|Voice is not configured|Nothing to speak|Start a lesson first|Not enough lesson context|This tutor can only help with learning topics|Invalid tutor input|An answer is required|No active concept)/i.test(
       raw,
     )
   ) {

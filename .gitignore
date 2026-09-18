@@ -24,6 +24,7 @@
 .DS_Store
 *.pem
 .cache/
+scripts/.smoke-*.cjs
 
 # debug
 npm-debug.log*
@@ -37,6 +38,12 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+backend/out/
 
 # typescript
 *.tsbuildinfo
