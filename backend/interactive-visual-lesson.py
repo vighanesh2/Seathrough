@@ -1102,7 +1102,7 @@ def write_lesson(html: str, dest: Path) -> Path:
     return dest
 
 
-def teach(
+def teach_payload(
     student: str,
     *,
     dest: Path | None = None,
@@ -1110,7 +1110,7 @@ def teach(
     diagnosis: str | None = None,
     strategy: str | None = None,
     previous_strategy: str | None = None,
-) -> str:
+) -> dict[str, Any]:
     text = misconception.validate_input(student)
     diagnosis = (diagnosis or "").strip() or misconception.detect(text)
     fields = parse_diagnosis(diagnosis)
@@ -1124,7 +1124,15 @@ def teach(
             "not_learning": "No visual lesson — that was not a learning statement.",
             "slip": "No visual lesson — that reads as a slip, not a stable mix-up.",
         }[kind]
-        return f"{diagnosis}\n\n{reason}"
+        return {
+            "skipped": True,
+            "kind": kind,
+            "report": f"{diagnosis}\n\n{reason}",
+            "visual_html": "",
+            "thinking": "",
+            "title": "",
+            "diagnosis": diagnosis,
+        }
 
     sources = research_topic(text, fields)
     evidence = websearch.format_evidence(sources)
@@ -1139,23 +1147,24 @@ def teach(
         previous_strategy=failed,
     )
     meta = lesson_meta(fields, thinking)
-    path = dest or OUT_DIR / "interactive-lesson.html"
-    write_lesson(
-        render_html(
-            meta,
-            diagnosis,
-            text,
-            thinking,
-            "",
-            sources,
-            components,
-            status="loading",
-        ),
-        path,
-    )
-    print("Visual is generating — the page will refresh when the drawing code is ready.", flush=True)
-    if open_browser:
-        webbrowser.open(path.resolve().as_uri())
+    path = dest
+    if path is not None:
+        write_lesson(
+            render_html(
+                meta,
+                diagnosis,
+                text,
+                thinking,
+                "",
+                sources,
+                components,
+                status="loading",
+            ),
+            path,
+        )
+        print("Visual is generating — the page will refresh when the drawing code is ready.", flush=True)
+        if open_browser:
+            webbrowser.open(path.resolve().as_uri())
     print("Writing visual code…", flush=True)
     sketch = generate_sketch(
         text,
@@ -1168,26 +1177,27 @@ def teach(
         previous_strategy=failed,
     )
     visual = build_artifact(sketch)
-    write_lesson(
-        render_html(
-            meta,
-            diagnosis,
-            text,
-            thinking,
-            visual,
-            sources,
-            components,
-            sketch,
-            "ready",
-        ),
-        path,
-    )
+    if path is not None:
+        write_lesson(
+            render_html(
+                meta,
+                diagnosis,
+                text,
+                thinking,
+                visual,
+                sources,
+                components,
+                sketch,
+                "ready",
+            ),
+            path,
+        )
 
     beats = "\n".join(f"- {b}" for b in meta.get("beats") or [])
     looked = "\n".join(
         f"- [{src.get('id')}] {src.get('title')}" for src in sources[:8]
     ) or "- (no Tavily results — check TAVILY_API_KEY)"
-    return (
+    report = (
         f"{diagnosis}\n\n"
         f"Research\n--------\n{looked}\n"
         f"Components: {', '.join(components) or '(none)'}\n\n"
@@ -1198,8 +1208,38 @@ def teach(
         f"Method: {clip(method, 160) or 'split-pane contrast'}\n"
         f"Visual: generated drawing code ({len(sketch)} chars)\n"
         f"{meta['say']}\n"
-        f"Open: {path}"
+        f"Open: {path or ''}"
     )
+    return {
+        "skipped": False,
+        "kind": kind,
+        "report": report,
+        "visual_html": visual,
+        "thinking": thinking,
+        "title": meta["title"],
+        "diagnosis": diagnosis,
+        "say": meta.get("say") or "",
+    }
+
+
+def teach(
+    student: str,
+    *,
+    dest: Path | None = None,
+    open_browser: bool = True,
+    diagnosis: str | None = None,
+    strategy: str | None = None,
+    previous_strategy: str | None = None,
+) -> str:
+    payload = teach_payload(
+        student,
+        dest=dest or OUT_DIR / "interactive-lesson.html",
+        open_browser=open_browser,
+        diagnosis=diagnosis,
+        strategy=strategy,
+        previous_strategy=previous_strategy,
+    )
+    return str(payload.get("report") or "")
 
 
 def self_test() -> str:
@@ -1332,6 +1372,10 @@ def self_test() -> str:
         lines.append("- teach can switch methods: ok")
     else:
         lines.append("- FAIL teach missing strategy")
+    if callable(teach_payload):
+        lines.append("- teach_payload returns visual html for the web tutor: ok")
+    else:
+        lines.append("- FAIL teach_payload")
     lines.append(f"- skip when correct: {diagnosis_kind({'kind': 'actually correct'})}")
     return "\n".join(lines)
 

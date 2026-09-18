@@ -1,4 +1,5 @@
 export { lessonsMode } from "@/modules/lessons/mode";
+export { aiTutorMode } from "@/modules/ai-tutor/mode";
 export { systemDesignMode } from "@/modules/system-design/mode";
 export { sceneExplainMode } from "@/modules/scene-explain/mode";
 export { screenshotExplainMode } from "@/modules/screenshot-explain/mode";

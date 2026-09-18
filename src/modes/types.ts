@@ -5,6 +5,7 @@
 
 export type ModeId =
   | "lessons"
+  | "ai-tutor"
   | "screenshot-explain"
   | "leetcode"
   | "figures-3d"

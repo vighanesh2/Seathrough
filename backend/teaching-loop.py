@@ -16,6 +16,7 @@ import re
 import sys
 from pathlib import Path
 from types import ModuleType
+from typing import Any
 
 BACKEND = Path(__file__).resolve().parent
 if str(BACKEND) not in sys.path:
@@ -245,7 +246,8 @@ def teach_mixup(
     *,
     open_browser: bool,
     previous_score: int | None = None,
-) -> tuple[str, str, list[str]]:
+    dest: Path | None = None,
+) -> tuple[str, str, list[str], str]:
     used = list(tried)
     previous = ""
     if current_method and strategy.needs_change(previous_score, current_method):
@@ -275,28 +277,26 @@ def teach_mixup(
         method = strategy.choose(diagnosis, student=answer)
         strategy.print_strategy(method, heading="Strategy thinker — first visual")
     print("\nBuilding a visual lesson with this method…", flush=True)
-    report = lesson.teach(
+    html_dest = dest if dest is not None else (
+        OUT_DIR / "interactive-lesson.html" if open_browser else None
+    )
+    payload = lesson.teach_payload(
         answer,
-        dest=OUT_DIR / "interactive-lesson.html",
+        dest=html_dest,
         open_browser=open_browser,
         diagnosis=diagnosis,
         strategy=method,
         previous_strategy=previous or None,
     )
-    opened = ""
-    for line in report.splitlines():
-        if line.startswith("Open:"):
-            opened = line
-            break
-    print(
-        "Visual lesson is ready. Look at both panes, press Play, then come back and answer the next question.",
-        flush=True,
-    )
-    if opened:
-        print(opened, flush=True)
+    visual_html = str(payload.get("visual_html") or "")
+    if visual_html:
+        print(
+            "Visual lesson is ready. Look at both panes, press Play, then come back and answer the next question.",
+            flush=True,
+        )
     if not any(strategy.same_method(method, item) for item in used):
         used.append(method)
-    return confused or last_confused, method, used
+    return confused or last_confused, method, used, visual_html
 
 
 def asked_questions(turns: list[dict[str, str]], current: str = "") -> list[str]:
@@ -371,146 +371,373 @@ def run_transfer_check(
     }
 
 
+def evaluate_transfer(
+    topic: str,
+    diagnosis: str,
+    turns: list[dict[str, str]],
+    example: str,
+    raw_answer: str,
+) -> dict[str, str | bool]:
+    result = transfer.grade(
+        example,
+        raw_answer,
+        topic=topic,
+        diagnosis=diagnosis,
+        asked=asked_questions(turns, example),
+    )
+    answer = (raw_answer or "").strip()
+    t_kind = "unknown"
+    t_diag = ""
+    t_confused = ""
+    if answer:
+        try:
+            checked = misconception.validate_input(answer)
+            t_diag = misconception.detect(
+                checked,
+                topic=topic or None,
+                context=history_context(topic, turns) + f"\nTransfer example: {example}",
+            )
+            fields = lesson.parse_diagnosis(t_diag)
+            t_kind = lesson.diagnosis_kind(fields)
+            t_confused = fields.get("what's confused") or fields.get("whats confused") or ""
+            if t_confused.lower() in {"none", "n/a", "-"}:
+                t_confused = ""
+        except (ValueError, RuntimeError):
+            t_kind = "unknown"
+    passed = bool(result["passed"]) and t_kind == "correct"
+    return {
+        "quit": False,
+        "passed": passed,
+        "example": example,
+        "answer": answer,
+        "kind": t_kind,
+        "diagnosis": t_diag,
+        "confused": t_confused,
+        "evidence": str(result["evidence"]),
+        "next_question": str(result["next_question"]),
+    }
+
+
+def empty_state(topic: str = "") -> dict[str, Any]:
+    cleaned = (topic or "").strip()
+    return {
+        "topic": cleaned,
+        "question": first_question(cleaned),
+        "turns": [],
+        "last_confused": "",
+        "current_method": "",
+        "tried_methods": [],
+        "turn_no": 0,
+        "phase": "ask",
+        "score": 0,
+        "kind": "",
+        "confused": "",
+        "diagnosis": "",
+        "wrong_model": "",
+        "right_model": "",
+        "message": "Share what you think. A picture will show up if a mix-up appears.",
+        "transfer_form": "",
+        "on_track": False,
+        "visual_html": "",
+        "method_label": "",
+        "think": "",
+        "evidence": "",
+    }
+
+
+def view_state(state: dict[str, Any]) -> dict[str, Any]:
+    turns = []
+    for item in state.get("turns") or []:
+        turns.append(
+            {
+                "turn": item.get("turn"),
+                "score": item.get("score"),
+                "kind": item.get("kind"),
+                "method": strategy.method_label(str(item.get("method") or "")),
+            }
+        )
+    visual = str(state.get("visual_html") or "")
+    return {
+        "phase": state.get("phase") or "ask",
+        "question": state.get("question") or "",
+        "score": int(state.get("score") or 0),
+        "kind": state.get("kind") or "",
+        "confused": state.get("confused") or "",
+        "topic": state.get("topic") or "",
+        "wrongModel": state.get("wrong_model") or "",
+        "rightModel": state.get("right_model") or "",
+        "methodLabel": state.get("method_label")
+        or strategy.method_label(str(state.get("current_method") or "")),
+        "think": state.get("think") or strategy.think_text(str(state.get("current_method") or "")),
+        "message": state.get("message") or "",
+        "evidence": state.get("evidence") or "",
+        "onTrack": bool(state.get("on_track")),
+        "visualHtml": visual,
+        "hasVisual": bool(visual),
+        "transferForm": state.get("transfer_form") or "",
+        "turns": turns,
+    }
+
+
+def _fill_models(state: dict[str, Any], diagnosis: str) -> None:
+    fields = lesson.parse_diagnosis(diagnosis)
+    state["diagnosis"] = diagnosis
+    state["wrong_model"] = fields.get("wrong model") or ""
+    state["right_model"] = fields.get("right model") or ""
+    state["method_label"] = strategy.method_label(str(state.get("current_method") or ""))
+    state["think"] = strategy.think_text(str(state.get("current_method") or ""))
+
+
+def apply_answer(
+    state: dict[str, Any],
+    raw_answer: str,
+    *,
+    open_browser: bool = False,
+) -> str:
+    if state.get("phase") == "on_track":
+        return ""
+    if is_quit(raw_answer):
+        state["phase"] = "stopped"
+        state["message"] = "Paused. Come back when you want to keep going."
+        return ""
+    try:
+        answer = misconception.validate_input(raw_answer)
+    except ValueError:
+        return "Say it in a sentence."
+    if int(state.get("turn_no") or 0) >= MAX_TURNS:
+        state["phase"] = "stopped"
+        state["message"] = "Let's pause here and pick this up again."
+        return ""
+    if state.get("phase") == "transfer":
+        return _apply_transfer_answer(state, answer, open_browser=open_browser)
+    return _apply_lesson_answer(state, answer, open_browser=open_browser)
+
+
+def _apply_lesson_answer(
+    state: dict[str, Any],
+    answer: str,
+    *,
+    open_browser: bool,
+) -> str:
+    topic = str(state.get("topic") or "")
+    question = str(state.get("question") or "")
+    turns: list[dict[str, str]] = list(state.get("turns") or [])
+    print("Checking for a mix-up…", flush=True)
+    diagnosis = misconception.detect(
+        answer,
+        topic=topic or None,
+        context=history_context(topic, turns) + f"\nCurrent question: {question}",
+    )
+    fields = lesson.parse_diagnosis(diagnosis)
+    kind = lesson.diagnosis_kind(fields)
+    topic = topic or fields.get("topic") or ""
+    if topic.lower() in {"unclear", "none"}:
+        topic = ""
+    confused = fields.get("what's confused") or fields.get("whats confused") or ""
+    if confused.lower() in {"none", "n/a", "-"}:
+        confused = ""
+    print("\nDetected\n--------\n" + diagnosis, flush=True)
+
+    last_confused = str(state.get("last_confused") or "")
+    current_method = str(state.get("current_method") or "")
+    tried_methods: list[str] = list(state.get("tried_methods") or [])
+    visual_html = str(state.get("visual_html") or "")
+    if should_teach(kind):
+        last_confused, current_method, tried_methods, drawn = teach_mixup(
+            answer,
+            diagnosis,
+            confused,
+            last_confused,
+            current_method,
+            tried_methods,
+            open_browser=open_browser,
+            previous_score=int(turns[-1]["score"]) if turns else None,
+        )
+        if drawn:
+            visual_html = drawn
+        state["message"] = "Look at the picture, press Play, then answer the next question."
+    elif kind == "correct":
+        state["message"] = "That matches the right idea. One more check to be sure."
+    elif kind == "slip":
+        state["message"] = "That looks like a small slip. Let's try the idea again."
+    else:
+        state["message"] = "Try answering the idea itself in a sentence."
+
+    judged = judge_turn(topic, question, answer, diagnosis, kind, turns)
+    score = cap_score(kind, int(judged["score"]))
+    state["turn_no"] = int(state.get("turn_no") or 0) + 1
+    turn = {
+        "turn": state["turn_no"],
+        "topic": topic,
+        "question": question,
+        "answer": answer,
+        "kind": kind,
+        "confused": confused,
+        "score": score,
+        "evidence": str(judged["evidence"]),
+        "method": current_method,
+    }
+    turns.append(turn)
+    append_log(turn)
+    print_tracker(turns, score, kind, confused)
+    print(f"Evidence: {judged['evidence']}", flush=True)
+
+    state["topic"] = topic
+    state["turns"] = turns
+    state["last_confused"] = last_confused
+    state["current_method"] = current_method
+    state["tried_methods"] = tried_methods
+    state["score"] = score
+    state["kind"] = kind
+    state["confused"] = confused
+    state["visual_html"] = visual_html
+    state["evidence"] = str(judged["evidence"])
+    _fill_models(state, diagnosis)
+
+    if transfer.ready_for_check(kind, score):
+        check = transfer.make_check(
+            topic,
+            diagnosis=diagnosis,
+            asked=asked_questions(turns),
+            mixup=confused,
+        )
+        form = str(check.get("form") or "new-question")
+        state["phase"] = "transfer"
+        state["transfer_form"] = form
+        state["question"] = str(check.get("question") or "")
+        if form == "new-example":
+            state["message"] = "Nice. Here's a new case of the same idea."
+        else:
+            state["message"] = "Nice. Here's a different question on the same idea."
+        return ""
+
+    state["phase"] = "ask"
+    state["question"] = str(judged["next_question"])
+    return ""
+
+
+def _apply_transfer_answer(
+    state: dict[str, Any],
+    answer: str,
+    *,
+    open_browser: bool,
+) -> str:
+    topic = str(state.get("topic") or "")
+    example = str(state.get("question") or "")
+    diagnosis = str(state.get("diagnosis") or "")
+    turns: list[dict[str, str]] = list(state.get("turns") or [])
+    check = evaluate_transfer(topic, diagnosis, turns, example, answer)
+    print("\nTransfer: " + ("true" if check["passed"] else "false"), flush=True)
+    print("Evidence: " + str(check["evidence"]), flush=True)
+    check_kind = str(check.get("kind") or "unknown")
+    check_confused = str(check.get("confused") or "")
+    score = int(state.get("score") or 0)
+    kind = str(state.get("kind") or "")
+    confused = str(state.get("confused") or "")
+    last_confused = str(state.get("last_confused") or "")
+    current_method = str(state.get("current_method") or "")
+    tried_methods: list[str] = list(state.get("tried_methods") or [])
+    visual_html = str(state.get("visual_html") or "")
+    transfer_ok = False
+    if check["passed"]:
+        transfer_ok = True
+        score = cap_score("correct", 100, transfer=True)
+        kind = "correct"
+        state["message"] = "You are on track."
+        state["on_track"] = True
+        state["phase"] = "on_track"
+    else:
+        score = cap_score(check_kind, min(score, 70))
+        kind = check_kind
+        confused = check_confused
+        state["message"] = "Not yet — we'll keep going with a clearer picture."
+        state["on_track"] = False
+        state["phase"] = "ask"
+        if should_teach(check_kind):
+            last_confused, current_method, tried_methods, drawn = teach_mixup(
+                str(check.get("answer") or answer),
+                str(check.get("diagnosis") or diagnosis),
+                check_confused,
+                last_confused,
+                current_method,
+                tried_methods,
+                open_browser=open_browser,
+                previous_score=score,
+            )
+            if drawn:
+                visual_html = drawn
+        state["question"] = str(check.get("next_question") or state.get("question") or "")
+    state["turn_no"] = int(state.get("turn_no") or 0) + 1
+    t_turn = {
+        "turn": state["turn_no"],
+        "topic": topic,
+        "question": example,
+        "answer": str(check.get("answer") or ""),
+        "kind": kind,
+        "confused": confused,
+        "score": score,
+        "evidence": str(check.get("evidence") or ""),
+        "method": current_method,
+        "transfer": "true" if transfer_ok else "false",
+    }
+    turns.append(t_turn)
+    append_log(t_turn)
+    print_tracker(turns, score, kind, confused)
+    state["turns"] = turns
+    state["score"] = score
+    state["kind"] = kind
+    state["confused"] = confused
+    state["last_confused"] = last_confused
+    state["current_method"] = current_method
+    state["tried_methods"] = tried_methods
+    state["visual_html"] = visual_html
+    state["evidence"] = str(check.get("evidence") or "")
+    extra_diag = str(check.get("diagnosis") or diagnosis)
+    if extra_diag:
+        _fill_models(state, extra_diag)
+    if on_track(kind, score, transfer_ok):
+        state["on_track"] = True
+        state["phase"] = "on_track"
+        state["score"] = 100
+        state["message"] = "You are on track."
+    return ""
+
+
 def run_loop(topic_hint: str = "", *, open_browser: bool = True) -> str:
-    topic = (topic_hint or "").strip()
-    turns: list[dict[str, str]] = []
-    last_confused = ""
-    current_method = ""
-    tried_methods: list[str] = []
-    question = first_question(topic)
+    state = empty_state(topic_hint)
     print("Continuous teaching loop — we stop only when there is evidence you understand.", flush=True)
     print("If an explanation fails, the method changes instead of repeating.", flush=True)
     print("100% requires a transfer check on a new example.", flush=True)
     print("Type quit to leave.\n", flush=True)
 
-    turn_no = 0
-    while turn_no < MAX_TURNS:
-        raw_answer = ask("\nQ: " + question)
-        if is_quit(raw_answer):
-            latest = int(turns[-1]["score"]) if turns else 0
-            return f"Stopped at {latest}% understanding after {len(turns)} turn(s). Not on track yet."
-        try:
-            answer = misconception.validate_input(raw_answer)
-        except ValueError:
-            print("Say it in a sentence, or type quit.", flush=True)
+    while int(state.get("turn_no") or 0) < MAX_TURNS and state.get("phase") not in {
+        "on_track",
+        "stopped",
+    }:
+        raw_answer = ask("\nQ: " + str(state.get("question") or ""))
+        error = apply_answer(state, raw_answer, open_browser=open_browser)
+        if error:
+            print(error, flush=True)
             continue
-        turn_no += 1
-
-        print("Checking for a mix-up…", flush=True)
-        diagnosis = misconception.detect(
-            answer,
-            topic=topic or None,
-            context=history_context(topic, turns) + f"\nCurrent question: {question}",
-        )
-        fields = lesson.parse_diagnosis(diagnosis)
-        kind = lesson.diagnosis_kind(fields)
-        topic = topic or fields.get("topic") or ""
-        if topic.lower() in {"unclear", "none"}:
-            topic = ""
-        confused = fields.get("what's confused") or fields.get("whats confused") or ""
-        if confused.lower() in {"none", "n/a", "-"}:
-            confused = ""
-
-        print("\nDetected\n--------\n" + diagnosis, flush=True)
-
-        if should_teach(kind):
-            last_confused, current_method, tried_methods = teach_mixup(
-                answer,
-                diagnosis,
-                confused,
-                last_confused,
-                current_method,
-                tried_methods,
-                open_browser=open_browser,
-                previous_score=int(turns[-1]["score"]) if turns else None,
+        if state.get("phase") == "stopped":
+            latest = int(state.get("score") or 0)
+            return (
+                f"Stopped at {latest}% understanding after "
+                f"{len(state.get('turns') or [])} turn(s). Not on track yet."
             )
-        elif kind == "correct":
-            print("\nThat answer matches the right model. Checking whether it is solid…", flush=True)
-        elif kind == "slip":
-            print("\nThat looks like a slip, not a stable mix-up. Let's check the idea again.", flush=True)
-        else:
-            print("\nThat did not answer the idea yet. Let's try a clearer question.", flush=True)
-
-        judged = judge_turn(topic, question, answer, diagnosis, kind, turns)
-        score = cap_score(kind, int(judged["score"]))
-        transfer_ok = False
-        check: dict[str, str | bool] | None = None
-        turn = {
-            "turn": turn_no,
-            "topic": topic,
-            "question": question,
-            "answer": answer,
-            "kind": kind,
-            "confused": confused,
-            "score": score,
-            "evidence": str(judged["evidence"]),
-            "method": current_method,
-        }
-        turns.append(turn)
-        append_log(turn)
-        print_tracker(turns, score, kind, confused)
-        print(f"Evidence: {judged['evidence']}", flush=True)
-
-        if transfer.ready_for_check(kind, score):
-            check = run_transfer_check(topic, diagnosis, confused, turns)
-            if check.get("quit"):
-                latest = int(turns[-1]["score"]) if turns else 0
-                return f"Stopped at {latest}% understanding after {len(turns)} turn(s). Not on track yet."
-            check_kind = str(check.get("kind") or "unknown")
-            check_confused = str(check.get("confused") or "")
-            if check["passed"]:
-                transfer_ok = True
-                score = cap_score("correct", 100, transfer=True)
-                kind = "correct"
-            else:
-                score = cap_score(check_kind, min(score, 70))
-                kind = check_kind
-                confused = check_confused
-                if should_teach(check_kind):
-                    last_confused, current_method, tried_methods = teach_mixup(
-                        str(check.get("answer") or answer),
-                        str(check.get("diagnosis") or diagnosis),
-                        check_confused,
-                        last_confused,
-                        current_method,
-                        tried_methods,
-                        open_browser=open_browser,
-                        previous_score=score,
-                    )
-            turn_no += 1
-            t_turn = {
-                "turn": turn_no,
-                "topic": topic,
-                "question": str(check.get("example") or ""),
-                "answer": str(check.get("answer") or ""),
-                "kind": kind,
-                "confused": confused,
-                "score": score,
-                "evidence": str(check.get("evidence") or ""),
-                "method": current_method,
-                "transfer": "true" if transfer_ok else "false",
-            }
-            turns.append(t_turn)
-            append_log(t_turn)
-            print_tracker(turns, score, kind, confused)
-
-        if on_track(kind, score, transfer_ok):
+        if state.get("on_track"):
             recap = "; ".join(
-                f"t{t['turn']} {t['score']}%" for t in turns
+                f"t{t['turn']} {t['score']}%" for t in (state.get("turns") or [])
             )
             return (
                 f"Understanding: 100%\n"
                 f"Transfer: true\n"
                 f"You are on track!\n"
-                f"Topic: {topic or 'this idea'}\n"
-                f"Turns: {len(turns)} ({recap})"
+                f"Topic: {state.get('topic') or 'this idea'}\n"
+                f"Turns: {len(state.get('turns') or [])} ({recap})"
             )
 
-        question = str(judged["next_question"])
-        if check is not None and not transfer_ok and check.get("next_question"):
-            question = str(check["next_question"])
-
-    latest = int(turns[-1]["score"]) if turns else 0
+    latest = int(state.get("score") or 0)
     return (
         f"Paused after {MAX_TURNS} turns at {latest}%. "
         "There is not yet enough evidence of understanding. Run the loop again to keep going."
@@ -582,6 +809,16 @@ def self_test() -> str:
         lines.append("- 100% understanding is transfer-gated: ok")
     else:
         lines.append("- FAIL transfer gate")
+    opening = empty_state("")
+    if opening.get("phase") == "ask" and "understand" in str(opening.get("question") or "").lower():
+        lines.append("- web session can start with an opening question: ok")
+    else:
+        lines.append("- FAIL empty_state")
+    err = apply_answer(opening, "   ", open_browser=False)
+    if err:
+        lines.append("- empty web answer rejected: ok")
+    else:
+        lines.append("- FAIL empty web answer")
     return "\n".join(lines)
 
 
