@@ -82,13 +82,19 @@
         canvas.width = pw;
         canvas.height = ph;
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ensureRough();
       }
       return dim;
     }
 
     const V = {
       ctx: ctx,
-      lerp: lerp,
+      lerp: function (a, b, u) {
+        if (a && typeof a === "object" && typeof a.x === "number") {
+          return { x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u) };
+        }
+        return lerp(a, b, u);
+      },
       clamp: clamp,
       leftTitle: "What you think",
       rightTitle: "What's true",
@@ -96,7 +102,42 @@
       captionAfter: "Notice what changed",
       duration: 2.2,
       draw: function () {},
+      rough: null,
     };
+
+    let rc = null;
+    let seq = 1;
+
+    function ensureRough() {
+      if (typeof rough === "undefined") {
+        rc = null;
+        V.rough = null;
+        return;
+      }
+      rc = rough.canvas(canvas);
+      V.rough = rc;
+    }
+
+    function nextSeed() {
+      seq += 1;
+      return seq;
+    }
+
+    function ink(extra) {
+      extra = extra || {};
+      return Object.assign({
+        roughness: 1.15,
+        bowing: 1.05,
+        strokeWidth: 1.7,
+        stroke: "#1a2b3c",
+        seed: nextSeed(),
+      }, extra);
+    }
+
+    function withRough(drawRough, drawPlain) {
+      if (rc) drawRough(rc);
+      else drawPlain();
+    }
 
     V.pane = function (side) {
       const dim = dims();
@@ -134,12 +175,25 @@
       const w = Math.min(width, tw + 16);
       const h = lines.length * 16 + 10;
       const top = y - h - 4;
-      roundRect(ctx, x - w / 2, top, w, h, 8);
-      ctx.fillStyle = "rgba(255,255,255,0.94)";
-      ctx.strokeStyle = "#d2c8b8";
-      ctx.lineWidth = 1;
-      ctx.fill();
-      ctx.stroke();
+      withRough(
+        function (r) {
+          r.rectangle(x - w / 2, top, w, h, ink({
+            fill: "rgba(255,255,255,0.94)",
+            fillStyle: "solid",
+            stroke: "#d2c8b8",
+            strokeWidth: 1.2,
+            roughness: 0.8,
+          }));
+        },
+        function () {
+          roundRect(ctx, x - w / 2, top, w, h, 8);
+          ctx.fillStyle = "rgba(255,255,255,0.94)";
+          ctx.strokeStyle = "#d2c8b8";
+          ctx.lineWidth = 1;
+          ctx.fill();
+          ctx.stroke();
+        }
+      );
       ctx.fillStyle = "#1a2b3c";
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
@@ -151,166 +205,254 @@
     };
 
     V.arrow = function (x1, y1, x2, y2, color, dashed) {
-      ctx.save();
-      ctx.strokeStyle = color || "#1b6ca8";
-      ctx.fillStyle = color || "#1b6ca8";
-      ctx.lineWidth = 3;
-      if (dashed) ctx.setLineDash([7, 5]);
-      ctx.beginPath();
-      ctx.moveTo(x1, y1);
-      ctx.lineTo(x2, y2);
-      ctx.stroke();
-      ctx.setLineDash([]);
+      const stroke = color || "#1b6ca8";
       const ang = Math.atan2(y2 - y1, x2 - x1);
-      ctx.beginPath();
-      ctx.moveTo(x2, y2);
-      ctx.lineTo(x2 - 12 * Math.cos(ang - 0.4), y2 - 12 * Math.sin(ang - 0.4));
-      ctx.lineTo(x2 - 12 * Math.cos(ang + 0.4), y2 - 12 * Math.sin(ang + 0.4));
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
+      withRough(
+        function (r) {
+          r.line(x1, y1, x2, y2, ink({
+            stroke: stroke,
+            strokeWidth: 2,
+            strokeLineDash: dashed ? [7, 5] : undefined,
+          }));
+          r.polygon([
+            [x2, y2],
+            [x2 - 12 * Math.cos(ang - 0.4), y2 - 12 * Math.sin(ang - 0.4)],
+            [x2 - 12 * Math.cos(ang + 0.4), y2 - 12 * Math.sin(ang + 0.4)],
+          ], ink({ stroke: stroke, fill: stroke, fillStyle: "solid", roughness: 0.7 }));
+        },
+        function () {
+          ctx.save();
+          ctx.strokeStyle = stroke;
+          ctx.fillStyle = stroke;
+          ctx.lineWidth = 3;
+          if (dashed) ctx.setLineDash([7, 5]);
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.beginPath();
+          ctx.moveTo(x2, y2);
+          ctx.lineTo(x2 - 12 * Math.cos(ang - 0.4), y2 - 12 * Math.sin(ang - 0.4));
+          ctx.lineTo(x2 - 12 * Math.cos(ang + 0.4), y2 - 12 * Math.sin(ang + 0.4));
+          ctx.closePath();
+          ctx.fill();
+          ctx.restore();
+        }
+      );
     };
 
     V.ball = function (x, y, color, r) {
       const rad = r || 10;
-      ctx.beginPath();
-      ctx.fillStyle = color || "#1b6ca8";
-      ctx.arc(x, y, rad, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.fillStyle = "rgba(255,255,255,0.35)";
-      ctx.arc(x - rad * 0.3, y - rad * 0.3, rad * 0.35, 0, Math.PI * 2);
-      ctx.fill();
+      const fill = color || "#1b6ca8";
+      withRough(
+        function (rcanvas) {
+          rcanvas.circle(x, y, rad * 2, ink({
+            stroke: fill,
+            fill: fill,
+            fillStyle: "solid",
+            roughness: 1.05,
+          }));
+        },
+        function () {
+          ctx.beginPath();
+          ctx.fillStyle = fill;
+          ctx.arc(x, y, rad, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      );
     };
 
     V.person = function (x, y) {
-      ctx.save();
-      ctx.strokeStyle = "#1a2b3c";
-      ctx.fillStyle = "#1a2b3c";
-      ctx.lineWidth = 2.4;
-      ctx.lineCap = "round";
-      ctx.beginPath();
-      ctx.arc(x, y - 58, 10, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.beginPath();
-      ctx.moveTo(x, y - 46);
-      ctx.lineTo(x, y - 18);
-      ctx.moveTo(x - 14, y - 36);
-      ctx.lineTo(x + 14, y - 36);
-      ctx.moveTo(x, y - 18);
-      ctx.lineTo(x - 12, y);
-      ctx.moveTo(x, y - 18);
-      ctx.lineTo(x + 12, y);
-      ctx.stroke();
-      ctx.restore();
+      withRough(
+        function (r) {
+          r.circle(x, y - 58, 20, ink({ fill: "#1a2b3c", fillStyle: "solid", stroke: "#1a2b3c" }));
+          r.line(x, y - 46, x, y - 18, ink({ stroke: "#1a2b3c", strokeWidth: 2 }));
+          r.line(x - 14, y - 36, x + 14, y - 36, ink({ stroke: "#1a2b3c", strokeWidth: 2 }));
+          r.line(x, y - 18, x - 12, y, ink({ stroke: "#1a2b3c", strokeWidth: 2 }));
+          r.line(x, y - 18, x + 12, y, ink({ stroke: "#1a2b3c", strokeWidth: 2 }));
+        },
+        function () {
+          ctx.save();
+          ctx.strokeStyle = "#1a2b3c";
+          ctx.fillStyle = "#1a2b3c";
+          ctx.lineWidth = 2.4;
+          ctx.beginPath();
+          ctx.arc(x, y - 58, 10, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.moveTo(x, y - 46);
+          ctx.lineTo(x, y - 18);
+          ctx.moveTo(x - 14, y - 36);
+          ctx.lineTo(x + 14, y - 36);
+          ctx.moveTo(x, y - 18);
+          ctx.lineTo(x - 12, y);
+          ctx.moveTo(x, y - 18);
+          ctx.lineTo(x + 12, y);
+          ctx.stroke();
+          ctx.restore();
+        }
+      );
     };
 
     V.sun = function (x, y, glow) {
       const g = clamp(Number(glow) || 0.7, 0.2, 1);
       const r = 12 + 14 * g;
-      ctx.save();
-      ctx.fillStyle = "rgba(244, 211, 94, " + (0.45 + 0.5 * g) + ")";
-      ctx.beginPath();
-      ctx.arc(x, y, r, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#f4d35e";
-      ctx.lineWidth = 3;
-      for (let i = 0; i < 8; i++) {
-        const a = (i / 8) * Math.PI * 2;
-        ctx.beginPath();
-        ctx.moveTo(x + Math.cos(a) * (r + 6), y + Math.sin(a) * (r + 6));
-        ctx.lineTo(x + Math.cos(a) * (r + 16), y + Math.sin(a) * (r + 16));
-        ctx.stroke();
-      }
-      ctx.restore();
+      withRough(
+        function (rcanvas) {
+          rcanvas.circle(x, y, r * 2, ink({
+            stroke: "#e0b429",
+            fill: "rgba(244, 211, 94, " + (0.45 + 0.5 * g) + ")",
+            fillStyle: "solid",
+          }));
+          for (let i = 0; i < 8; i++) {
+            const a = (i / 8) * Math.PI * 2;
+            rcanvas.line(
+              x + Math.cos(a) * (r + 6),
+              y + Math.sin(a) * (r + 6),
+              x + Math.cos(a) * (r + 16),
+              y + Math.sin(a) * (r + 16),
+              ink({ stroke: "#e0b429", strokeWidth: 2 })
+            );
+          }
+        },
+        function () {
+          ctx.save();
+          ctx.fillStyle = "rgba(244, 211, 94, " + (0.45 + 0.5 * g) + ")";
+          ctx.beginPath();
+          ctx.arc(x, y, r, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      );
     };
 
     V.leaf = function (x, y, fill) {
       const f = clamp(Number(fill) || 0.55, 0.15, 1);
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.fillStyle = "rgba(58, 125, 68, " + (0.35 + 0.65 * f) + ")";
-      ctx.beginPath();
-      ctx.ellipse(0, 0, 14 + 16 * f, 8 + 8 * f, -0.6, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = "#2c5c33";
-      ctx.beginPath();
-      ctx.moveTo(-16, 8);
-      ctx.lineTo(14, -10);
-      ctx.stroke();
-      ctx.restore();
+      const rw = 14 + 16 * f;
+      const rh = 8 + 8 * f;
+      withRough(
+        function (rcanvas) {
+          rcanvas.ellipse(x, y, rw * 2, rh * 2, ink({
+            stroke: "#2c5c33",
+            fill: "rgba(58, 125, 68, " + (0.35 + 0.65 * f) + ")",
+            fillStyle: "hachure",
+            hachureGap: 4,
+          }));
+          rcanvas.line(x - 16, y + 8, x + 14, y - 10, ink({ stroke: "#2c5c33" }));
+        },
+        function () {
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.fillStyle = "rgba(58, 125, 68, " + (0.35 + 0.65 * f) + ")";
+          ctx.beginPath();
+          ctx.ellipse(0, 0, rw, rh, -0.6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      );
     };
 
     V.beaker = function (x, y, opts) {
       const o = opts || {};
       const h = 120, topW = 78, botW = 58;
       const fill = clamp(Number(o.fill) || 0.55, 0.12, 0.92);
-      ctx.save();
-      ctx.beginPath();
-      ctx.moveTo(x - topW / 2, y - h);
-      ctx.lineTo(x - botW / 2, y);
-      ctx.quadraticCurveTo(x, y + 8, x + botW / 2, y);
-      ctx.lineTo(x + topW / 2, y - h);
-      ctx.closePath();
-      ctx.fillStyle = "rgba(236, 245, 250, 0.72)";
-      ctx.fill();
-      ctx.strokeStyle = "#3b5566";
-      ctx.lineWidth = 3;
-      ctx.stroke();
       const ly = y - 10 - (h - 22) * fill;
-      ctx.save();
-      ctx.clip();
-      ctx.fillStyle = o.liquid || "#5aa6d6";
-      ctx.fillRect(x - 50, ly, 100, y + 12 - ly);
-      ctx.restore();
-      ctx.beginPath();
-      ctx.ellipse(x, y - h, topW / 2, 8, 0, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
+      const liquid = o.liquid || "#5aa6d6";
+      withRough(
+        function (r) {
+          r.polygon([
+            [x - topW / 2, y - h],
+            [x + topW / 2, y - h],
+            [x + botW / 2, y],
+            [x - botW / 2, y],
+          ], ink({
+            stroke: "#3b5566",
+            fill: "rgba(236, 245, 250, 0.5)",
+            fillStyle: "solid",
+            strokeWidth: 2,
+          }));
+          r.rectangle(x - 28, ly, 56, Math.max(8, y - 8 - ly), ink({
+            stroke: "none",
+            fill: liquid,
+            fillStyle: "hachure",
+            hachureGap: 5,
+            roughness: 0.7,
+          }));
+        },
+        function () {
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(x - topW / 2, y - h);
+          ctx.lineTo(x - botW / 2, y);
+          ctx.quadraticCurveTo(x, y + 8, x + botW / 2, y);
+          ctx.lineTo(x + topW / 2, y - h);
+          ctx.closePath();
+          ctx.fillStyle = "rgba(236, 245, 250, 0.72)";
+          ctx.fill();
+          ctx.strokeStyle = "#3b5566";
+          ctx.stroke();
+          ctx.restore();
+        }
+      );
       return { x: x, y: y, ly: ly };
     };
 
     V.thermometer = function (x, y, value) {
       const v = clamp(Number(value) || 0.5, 0.05, 0.95);
-      ctx.save();
-      ctx.fillStyle = "#e9eef2";
-      roundRect(ctx, x - 8, y - 110, 16, 110, 8);
-      ctx.fill();
-      ctx.strokeStyle = "#3b5566";
-      ctx.stroke();
-      ctx.beginPath();
-      ctx.fillStyle = "#c45e1a";
-      ctx.arc(x, y, 14, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillRect(x - 5, y - 8 - 90 * v, 10, 90 * v);
-      ctx.restore();
+      withRough(
+        function (r) {
+          r.rectangle(x - 8, y - 110, 16, 110, ink({ fill: "#e9eef2", fillStyle: "solid", stroke: "#3b5566" }));
+          r.circle(x, y, 28, ink({ fill: "#c45e1a", fillStyle: "solid", stroke: "#c45e1a" }));
+          r.rectangle(x - 5, y - 8 - 90 * v, 10, 90 * v, ink({
+            stroke: "none",
+            fill: "#c45e1a",
+            fillStyle: "solid",
+            roughness: 0.6,
+          }));
+        },
+        function () {
+          ctx.save();
+          ctx.fillStyle = "#e9eef2";
+          roundRect(ctx, x - 8, y - 110, 16, 110, 8);
+          ctx.fill();
+          ctx.beginPath();
+          ctx.fillStyle = "#c45e1a";
+          ctx.arc(x, y, 14, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.restore();
+        }
+      );
     };
 
     V.hill = function (pane) {
       const x0 = pane.x + 16;
       const x1 = pane.x + pane.w - 16;
       const yBase = pane.y + pane.h * 0.78;
-      ctx.save();
-      ctx.strokeStyle = "#8a7a68";
-      ctx.lineWidth = 2;
       for (let k = 0; k < 5; k++) {
-        ctx.beginPath();
-        for (let i = 0; i <= 24; i++) {
-          const u = i / 24;
-          const x = lerp(x0, x1, u);
+        const pts = [];
+        for (let i = 0; i <= 18; i++) {
+          const u = i / 18;
           const bump = Math.sin(u * Math.PI) * (42 - k * 6);
           const valley = Math.sin((u - 0.12) * 7) * (10 - k);
-          const y = yBase - bump + valley + k * 10;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
+          pts.push([lerp(x0, x1, u), yBase - bump + valley + k * 10]);
         }
-        ctx.stroke();
+        withRough(
+          function (r) {
+            r.curve(pts, ink({ stroke: "#8a7a68", strokeWidth: 1.5, roughness: 1.05 }));
+          },
+          function () {
+            ctx.beginPath();
+            pts.forEach(function (pt, i) {
+              if (i === 0) ctx.moveTo(pt[0], pt[1]);
+              else ctx.lineTo(pt[0], pt[1]);
+            });
+            ctx.strokeStyle = "#8a7a68";
+            ctx.stroke();
+          }
+        );
       }
-      ctx.fillStyle = "#1b6ca8";
-      ctx.beginPath();
-      ctx.arc(pane.x + pane.w * 0.84, pane.y + pane.h * 0.58, 5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
+      V.ball(pane.x + pane.w * 0.84, pane.y + pane.h * 0.58, "#1b6ca8", 5);
     };
 
     V.axes = function (pane, xlabel, ylabel) {
@@ -325,17 +467,27 @@
 
     V.curve = function (pane, path, color) {
       if (!path || path.length < 2) return;
-      ctx.save();
-      ctx.strokeStyle = color || "#1b6ca8";
-      ctx.lineWidth = 2.4;
-      ctx.beginPath();
-      path.forEach(function (pt, i) {
+      const pts = path.map(function (pt) {
         const p = V.xy(pane, pt[0], pt[1]);
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
+        return [p.x, p.y];
       });
-      ctx.stroke();
-      ctx.restore();
+      withRough(
+        function (r) {
+          r.curve(pts, ink({ stroke: color || "#1b6ca8", strokeWidth: 2 }));
+        },
+        function () {
+          ctx.save();
+          ctx.strokeStyle = color || "#1b6ca8";
+          ctx.lineWidth = 2.4;
+          ctx.beginPath();
+          pts.forEach(function (pt, i) {
+            if (i === 0) ctx.moveTo(pt[0], pt[1]);
+            else ctx.lineTo(pt[0], pt[1]);
+          });
+          ctx.stroke();
+          ctx.restore();
+        }
+      );
     };
 
     V.along = function (path, t) {
@@ -344,31 +496,46 @@
 
     V.dots = function (x, y, count, speed, color) {
       const n = Math.max(4, Math.min(20, count || 10));
-      ctx.save();
+      const fill = color || "#1b4f72";
       for (let i = 0; i < n; i++) {
         const a = (i / n) * Math.PI * 2 + (speed || 1) * 0.4;
-        const r = 10 + (i % 4) * 6;
-        ctx.beginPath();
-        ctx.fillStyle = color || "#1b4f72";
-        ctx.arc(x + Math.cos(a) * r, y + Math.sin(a) * r * 0.7, 3, 0, Math.PI * 2);
-        ctx.fill();
+        const rad = 10 + (i % 4) * 6;
+        V.ball(x + Math.cos(a) * rad, y + Math.sin(a) * rad * 0.7, fill, 3);
       }
-      ctx.restore();
     };
 
     function chrome() {
+      seq = 1;
       const dim = resize();
+      if (!rc) ensureRough();
       ctx.fillStyle = "#fbf8f1";
       ctx.fillRect(0, 0, dim.w, dim.h);
       const L = V.pane("left");
       const R = V.pane("right");
-      ctx.fillStyle = "#fff";
-      roundRect(ctx, L.x - 6, 10, L.w + 12, dim.h - 18, 14);
-      ctx.fill();
-      roundRect(ctx, R.x - 6, 10, R.w + 12, dim.h - 18, 14);
-      ctx.fill();
-      ctx.fillStyle = "#d7cfc3";
-      ctx.fillRect(dim.w / 2 - 1, 12, 2, dim.h - 24);
+      withRough(
+        function (r) {
+          r.rectangle(L.x - 6, 10, L.w + 12, dim.h - 18, ink({
+            fill: "#fff",
+            fillStyle: "solid",
+            stroke: "#d7cfc3",
+            roughness: 0.7,
+          }));
+          r.rectangle(R.x - 6, 10, R.w + 12, dim.h - 18, ink({
+            fill: "#fff",
+            fillStyle: "solid",
+            stroke: "#d7cfc3",
+            roughness: 0.7,
+          }));
+          r.line(dim.w / 2, 16, dim.w / 2, dim.h - 12, ink({ stroke: "#d7cfc3", strokeWidth: 1.4 }));
+        },
+        function () {
+          ctx.fillStyle = "#fff";
+          roundRect(ctx, L.x - 6, 10, L.w + 12, dim.h - 18, 14);
+          ctx.fill();
+          roundRect(ctx, R.x - 6, 10, R.w + 12, dim.h - 18, 14);
+          ctx.fill();
+        }
+      );
       ctx.font = "600 14px ui-sans-serif, system-ui";
       ctx.textAlign = "center";
       ctx.fillStyle = "#c45e1a";

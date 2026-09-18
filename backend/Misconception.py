@@ -121,6 +121,24 @@ def complete(
     temperature: float = 0.2,
     timeout: int | None = None,
 ) -> str:
+    text, _reason = complete_result(
+        system,
+        user,
+        max_tokens=max_tokens,
+        temperature=temperature,
+        timeout=timeout,
+    )
+    return text
+
+
+def complete_result(
+    system: str,
+    user: str,
+    *,
+    max_tokens: int = 700,
+    temperature: float = 0.2,
+    timeout: int | None = None,
+) -> tuple[str, str]:
     api_key, model, url = llm_config()
     payload = {
         "model": model,
@@ -169,7 +187,8 @@ def complete(
     text = (content or "").strip()
     if not text:
         raise RuntimeError("The model returned empty text.")
-    return text
+    reason = str(choices[0].get("finish_reason") or "").strip().lower()
+    return text, reason
 
 
 def detect(text: str, topic: str | None = None) -> str:

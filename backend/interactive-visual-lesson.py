@@ -58,7 +58,8 @@ Do not put beaker or flask unless the sources are about heat, temperature, chemi
 
 VISUAL_PROMPT = """Write JavaScript that draws this lesson on a canvas. Output ONLY JavaScript. No markdown. No HTML.
 
-You receive VisualRuntime as V. Assign V.draw and titles. You may also use V.ctx for custom shapes.
+You receive VisualRuntime as V. Assign V.draw and titles. Helpers already draw in a Rough.js sketchy ink style — prefer them over raw ctx.
+V.rough is the Rough.js canvas if you need a custom shape (seed it so Play does not flicker).
 
 API:
   V.leftTitle, V.rightTitle, V.captionBefore, V.captionAfter, V.duration
@@ -78,7 +79,7 @@ API:
   V.curve(pane, [[nx,ny],...], color)
   V.along(path, t) -> {x,y} in 0-1
   V.dots(x,y,count,speed,color)
-  V.lerp, V.clamp, V.ctx
+  V.lerp, V.clamp, V.ctx, V.rough
 
 Required shape:
 V.leftTitle = "What you think";
@@ -96,9 +97,15 @@ Rules:
 - Draw EVERY component in the researched list. Invent extra canvas drawing if a helper is missing.
 - Left = mix-up. Right = true. Play (t going 0→1) must make them look different.
 - Use V.label for text so it is not clipped.
+- Keep it compact: under 120 lines. Compose V.arrow, V.curve, V.ball, V.person, V.label, and short V.rough paths inside V.draw. Do not write long nested helpers (no drawDNA/drawRNA style functions).
+- Finish the whole sketch. Close every function and brace. Never stop mid-statement.
 - Do NOT draw a beaker/flask/glass unless components include heat, temperature, chemistry, or liquid.
 - Do NOT replace the topic with a generic graph of two balls unless the topic is motion on a graph.
 - No fetch, eval, parent, cookies, or HTML.
+"""
+
+CONTINUE_PROMPT = """Continue this JavaScript canvas sketch from the exact cutoff. Output ONLY the remaining JavaScript. No markdown. No HTML.
+Do not repeat lines that are already finished. If the last line is incomplete, finish that line first, then close every open function and brace. Prefer V.* helpers.
 """
 
 ARTIFACT_TEMPLATE = r"""<!doctype html>
@@ -137,6 +144,7 @@ ARTIFACT_TEMPLATE = r"""<!doctype html>
       <span id="cap"></span>
     </div>
   </div>
+  <script>__ROUGH__</script>
   <script>__RUNTIME__</script>
   <script>
     VisualRuntime.mount(
@@ -661,8 +669,89 @@ def sketch_is_safe(sketch: str) -> bool:
     return not any(token in low for token in FORBIDDEN_JS)
 
 
-def sketch_looks_complete(sketch: str) -> bool:
-    return "V.draw" in sketch and len(sketch) >= 120
+def _js_open_counts(text: str) -> tuple[int, int, int]:
+    braces = parens = brackets = 0
+    i = 0
+    n = len(text)
+    while i < n:
+        ch = text[i]
+        nxt = text[i + 1] if i + 1 < n else ""
+        if ch == "/" and nxt == "/":
+            while i < n and text[i] != "\n":
+                i += 1
+            continue
+        if ch == "/" and nxt == "*":
+            i += 2
+            while i + 1 < n and not (text[i] == "*" and text[i + 1] == "/"):
+                i += 1
+            i += 2
+            continue
+        if ch in {'"', "'", "`"}:
+            quote = ch
+            i += 1
+            while i < n:
+                if text[i] == "\\":
+                    i += 2
+                    continue
+                if text[i] == quote:
+                    i += 1
+                    break
+                i += 1
+            continue
+        if ch == "{":
+            braces += 1
+        elif ch == "}":
+            braces -= 1
+        elif ch == "(":
+            parens += 1
+        elif ch == ")":
+            parens -= 1
+        elif ch == "[":
+            brackets += 1
+        elif ch == "]":
+            brackets -= 1
+        i += 1
+    return braces, parens, brackets
+
+
+def sketch_is_truncated(sketch: str, finish_reason: str = "") -> bool:
+    text = (sketch or "").strip()
+    if not text:
+        return True
+    braces, parens, brackets = _js_open_counts(text)
+    if braces != 0 or parens != 0 or brackets != 0:
+        return True
+    last = ""
+    for line in reversed(text.splitlines()):
+        stripped = line.strip()
+        if stripped and not stripped.startswith("//"):
+            last = stripped
+            break
+    if last and last[-1] not in ";})":
+        return True
+    reason = (finish_reason or "").strip().lower()
+    if reason in {"length", "max_tokens", "max_completion_tokens"} and not text.rstrip().endswith(";"):
+        return True
+    return False
+
+
+def sketch_looks_complete(sketch: str, finish_reason: str = "") -> bool:
+    text = sketch or ""
+    return "V.draw" in text and len(text) >= 120 and not sketch_is_truncated(text, finish_reason)
+
+
+def stitch_sketch(head: str, extra: str) -> str:
+    piece = extract_js(extra)
+    if not piece:
+        return head
+    if "V.draw" in piece and not sketch_is_truncated(piece):
+        return piece
+    head_r = (head or "").rstrip()
+    if not head_r:
+        return piece
+    if head_r.endswith((";", "}", "{", ")")):
+        return head_r + "\n" + piece.lstrip()
+    return head_r + piece.lstrip()
 
 
 def normalize_sketch(sketch: str) -> str:
@@ -801,9 +890,17 @@ def runtime_source() -> str:
     return (BACKEND / "visual_runtime.js").read_text(encoding="utf-8")
 
 
+def rough_source() -> str:
+    return (BACKEND / "rough.js").read_text(encoding="utf-8").replace("</", "<\\/")
+
+
 def build_artifact(sketch: str) -> str:
     body = (sketch or "").replace("</", "<\\/")
-    return ARTIFACT_TEMPLATE.replace("__RUNTIME__", runtime_source()).replace("__SKETCH__", body)
+    return (
+        ARTIFACT_TEMPLATE.replace("__ROUGH__", rough_source())
+        .replace("__RUNTIME__", runtime_source())
+        .replace("__SKETCH__", body)
+    )
 
 
 def think_aloud(
@@ -837,6 +934,39 @@ def think_aloud(
         return fallback_thinking(fields)
 
 
+def _complete_js(system: str, user: str, *, max_tokens: int) -> tuple[str, str]:
+    last_error: Exception | None = None
+    for attempt in range(2):
+        try:
+            return misconception.complete_result(
+                system,
+                user,
+                max_tokens=max_tokens,
+                temperature=0.25,
+                timeout=90,
+            )
+        except (ValueError, RuntimeError) as error:
+            last_error = error
+            err = str(error).lower()
+            if attempt == 0 and ("429" in err or "rate limit" in err):
+                print("Visual model is busy — retrying in a few seconds…", flush=True)
+                time.sleep(5)
+                continue
+            break
+    raise last_error or RuntimeError("Visual code generation failed.")
+
+
+def continue_sketch(sketch: str) -> tuple[str, str]:
+    tail = "\n".join((sketch or "").splitlines()[-80:])
+    user = (
+        "The sketch stopped mid-way. Finish it from the cutoff.\n\n"
+        "```javascript\n"
+        f"{tail}\n"
+        "```"
+    )
+    return _complete_js(CONTINUE_PROMPT, user, max_tokens=1400)
+
+
 def generate_sketch(
     student: str,
     diagnosis: str,
@@ -846,40 +976,35 @@ def generate_sketch(
     components: list[str] | None = None,
 ) -> str:
     fallback = fallback_sketch(fields, thinking, components)
-    last_error: Exception | None = None
-    raw = ""
-    for attempt in range(2):
-        try:
-            raw = misconception.complete(
-                VISUAL_PROMPT,
-                json.dumps(
-                    {
-                        "student": student,
-                        "diagnosis": clip(diagnosis, 800),
-                        "thinking": clip(thinking, 1200),
-                        "must_draw": components or [],
-                        "web_research": clip(research, 1800),
-                    },
-                    ensure_ascii=True,
-                ),
-                max_tokens=2200,
-                temperature=0.25,
-                timeout=90,
-            )
-            last_error = None
-            break
-        except (ValueError, RuntimeError) as error:
-            last_error = error
-            err = str(error).lower()
-            if attempt == 0 and ("429" in err or "rate limit" in err):
-                print("Visual model is busy — retrying in a few seconds…", flush=True)
-                time.sleep(5)
-                continue
-            break
-    if last_error is not None:
+    try:
+        raw, reason = _complete_js(
+            VISUAL_PROMPT,
+            json.dumps(
+                {
+                    "student": student,
+                    "diagnosis": clip(diagnosis, 800),
+                    "thinking": clip(thinking, 1200),
+                    "must_draw": components or [],
+                    "web_research": clip(research, 1800),
+                },
+                ensure_ascii=True,
+            ),
+            max_tokens=3500,
+        )
+    except (ValueError, RuntimeError):
         print("Visual code generation failed. Using a fallback drawing.", flush=True)
         return fallback
     sketch = normalize_sketch(extract_js(raw))
+    for _ in range(2):
+        if not sketch_is_truncated(sketch, reason):
+            break
+        print("Visual code was cut off — finishing it…", flush=True)
+        try:
+            extra, reason = continue_sketch(sketch)
+        except (ValueError, RuntimeError):
+            break
+        raw = (raw or "") + "\n" + extra
+        sketch = normalize_sketch(stitch_sketch(sketch, extra))
     if not sketch_is_safe(sketch) or not sketch_looks_complete(sketch):
         OUT_DIR.mkdir(parents=True, exist_ok=True)
         try:
@@ -1090,8 +1215,8 @@ def self_test() -> str:
         lines.append("- heat fallback draws beaker/thermometer/particles: ok")
     else:
         lines.append("- FAIL heat sketch")
-    if 'id="play"' in visual and "VisualRuntime" in visual:
-        lines.append("- generated artifact is playable: ok")
+    if 'id="play"' in visual and "VisualRuntime" in visual and "var rough=" in visual:
+        lines.append("- generated artifact is playable with Rough.js: ok")
     else:
         lines.append("- FAIL runtime artifact")
     gd = fallback_sketch(
@@ -1133,6 +1258,29 @@ def self_test() -> str:
         lines.append("- extract js from fences: ok")
     else:
         lines.append("- FAIL extract js")
+    cut = (
+        'V.leftTitle = "What you think";\n'
+        "V.draw = function (t) {\n"
+        '  const L = V.pane("left");\n'
+        "  const ay = V.lerp(mrnaPos.y, ribPos"
+    )
+    if sketch_is_truncated(cut) and not sketch_looks_complete(cut):
+        lines.append("- truncated sketch detected: ok")
+    else:
+        lines.append("- FAIL truncated sketch slipped through")
+    finished_cut = stitch_sketch(cut, "Pos.y, phase2);\n  V.ball(1, 2);\n};\n")
+    if sketch_looks_complete(finished_cut) and "ribPosPos.y" in finished_cut:
+        lines.append("- truncated sketch can be stitched: ok")
+    else:
+        lines.append("- FAIL stitch continuation")
+    done = (
+        'V.leftTitle = "What you think";\nV.rightTitle = "What\'s true";\n'
+        'V.draw = function (t) {\n  const L = V.pane("left");\n  V.ball(10, 10, "#000", 6);\n};'
+    )
+    if sketch_looks_complete(done) and not sketch_is_truncated(done, "stop"):
+        lines.append("- finished sketch accepted: ok")
+    else:
+        lines.append("- FAIL finished sketch rejected")
     if not sketch_is_safe("V.draw = function (t) { fetch('https://x'); }"):
         lines.append("- unsafe sketch blocked: ok")
     else:
