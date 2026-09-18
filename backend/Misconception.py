@@ -191,10 +191,15 @@ def complete_result(
     return text, reason
 
 
-def detect(text: str, topic: str | None = None) -> str:
+def detect(text: str, topic: str | None = None, context: str | None = None) -> str:
     """Detect the misconception in `text`. Returns plain text."""
     student = validate_input(text)
-    user = student if not (topic or "").strip() else f"Topic hint: {topic.strip()}\n\nStudent said:\n{student}"
+    parts: list[str] = []
+    if (topic or "").strip():
+        parts.append(f"Topic hint: {topic.strip()}")
+    if (context or "").strip():
+        parts.append(context.strip())
+    user = ("\n\n".join(parts) + f"\n\nStudent said:\n{student}") if parts else student
     return complete(SYSTEM_PROMPT, user)
 
 

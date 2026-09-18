@@ -46,6 +46,8 @@ BEATS:
 - visible event 3
 
 8-14 short sentences before the trailer.
+
+If a teaching method is provided, the picture MUST follow that method and representation. Do not reuse a failed method listed under do_not_repeat.
 """
 
 EXTRACT_PROMPT = """From the web notes, list the concrete things a teacher should DRAW.
@@ -101,6 +103,7 @@ Rules:
 - Finish the whole sketch. Close every function and brace. Never stop mid-statement.
 - Do NOT draw a beaker/flask/glass unless components include heat, temperature, chemistry, or liquid.
 - Do NOT replace the topic with a generic graph of two balls unless the topic is motion on a graph.
+- If a teaching method is provided, draw THAT representation. Do not redraw a failed method listed under do_not_repeat.
 - No fetch, eval, parent, cookies, or HTML.
 """
 
@@ -909,6 +912,8 @@ def think_aloud(
     fields: dict[str, str],
     research: str = "",
     components: list[str] | None = None,
+    strategy: str = "",
+    previous_strategy: str = "",
 ) -> str:
     try:
         raw = misconception.complete(
@@ -919,6 +924,8 @@ def think_aloud(
                     "diagnosis": diagnosis,
                     "web_research": research or "(no web results — use the diagnosis carefully)",
                     "visual_components": components or [],
+                    "teaching_method": strategy or "",
+                    "do_not_repeat": previous_strategy or "",
                 },
                 ensure_ascii=True,
             ),
@@ -974,6 +981,8 @@ def generate_sketch(
     thinking: str,
     research: str = "",
     components: list[str] | None = None,
+    strategy: str = "",
+    previous_strategy: str = "",
 ) -> str:
     fallback = fallback_sketch(fields, thinking, components)
     try:
@@ -986,6 +995,8 @@ def generate_sketch(
                     "thinking": clip(thinking, 1200),
                     "must_draw": components or [],
                     "web_research": clip(research, 1800),
+                    "teaching_method": clip(strategy, 700),
+                    "do_not_repeat": clip(previous_strategy, 500),
                 },
                 ensure_ascii=True,
             ),
@@ -1091,11 +1102,21 @@ def write_lesson(html: str, dest: Path) -> Path:
     return dest
 
 
-def teach(student: str, *, dest: Path | None = None, open_browser: bool = True) -> str:
+def teach(
+    student: str,
+    *,
+    dest: Path | None = None,
+    open_browser: bool = True,
+    diagnosis: str | None = None,
+    strategy: str | None = None,
+    previous_strategy: str | None = None,
+) -> str:
     text = misconception.validate_input(student)
-    diagnosis = misconception.detect(text)
+    diagnosis = (diagnosis or "").strip() or misconception.detect(text)
     fields = parse_diagnosis(diagnosis)
     kind = diagnosis_kind(fields)
+    method = (strategy or "").strip()
+    failed = (previous_strategy or "").strip()
 
     if kind in {"correct", "not_learning", "slip"}:
         reason = {
@@ -1108,7 +1129,15 @@ def teach(student: str, *, dest: Path | None = None, open_browser: bool = True) 
     sources = research_topic(text, fields)
     evidence = websearch.format_evidence(sources)
     components = extract_components(fields, sources)
-    thinking = think_aloud(text, diagnosis, fields, evidence, components)
+    thinking = think_aloud(
+        text,
+        diagnosis,
+        fields,
+        evidence,
+        components,
+        strategy=method,
+        previous_strategy=failed,
+    )
     meta = lesson_meta(fields, thinking)
     path = dest or OUT_DIR / "interactive-lesson.html"
     write_lesson(
@@ -1128,7 +1157,16 @@ def teach(student: str, *, dest: Path | None = None, open_browser: bool = True) 
     if open_browser:
         webbrowser.open(path.resolve().as_uri())
     print("Writing visual code…", flush=True)
-    sketch = generate_sketch(text, diagnosis, fields, thinking, evidence, components)
+    sketch = generate_sketch(
+        text,
+        diagnosis,
+        fields,
+        thinking,
+        evidence,
+        components,
+        strategy=method,
+        previous_strategy=failed,
+    )
     visual = build_artifact(sketch)
     write_lesson(
         render_html(
@@ -1157,6 +1195,7 @@ def teach(student: str, *, dest: Path | None = None, open_browser: bool = True) 
         f"Plan\n----\n{beats or '- (no beats)'}\n\n"
         f"Lesson: {meta['title']}\n"
         f"Picture: {meta['picture']}\n"
+        f"Method: {clip(method, 160) or 'split-pane contrast'}\n"
         f"Visual: generated drawing code ({len(sketch)} chars)\n"
         f"{meta['say']}\n"
         f"Open: {path}"
@@ -1289,6 +1328,10 @@ def self_test() -> str:
         lines.append("- thinking embedded: ok")
     else:
         lines.append("- FAIL thinking embed")
+    if "strategy" in teach.__code__.co_varnames and "previous_strategy" in teach.__code__.co_varnames:
+        lines.append("- teach can switch methods: ok")
+    else:
+        lines.append("- FAIL teach missing strategy")
     lines.append(f"- skip when correct: {diagnosis_kind({'kind': 'actually correct'})}")
     return "\n".join(lines)
 
