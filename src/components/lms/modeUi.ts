@@ -9,6 +9,7 @@ import {
   Lightbulb,
   Network,
   PenLine,
+  Sparkles,
   WandSparkles,
 } from "lucide-react";
 import type { ModeId } from "@/modes/types";
@@ -22,6 +23,11 @@ export type ModeUi = {
 };
 
 export const MODE_UI: Record<ModeId, ModeUi> = {
+  "smart-tutor": {
+    icon: Sparkles,
+    hint: "Ask a question. The tutor draws, talks, and checks you understood.",
+    tone: "blue",
+  },
   lessons: {
     icon: BookOpen,
     hint: "Type what you’re stuck on. We’ll draw it step by step.",

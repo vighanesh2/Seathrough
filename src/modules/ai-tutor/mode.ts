@@ -11,7 +11,7 @@ export const aiTutorMode: ModeDefinition = {
   kind: "learning",
   group: "studio",
   order: 12,
-  enabled: true,
+  enabled: false,
   badge: "new",
   usesWhiteboard: false,
   metaTitle: "Guided tutor | SeeThrough",

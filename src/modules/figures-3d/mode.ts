@@ -11,7 +11,7 @@ export const figures3dMode: ModeDefinition = {
   kind: "learning",
   group: "studio",
   order: 20,
-  enabled: true,
+  enabled: false,
   badge: "beta",
   usesWhiteboard: false,
   metaTitle: "Human anatomy | SeeThrough",

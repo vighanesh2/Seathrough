@@ -11,7 +11,7 @@ export const lessonsMode: ModeDefinition = {
   kind: "learning",
   group: "studio",
   order: 10,
-  enabled: true,
+  enabled: false,
   usesWhiteboard: true,
   metaTitle: "Start a lesson | SeeThrough",
   metaDescription:
