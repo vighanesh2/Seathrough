@@ -91,6 +91,7 @@ export function getDeepgramConfig() {
   return {
     apiKey: required("DEEPGRAM_API_KEY"),
     model: optional("DEEPGRAM_TTS_MODEL") ?? "aura-2-thalia-en",
+    sttModel: optional("DEEPGRAM_STT_MODEL") ?? "nova-2",
   };
 }
 

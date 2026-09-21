@@ -26,7 +26,7 @@ SWITCH_BELOW = 70
 SWITCH_PROMPT = """You are the strategy thinker for a visual lesson. The last method did not get understanding to 70%.
 Think, then pick a BETTER method. You MUST change. Do not keep or rename the same picture.
 
-Think: <2-4 sentences: what the last visual showed, why it didn't land, what picture would work better for THIS mix-up>
+Think: <2-4 sentences: what the last visual showed, why it didn't land, what picture would work better>
 Decision: change
 Method: <short new name — not the same as Current or Tried>
 Representation: <concrete objects and motion to draw for THIS topic, not a generic template>
@@ -35,15 +35,15 @@ Ask next: <one check question that fits the new picture>
 
 Rules:
 - If understanding is under 70, Decision must be change.
-- Change the representation (number trace, causal chain, counterexample, step sequence, analogy, before/after). Split-pane contrast is banned if it was already tried.
-- Name objects from the mix-up (grid vs tailpipe, coal plant, battery, etc.) not "left pane / right pane" unless that method is new.
+- Change the representation (number trace, causal chain, step sequence, analogy, before/after, call stack). Split-pane contrast is banned.
+- Name objects from the topic. Do not invent a mix-up the student never stated.
 - Do not lecture. The visual lesson will draw this.
 """
 
-CHOOSE_PROMPT = """You are the strategy thinker picking the FIRST visual method for this mix-up.
+CHOOSE_PROMPT = """You are picking the FIRST visual for this topic.
 Think, then output the best first picture.
 
-Think: <2-4 sentences: what mix-up to make visible, what objects to draw>
+Think: <2-4 sentences: how the idea actually works, what objects to draw>
 Decision: start
 Method: <short name>
 Representation: <concrete objects and motion for THIS topic>
@@ -51,20 +51,22 @@ Why this: <one sentence>
 Ask next: <one check question>
 
 Rules:
-- Prefer the picture that makes the mix-up fail on screen, not a generic split-pane of two labels.
+- Show the true mechanism. Do not invent a mix-up if Wrong model is none.
+- For recursion / self-calling functions: nested call-stack frames that grow, then unwind with return values.
+- No split-pane of "what you think" vs "what's true".
 - Do not lecture. The visual lesson will draw this.
 """
 
 DEFAULT_METHOD = (
-    "Method: split-pane contrast\n"
-    "Representation: left pane is the mix-up; right pane is the true model; Play makes them move differently"
+    "Method: mechanism in motion\n"
+    "Representation: one full scene of how the idea actually works; Play walks the real steps"
 )
 
 METHOD_BANK = [
     DEFAULT_METHOD,
     (
-        "Method: single-object before/after\n"
-        "Representation: one object transforms as Play runs; no second-pane story"
+        "Method: call stack\n"
+        "Representation: nested labeled frames push as calls happen, then unwind with return values"
     ),
     (
         "Method: step sequence\n"
@@ -145,7 +147,7 @@ def default_method(diagnosis: str = "") -> str:
         return DEFAULT_METHOD
     return (
         DEFAULT_METHOD
-        + f"\nWhy this first: start with a clear mix-up vs true picture for {topic}."
+        + f"\nWhy this first: show how {topic} actually works."
     )
 
 

@@ -1,0 +1,6 @@
+# Backend is stdlib-only (urllib). No pip packages required.
+# Requires Python 3.10+
+#
+#   python3 --version
+#   npm run backend:check
+#   npm run backend

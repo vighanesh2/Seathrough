@@ -8,11 +8,11 @@ async function readView(response: Response): Promise<TutorView> {
   return payload;
 }
 
-export async function startTutor(topic = ""): Promise<TutorView> {
+export async function startTutor(topic = "", language = ""): Promise<TutorView> {
   const response = await fetch("/api/ai-tutor", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "start", topic }),
+    body: JSON.stringify({ action: "start", topic, language }),
   });
   return readView(response);
 }

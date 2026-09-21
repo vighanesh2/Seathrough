@@ -24,6 +24,7 @@ if str(BACKEND) not in sys.path:
 
 import Misconception as misconception  # noqa: E402
 import tavily as websearch  # noqa: E402
+import visual_plan as vplan  # noqa: E402
 
 OUT_DIR = BACKEND / "out"
 MAX_VISUAL_CHARS = 80_000
@@ -70,6 +71,7 @@ API:
   V.inPane(pane, fn)
   V.label(x, y, text, maxW)
   V.arrow(x1,y1,x2,y2,color,dashed)
+  V.box(x,y,w,h,{stroke,fill,roughness})  // sketchy rectangle — USE THIS for frames/boxes
   V.ball(x,y,color,r)
   V.person(x,y)
   V.sun(x,y,glow)
@@ -82,6 +84,12 @@ API:
   V.along(path, t) -> {x,y} in 0-1
   V.dots(x,y,count,speed,color)
   V.lerp, V.clamp, V.ctx, V.rough
+
+Rough.js (only if you must use V.rough directly):
+  V.rough.rectangle(x,y,w,h,opts)   // NOT .rect — that does not exist
+  V.rough.circle(x,y,diameter,opts)
+  V.rough.line(x1,y1,x2,y2,opts)
+  Prefer V.box / V.ball / V.arrow instead of calling V.rough yourself.
 
 Required shape:
 V.leftTitle = "What you think";
@@ -99,8 +107,9 @@ Rules:
 - Draw EVERY component in the researched list. Invent extra canvas drawing if a helper is missing.
 - Left = mix-up. Right = true. Play (t going 0→1) must make them look different.
 - Use V.label for text so it is not clipped.
-- Keep it compact: under 120 lines. Compose V.arrow, V.curve, V.ball, V.person, V.label, and short V.rough paths inside V.draw. Do not write long nested helpers (no drawDNA/drawRNA style functions).
+- Keep it compact: under 120 lines. Compose V.box, V.arrow, V.curve, V.ball, V.person, V.label inside V.draw. Do not write long nested helpers (no drawDNA/drawRNA style functions).
 - Finish the whole sketch. Close every function and brace. Never stop mid-statement.
+- Do NOT call V.rough.rect — use V.box(x,y,w,h) or V.rough.rectangle.
 - Do NOT draw a beaker/flask/glass unless components include heat, temperature, chemistry, or liquid.
 - Do NOT replace the topic with a generic graph of two balls unless the topic is motion on a graph.
 - If a teaching method is provided, draw THAT representation. Do not redraw a failed method listed under do_not_repeat.
@@ -445,15 +454,12 @@ def parse_thinking_trailer(raw: str) -> dict[str, Any]:
 
 def fallback_thinking(fields: dict[str, str]) -> str:
     topic = fields.get("topic") or "this idea"
-    wrong = fields.get("wrong model") or "the mix-up"
-    right = fields.get("right model") or "what's true"
     return (
-        f"The student is tangled up about {topic}. They seem to believe: {wrong} "
-        f"What they need to see is: {right} "
-        "Draw the actual stuff of the topic, not a graph, unless the idea is coordinates.\n\n"
+        f"Show how {topic} works as a moving picture of its real parts. "
+        "Play must change what is on screen.\n\n"
         f"TITLE: {clip(topic, 60)}\n"
-        f"PICTURE: a concrete scene for {clip(topic, 40)}\n"
-        "BEATS:\n- the mix-up plays out\n- the true model does something else\n- the two endings differ"
+        f"PICTURE: the working parts of {clip(topic, 40)}\n"
+        "BEATS:\n- the process starts\n- a working part changes\n- a result is visible"
     )
 
 
@@ -765,128 +771,16 @@ def normalize_sketch(sketch: str) -> str:
         text = "V.draw = function (t) {\n" + text + "\n};"
     if "V.leftTitle" not in text:
         text = 'V.leftTitle = "What you think";\nV.rightTitle = "What\'s true";\n' + text
+    # Rough.js canvas API is rectangle/circle/line — models often invent .rect.
+    text = re.sub(r"V\.rough\.rect\s*\(", "V.box(", text)
+    text = re.sub(r"\.rough\.rect\s*\(", ".rough.rectangle(", text)
     return text
 
 
 def fallback_sketch(fields: dict[str, str], thinking: str = "", components: list[str] | None = None) -> str:
-    blob = topic_blob(fields, thinking + " " + " ".join(components or []))
-    wrong = json.dumps(clip(fields.get("wrong model") or "mix-up", 36), ensure_ascii=True)
-    right = json.dumps(clip(fields.get("right model") or "true", 36), ensure_ascii=True)
-    if any(w in blob for w in ("gradient", "descent", "loss function", "bowl", "marble", "contour")):
-        return r"""
-V.leftTitle = "What you think";
-V.rightTitle = "What's true";
-V.captionBefore = "Same start. Watch the path.";
-V.captionAfter = "Straight to the min cuts across. Descent follows the slope.";
-V.draw = function (t) {
-  const L = V.pane("left");
-  const R = V.pane("right");
-  V.hill(L);
-  V.hill(R);
-  const straight = [[0.18, 0.22], [0.84, 0.55]];
-  const slope = [[0.18, 0.22], [0.28, 0.42], [0.34, 0.3], [0.48, 0.52], [0.55, 0.38], [0.68, 0.58], [0.76, 0.5], [0.84, 0.55]];
-  V.curve(L, straight, "#c45e1a");
-  V.curve(R, slope, "#1b6ca8");
-  const a = V.along(straight, t);
-  const b = V.along(slope, t);
-  const pL = V.xy(L, a.x, a.y);
-  const pR = V.xy(R, b.x, b.y);
-  V.ball(pL.x, pL.y, "#c45e1a", 9);
-  V.ball(pR.x, pR.y, "#1b6ca8", 9);
-  V.label(pL.x, pL.y - 14, "straight to min", 130);
-  V.label(pR.x, pR.y - 14, "follow the slope", 130);
-};
-""".strip()
-    if any(w in blob for w in ("heat", "temp", "thermo", "boiling")):
-        return r"""
-V.leftTitle = "What you think";
-V.rightTitle = "What's true";
-V.captionBefore = "Same word, two ideas";
-V.captionAfter = "Heat flows. Temperature is how fast particles jiggle.";
-V.draw = function (t) {
-  const L = V.pane("left");
-  const R = V.pane("right");
-  const cup = V.xy(L, 0.4, 0.78);
-  V.beaker(cup.x, cup.y, { fill: 0.55, liquid: "#7eb6e8" });
-  V.thermometer(V.xy(L, 0.78, 0.72).x, V.xy(L, 0.78, 0.72).y, 0.7);
-  V.label(cup.x, cup.y - 130, "Heat = temperature", 160);
-  const hot = V.xy(R, 0.28, 0.78);
-  const cold = V.xy(R, 0.72, 0.78);
-  V.beaker(hot.x, hot.y, { fill: 0.6, liquid: "#f4a261" });
-  V.beaker(cold.x, cold.y, { fill: 0.6, liquid: "#8ecae6" });
-  V.dots(hot.x, hot.y - 70, 14, 2.6 - t, "#c45e1a");
-  V.dots(cold.x, cold.y - 70, 14, 0.4 + t * 1.4, "#1b6ca8");
-  V.thermometer(V.xy(R, 0.12, 0.62).x, V.xy(R, 0.12, 0.62).y, 0.85 - t * 0.25);
-  V.thermometer(V.xy(R, 0.9, 0.62).x, V.xy(R, 0.9, 0.62).y, 0.18 + t * 0.25);
-  V.arrow(hot.x + 30, hot.y - 80, cold.x - 30, cold.y - 80, "#c45e1a");
-  V.label((hot.x + cold.x) / 2, hot.y - 150, "heat flows", 110);
-};
-""".strip()
-    if any(w in blob for w in ("gravity", "throw", "projectile", "parabola")):
-        return r"""
-V.leftTitle = "What you think";
-V.rightTitle = "What's true";
-V.captionBefore = "Throw both balls";
-V.captionAfter = "Only the true side comes back down";
-V.draw = function (t) {
-  const L = V.pane("left");
-  const R = V.pane("right");
-  V.person(V.xy(L, 0.22, 0.88).x, V.xy(L, 0.22, 0.88).y);
-  V.person(V.xy(R, 0.22, 0.88).x, V.xy(R, 0.22, 0.88).y);
-  const up = [[0.32, 0.72], [0.55, 0.28], [0.82, 0.08]];
-  const arc = [[0.32, 0.72], [0.52, 0.22], [0.7, 0.82]];
-  V.curve(L, up, "#c45e1a");
-  V.curve(R, arc, "#1b6ca8");
-  const a = V.along(up, t);
-  const b = V.along(arc, t);
-  const pL = V.xy(L, a.x, a.y);
-  const pR = V.xy(R, b.x, b.y);
-  V.ball(pL.x, pL.y, "#c45e1a", 9);
-  V.ball(pR.x, pR.y, "#1b6ca8", 9);
-};
-""".strip()
-    if any(w in blob for w in ("eigen", "vector", "matrix")):
-        return r"""
-V.leftTitle = "What you think";
-V.rightTitle = "What's true";
-V.captionBefore = "Any arrow?";
-V.captionAfter = "Only some arrows keep their line.";
-V.draw = function (t) {
-  const L = V.pane("left");
-  const R = V.pane("right");
-  V.axes(L, "x", "y");
-  V.axes(R, "x", "y");
-  const oL = V.xy(L, 0.28, 0.7);
-  const oR = V.xy(R, 0.28, 0.7);
-  V.arrow(oL.x, oL.y, V.xy(L, 0.7, 0.35).x, V.xy(L, 0.7, 0.35).y, "#c45e1a");
-  V.arrow(oL.x, oL.y, V.xy(L, 0.78, 0.62).x, V.xy(L, 0.78, 0.62).y, "#5a6b7c", true);
-  V.label(V.xy(L, 0.72, 0.28).x, V.xy(L, 0.72, 0.28).y, "any arrow", 100);
-  const keep = V.xy(R, 0.28 + 0.4 * t, 0.7 - 0.02 * t);
-  const spin = V.xy(R, 0.28 + 0.32 * Math.cos(t * 1.2), 0.7 - 0.28 * Math.sin(t * 1.2 + 0.4));
-  V.arrow(oR.x, oR.y, keep.x, keep.y, "#1b6ca8");
-  V.arrow(oR.x, oR.y, spin.x, spin.y, "#c45e1a", true);
-  V.label(keep.x, keep.y - 8, "stays on its line", 130);
-  V.label(spin.x, spin.y - 8, "rotates away", 110);
-};
-""".strip()
-    return f"""
-V.leftTitle = "What you think";
-V.rightTitle = "What's true";
-V.captionBefore = "Press Play";
-V.captionAfter = "The two sides do not match";
-V.draw = function (t) {{
-  const L = V.pane("left");
-  const R = V.pane("right");
-  V.label(V.xy(L, 0.5, 0.18).x, V.xy(L, 0.18, 0.18).y, {wrong}, 160);
-  V.label(V.xy(R, 0.5, 0.18).x, V.xy(R, 0.18, 0.18).y, {right}, 160);
-  const a = V.xy(L, 0.25, 0.6);
-  const b = V.xy(L, 0.78, 0.6);
-  V.arrow(a.x, a.y, b.x, b.y, "#c45e1a");
-  const c = V.xy(R, 0.25, 0.62);
-  const d = V.xy(R, 0.55 + 0.25 * t, 0.35 + 0.3 * t);
-  V.arrow(c.x, c.y, d.x, d.y, "#1b6ca8");
-}};
-""".strip()
+    """Genre template HTML — never dump Right model / diagnosis sentences into boxes."""
+    plan = vplan.make_plan("", fields, thinking, components, use_llm=False)
+    return vplan.build_widget_html(plan)
 
 
 def runtime_source() -> str:
@@ -1110,6 +1004,7 @@ def teach_payload(
     diagnosis: str | None = None,
     strategy: str | None = None,
     previous_strategy: str | None = None,
+    language: str = "",
 ) -> dict[str, Any]:
     text = misconception.validate_input(student)
     diagnosis = (diagnosis or "").strip() or misconception.detect(text)
@@ -1129,6 +1024,7 @@ def teach_payload(
             "kind": kind,
             "report": f"{diagnosis}\n\n{reason}",
             "visual_html": "",
+            "visual_plan": None,
             "thinking": "",
             "title": "",
             "diagnosis": diagnosis,
@@ -1165,18 +1061,23 @@ def teach_payload(
         print("Visual is generating — the page will refresh when the drawing code is ready.", flush=True)
         if open_browser:
             webbrowser.open(path.resolve().as_uri())
-    print("Writing visual code…", flush=True)
-    sketch = generate_sketch(
+    print("Writing visual…", flush=True)
+    images = [
+        src for src in sources if src.get("kind") == "image" and src.get("url")
+    ]
+    plan = vplan.make_plan(
         text,
-        diagnosis,
         fields,
         thinking,
-        evidence,
         components,
-        strategy=method,
-        previous_strategy=failed,
+        language=language,
+        images=images,
+        use_llm=True,
     )
-    visual = build_artifact(sketch)
+    visual = vplan.build_widget_html(plan)
+    sketch = json.dumps(plan, ensure_ascii=True)
+    kind_visual = str(plan.get("genre") or "flow")
+    print(f"Using {kind_visual} genre widget ({len(plan.get('beats') or [])} beats).", flush=True)
     if path is not None:
         write_lesson(
             render_html(
@@ -1206,7 +1107,7 @@ def teach_payload(
         f"Lesson: {meta['title']}\n"
         f"Picture: {meta['picture']}\n"
         f"Method: {clip(method, 160) or 'split-pane contrast'}\n"
-        f"Visual: generated drawing code ({len(sketch)} chars)\n"
+        f"Visual: {kind_visual} genre widget\n"
         f"{meta['say']}\n"
         f"Open: {path or ''}"
     )
@@ -1215,6 +1116,7 @@ def teach_payload(
         "kind": kind,
         "report": report,
         "visual_html": visual,
+        "visual_plan": plan,
         "thinking": thinking,
         "title": meta["title"],
         "diagnosis": diagnosis,
@@ -1256,7 +1158,7 @@ def self_test() -> str:
     )
     thinking = fallback_thinking(fields)
     heat = fallback_sketch(fields, thinking)
-    visual = build_artifact(heat)
+    visual = heat
     meta = lesson_meta(fields, thinking)
     loading = render_html(
         meta,
@@ -1290,14 +1192,46 @@ def self_test() -> str:
         lines.append("- loading page waits and refreshes: ok")
     else:
         lines.append("- FAIL loading page")
-    if "V.beaker" in heat and "V.thermometer" in heat and "V.dots" in heat:
-        lines.append("- heat fallback draws beaker/thermometer/particles: ok")
+    if "heat" in heat.lower() and "Play" in heat and "a clear working model of how" not in heat.lower():
+        lines.append("- heat fallback is a playable genre widget: ok")
     else:
         lines.append("- FAIL heat sketch")
-    if 'id="play"' in visual and "VisualRuntime" in visual and "var rough=" in visual:
-        lines.append("- generated artifact is playable with Rough.js: ok")
+    if 'id="play"' in visual and "var rough=" not in visual:
+        lines.append("- generated artifact is playable without Rough.js: ok")
     else:
         lines.append("- FAIL runtime artifact")
+    rec_fields = parse_diagnosis(
+        "Topic: recursion\nKind: knowledge gap\nWhat's confused: none\n"
+        "Wrong model: none\nRight model: a clear working model of how recursion works"
+    )
+    rec_plan = vplan.make_plan(
+        "I want to learn about recursion",
+        rec_fields,
+        fallback_thinking(rec_fields),
+        [],
+        use_llm=False,
+    )
+    rec_html = vplan.build_widget_html(rec_plan)
+    rec_blob = (json.dumps(rec_plan) + rec_html).lower()
+    if rec_plan.get("genre") != "stack":
+        lines.append(f"- FAIL recursion genre={rec_plan.get('genre')}")
+    elif "a clear working model of how" in rec_blob:
+        lines.append("- FAIL recursion dumped diagnosis text")
+    elif "factorial(" not in rec_blob or "frames" not in json.dumps(rec_plan):
+        lines.append("- FAIL recursion stack frames missing")
+    else:
+        lines.append("- recursion intro uses a stack widget, not diagnosis boxes: ok")
+    fib_plan = vplan.make_plan(
+        "explain fib(4)",
+        parse_diagnosis("Topic: fibonacci recursion\nKind: knowledge gap\nWrong model: none\nRight model: none"),
+        "",
+        [],
+        use_llm=False,
+    )
+    if fib_plan.get("example", {}).get("fn") == "fib" and fib_plan.get("example", {}).get("n") == 4:
+        lines.append("- stack example parameterizes fib(4): ok")
+    else:
+        lines.append(f"- FAIL fib example={fib_plan.get('example')}")
     gd = fallback_sketch(
         parse_diagnosis(
             "Topic: gradient descent\nKind: misconception\nWhat's confused: always goes straight to the min\n"
@@ -1306,8 +1240,10 @@ def self_test() -> str:
         "marble rolling on a curved bowl",
         ["contour lines", "marble"],
     )
-    if "V.hill" in gd and "V.ball" in gd and "beaker" not in gd:
-        lines.append("- gradient descent sketch uses a hill and marble: ok")
+    if "a clear working model of how" in gd.lower():
+        lines.append("- FAIL gd dumped diagnosis")
+    elif "Play" in gd:
+        lines.append("- gradient descent uses a genre widget: ok")
     else:
         lines.append("- FAIL gd sketch")
     generic = fallback_sketch(
@@ -1316,10 +1252,12 @@ def self_test() -> str:
             "Wrong model: any arrow is an eigenvector\nRight model: only directions that stay on their line"
         )
     )
-    if "beaker" in generic or "flask" in generic:
+    if "a clear working model of how" in generic.lower():
+        lines.append("- FAIL generic dumped diagnosis")
+    elif "beaker" in generic or "flask" in generic:
         lines.append("- FAIL generic reused glass")
-    elif "V.arrow" in generic:
-        lines.append("- generic fallback uses arrows, not glass: ok")
+    elif "eigenvector" in generic.lower() and "Play" in generic:
+        lines.append("- generic fallback uses the topic, not glass: ok")
     else:
         lines.append("- FAIL generic sketch")
     gd_bits = harvest_components("gradient descent marble on a contour bowl")
@@ -1376,6 +1314,16 @@ def self_test() -> str:
         lines.append("- teach_payload returns visual html for the web tutor: ok")
     else:
         lines.append("- FAIL teach_payload")
+    dumped = fallback_sketch(
+        parse_diagnosis(
+            "Topic: recursion\nKind: knowledge gap\nWhat's confused: none\n"
+            "Wrong model: none\nRight model: a clear working model of how recursion in programming works"
+        )
+    )
+    if "a clear working model of how" in dumped.lower():
+        lines.append("- FAIL fallback_sketch still paints diagnosis")
+    else:
+        lines.append("- fallback_sketch no longer paints diagnosis sentences: ok")
     lines.append(f"- skip when correct: {diagnosis_kind({'kind': 'actually correct'})}")
     return "\n".join(lines)
 

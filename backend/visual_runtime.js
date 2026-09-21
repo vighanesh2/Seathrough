@@ -242,6 +242,35 @@
       );
     };
 
+    /** Sketchy rectangle. Prefer this over V.rough.rect (that method does not exist). */
+    V.box = function (x, y, w, h, opts) {
+      opts = opts || {};
+      const stroke = opts.stroke || opts.color || "#1a2b3c";
+      const fill = opts.fill || "none";
+      withRough(
+        function (r) {
+          r.rectangle(x, y, w, h, ink({
+            stroke: stroke,
+            fill: fill === "none" ? undefined : fill,
+            fillStyle: fill === "none" ? undefined : (opts.fillStyle || "solid"),
+            strokeWidth: opts.strokeWidth || 1.7,
+            roughness: opts.roughness == null ? 1.05 : opts.roughness,
+          }));
+        },
+        function () {
+          ctx.save();
+          ctx.strokeStyle = stroke;
+          ctx.lineWidth = opts.strokeWidth || 2;
+          if (fill !== "none") {
+            ctx.fillStyle = fill;
+            ctx.fillRect(x, y, w, h);
+          }
+          ctx.strokeRect(x, y, w, h);
+          ctx.restore();
+        }
+      );
+    };
+
     V.ball = function (x, y, color, r) {
       const rad = r || 10;
       const fill = color || "#1b6ca8";

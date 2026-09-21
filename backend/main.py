@@ -3,9 +3,19 @@ Entry point for the backend: start the continuous teaching loop.
 
 Detect and the visual lesson are called from teaching-loop.py, not from here.
 
-    python backend/main.py
-    python backend/main.py "octet rule"
-    python backend/main.py --self-test
+Local (from repo root):
+
+    npm run backend:check
+    npm run backend
+    npm run backend -- "octet rule"
+    python3 backend/main.py --check
+    python3 backend/main.py
+    ./backend/run.sh
+
+Web tutor (uses backend/web_session.py via Next):
+
+    npm run dev
+    open http://localhost:3000/ai-tutor
 """
 
 from __future__ import annotations

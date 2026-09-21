@@ -82,6 +82,51 @@ def env_value(name: str) -> str:
     return (os.environ.get(name) or "").strip()
 
 
+def require_python() -> None:
+    if sys.version_info < (3, 10):
+        raise RuntimeError(
+            f"Python 3.10+ is required (found {sys.version.split()[0]})."
+        )
+
+
+def require_llm_keys() -> tuple[str, str, str]:
+    """Load .env and verify the active LLM provider has a key."""
+    require_python()
+    load_env()
+    return llm_config()
+
+
+def describe_local_setup() -> str:
+    """Human-readable readiness check for local runs (no secrets printed)."""
+    require_python()
+    load_env()
+    lines = [
+        f"Python {sys.version.split()[0]} OK",
+        f"Repo root: {repo_root()}",
+    ]
+    provider = (env_value("LLM_PROVIDER") or "groq").lower()
+    lines.append(f"LLM_PROVIDER={provider}")
+    if provider == "openai":
+        lines.append(
+            "OPENAI_API_KEY=" + ("set" if env_value("OPENAI_API_KEY") else "MISSING")
+        )
+    else:
+        lines.append(
+            "GROQ_API_KEY=" + ("set" if env_value("GROQ_API_KEY") else "MISSING")
+        )
+        if env_value("GROQ_MODEL"):
+            lines.append(f"GROQ_MODEL={resolve_groq_model(env_value('GROQ_MODEL'))}")
+    lines.append(
+        "TAVILY_API_KEY=" + ("set" if env_value("TAVILY_API_KEY") else "optional/unset")
+    )
+    try:
+        key, model, _url = llm_config()
+        lines.append(f"LLM ready (model={model}, key_len={len(key)})")
+    except RuntimeError as error:
+        lines.append(f"LLM not ready: {error}")
+    return "\n".join(lines)
+
+
 def resolve_groq_model(requested: str) -> str:
     model = requested or "openai/gpt-oss-20b"
     return GROQ_MODEL_REPLACEMENTS.get(model, model)

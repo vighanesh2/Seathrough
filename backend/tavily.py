@@ -19,6 +19,7 @@ SEARCH_URL = "https://api.tavily.com/search"
 USER_AGENT = "SeethroughBackend/1.0"
 TIMEOUT_SEC = 12
 MAX_RESULTS = 5
+MAX_IMAGES = 6
 
 BLOCKED = (
     "reddit.com",
@@ -91,6 +92,70 @@ def _normalize(payload: dict[str, Any]) -> list[dict[str, str]]:
     return out
 
 
+def _looks_like_image(url: str) -> bool:
+    path = urlparse(url).path.lower()
+    return any(path.endswith(ext) for ext in (".png", ".jpg", ".jpeg", ".webp", ".gif", ".svg"))
+
+
+def _image_ok(url: str) -> bool:
+    if not url.startswith("https://"):
+        return False
+    if _blocked(url):
+        return False
+    host = _hostname(url)
+    if not host:
+        return False
+    if host.endswith(".edu") or host.endswith(".gov"):
+        return True
+    preferred = (
+        "upload.wikimedia.org",
+        "commons.wikimedia.org",
+        "nasa.gov",
+        "noaa.gov",
+        "nih.gov",
+        "nlm.nih.gov",
+        "britannica.com",
+        "khanacademy.org",
+        "ck12.org",
+        "openstax.org",
+        "nature.com",
+        "science.org",
+        "bbc.co.uk",
+        "bbc.com",
+    )
+    return any(host == d or host.endswith("." + d) for d in preferred) or _looks_like_image(url)
+
+
+def _normalize_images(payload: dict[str, Any]) -> list[dict[str, str]]:
+    seen: set[str] = set()
+    out: list[dict[str, str]] = []
+    raw_images = payload.get("images") or []
+    for raw in raw_images:
+        url = ""
+        title = "Diagram"
+        if isinstance(raw, str):
+            url = raw.strip()
+        elif isinstance(raw, dict):
+            url = str(raw.get("url") or raw.get("src") or "").strip()
+            title = " ".join(str(raw.get("description") or raw.get("title") or "Diagram").split())[:160]
+        if not _image_ok(url) or url in seen:
+            continue
+        seen.add(url)
+        out.append(
+            {
+                "id": f"I{len(out) + 1}",
+                "title": title or "Diagram",
+                "url": url,
+                "publisher": _hostname(url),
+                "excerpt": "Educational diagram",
+                "kind": "image",
+            }
+        )
+        if len(out) >= MAX_IMAGES:
+            break
+    return out
+
+
 def search(query: str, *, max_results: int = 8) -> list[dict[str, str]]:
     key = misconception.env_value("TAVILY_API_KEY")
     trimmed = " ".join((query or "").split())[:400]
@@ -104,7 +169,7 @@ def search(query: str, *, max_results: int = 8) -> list[dict[str, str]]:
             "max_results": max(3, min(12, max_results)),
             "include_answer": True,
             "include_raw_content": False,
-            "include_images": False,
+            "include_images": True,
         }
     ).encode("utf-8")
     request = urllib.request.Request(
@@ -124,7 +189,7 @@ def search(query: str, *, max_results: int = 8) -> list[dict[str, str]]:
         return []
     if not isinstance(payload, dict):
         return []
-    return _normalize(payload)
+    return _normalize(payload) + _normalize_images(payload)
 
 
 def format_evidence(sources: list[dict[str, str]]) -> str:

@@ -30,8 +30,11 @@ MAX_TURNS = 12
 OPENER = "What are you trying to understand, and how do you think it works?"
 
 QUESTION_PROMPT = """Write ONE check question for a student about this topic.
-Plain text only. One sentence. No lecture. No multiple choice. No markdown.
-The question should surface a typical mix-up if they have one.
+Plain text only. One sentence ending with ?. No lecture. No multiple choice. No markdown.
+Ask them to explain the idea in their own words, or probe a typical mix-up.
+If the learner already typed a question, do NOT repeat or wrap their wording.
+Never produce doubled phrases like "how does how does" or "work? work?".
+Use the concept name only (e.g. topic "how does recursion work?" → ask about recursion).
 """
 
 JUDGE_PROMPT = """Score whether the student now understands the idea. Plain text only:
@@ -46,6 +49,7 @@ Rules:
 - Max 90 if the answer looks right.
 - If Kind is misconception or knowledge gap, Understanding must be under 60.
 - Next question must be one sentence, answerable in one or two sentences.
+- Next question must be a real, specific tutor question ending with ?. Never write "none", "n/a", or vague lines like "if a usual part were missing".
 - Do not teach in the next question. Ask.
 """
 
@@ -72,6 +76,11 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument("topic", nargs="*", help="Optional topic. If omitted, the first question asks for it.")
     parser.add_argument("--no-open", action="store_true", help="Do not open visual lessons in the browser.")
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Verify Python + .env LLM keys, then exit (no interactive loop).",
+    )
     parser.add_argument("--self-test", action="store_true")
     return parser.parse_args(argv)
 
@@ -80,7 +89,39 @@ def is_quit(text: str) -> bool:
     return (text or "").strip().lower() in {"q", "quit", "exit", "stop", "done"}
 
 
+def is_blank_label(text: str) -> bool:
+    cleaned = (text or "").strip().lower().rstrip(".?!")
+    return cleaned in {"", "none", "n/a", "na", "null", "nil", "-", "no probe", "no question"}
+
+
+def usable_question(text: str) -> bool:
+    cleaned = (text or "").strip()
+    if len(cleaned) < 12 or "?" not in cleaned:
+        return False
+    if is_blank_label(cleaned):
+        return False
+    # Guard against Probe: none → "none?"
+    head = cleaned.lower().split("?", 1)[0].strip()
+    return head not in {"none", "n/a", "na", "null", "nil", "-"}
+
+
+def default_followup(topic: str, diagnosis: str = "", asked: list[str] | None = None, last_answer: str = "") -> str:
+    return transfer.fallback_probe(
+        topic,
+        diagnosis,
+        asked,
+        last_answer=last_answer,
+    )
+
+
 def ask(prompt: str) -> str:
+    if not sys.stdin.isatty():
+        raise ValueError(
+            "Interactive terminal required.\n"
+            "  npm run backend\n"
+            "  # or: python3 backend/main.py\n"
+            "For the web UI: npm run dev → open /ai-tutor"
+        )
     print(prompt, flush=True)
     try:
         return input("> ")
@@ -141,22 +182,164 @@ def history_context(topic: str, turns: list[dict[str, str]]) -> str:
     return "\n".join(lines)
 
 
+_TOPIC_QUESTION = re.compile(
+    r"^(?:"
+    r"how\s+does\s+(.+?)\s+work|"
+    r"how\s+do\s+(.+?)\s+work|"
+    r"what\s+is\s+(.+?)|"
+    r"what\s+are\s+(.+?)|"
+    r"why\s+does\s+(.+?)|"
+    r"why\s+do\s+(.+?)|"
+    r"explain\s+(.+?)|"
+    r"can\s+you\s+explain\s+(.+?)"
+    r")\??$",
+    re.IGNORECASE,
+)
+
+
+def topic_concept(topic: str) -> str:
+    """Turn a learner question into a short concept label."""
+    cleaned = re.sub(r"\s+", " ", (topic or "").strip())
+    if not cleaned:
+        return ""
+    match = _TOPIC_QUESTION.match(cleaned)
+    if match:
+        for group in match.groups():
+            if group:
+                return group.strip(" .")
+    return cleaned.rstrip("?").strip()
+
+
 def first_question(topic: str) -> str:
     if not topic:
         return OPENER
+    concept = topic_concept(topic) or topic.strip()
     try:
         text = misconception.complete(
             QUESTION_PROMPT,
-            json.dumps({"topic": topic}, ensure_ascii=True),
+            json.dumps(
+                {"topic": concept, "learner_said": topic.strip()},
+                ensure_ascii=True,
+            ),
             max_tokens=80,
             temperature=0.3,
         ).strip()
         text = text.splitlines()[0].strip().strip('"')
-        if len(text) >= 12 and "?" in text:
+        if usable_question(text) and "how does how" not in text.lower():
             return text
     except (ValueError, RuntimeError):
         pass
-    return f"In your own words, how does {topic} work?"
+    return f"In your own words, how does {concept} work?"
+
+
+INTRO_RIGHT_PROMPT = """State the core idea of this topic in 1-2 plain sentences.
+No lecture. No markdown. No labels. Just the idea a beginner needs.
+"""
+
+
+def stated_mixup(fields: dict[str, str]) -> str:
+    if lesson.diagnosis_kind(fields) != "misconception":
+        return ""
+    wrong = fields.get("wrong model") or ""
+    confused = fields.get("what's confused") or fields.get("whats confused") or ""
+    if is_blank_label(wrong) or is_blank_label(confused):
+        return ""
+    return confused
+
+
+def intro_diagnosis(concept: str) -> str:
+    right = ""
+    try:
+        right = misconception.complete(
+            INTRO_RIGHT_PROMPT,
+            json.dumps({"topic": concept}, ensure_ascii=True),
+            max_tokens=100,
+            temperature=0.2,
+        ).strip()
+        right = right.splitlines()[0].strip().strip('"')
+    except (ValueError, RuntimeError):
+        right = ""
+    if (
+        is_blank_label(right)
+        or len(right) < 8
+        or "a clear working model of how" in right.lower()
+    ):
+        if lesson.vplan.is_recursion_topic({"topic": concept}, concept):
+            right = (
+                "A function solves a smaller copy of the same problem until a base case returns, "
+                "then answers unwind back up the call stack."
+            )
+        else:
+            right = f"{concept} is a process with parts that change in a definite order."
+    return (
+        f"Topic: {concept}\n"
+        f"Kind: knowledge gap\n"
+        f"What's confused: none\n"
+        f"Wrong model: none\n"
+        f"Right model: {right}\n"
+        f"Probe: none"
+    )
+
+
+def seed_intro_lesson(state: dict[str, Any], *, open_browser: bool = False) -> None:
+    concept = str(state.get("topic") or "").strip()
+    if not concept:
+        state["question"] = OPENER
+        state["message"] = ""
+        return
+    language = str(state.get("language") or "").strip()
+    print(f"\nBuilding an intro lesson on {concept}…", flush=True)
+    diagnosis = intro_diagnosis(concept)
+    learner = f"I want to learn about {concept}"
+    if language:
+        learner += f". Use {language} for any code examples."
+    method = strategy.choose(diagnosis, student=learner)
+    strategy.print_strategy(method, heading="Strategy thinker — intro visual")
+    payload = lesson.teach_payload(
+        learner,
+        dest=None,
+        open_browser=open_browser,
+        diagnosis=diagnosis,
+        strategy=method,
+        language=language,
+    )
+    visual = str(payload.get("visual_html") or "")
+    plan = payload.get("visual_plan") if isinstance(payload.get("visual_plan"), dict) else None
+    say = str(payload.get("say") or "").strip()
+    thinking = str(payload.get("thinking") or "").strip()
+    fields = lesson.parse_diagnosis(str(payload.get("diagnosis") or diagnosis))
+    right = fields.get("right model") or ""
+    if is_blank_label(right) or "a clear working model of how" in right.lower():
+        right = ""
+    explanation = say
+    if not explanation and thinking:
+        explanation = thinking.split("\n\n")[0].strip()
+    if not explanation and right:
+        explanation = right
+    if not explanation:
+        explanation = (
+            "Press Play on the picture, then answer the question below."
+            if visual or plan
+            else f"Here is the core idea of {concept}."
+        )
+    state["visual_html"] = visual
+    state["visual_plan"] = plan
+    state["current_method"] = method
+    state["tried_methods"] = [method] if method else []
+    state["diagnosis"] = diagnosis
+    state["confused"] = ""
+    state["wrong_model"] = ""
+    state["right_model"] = right
+    state["method_label"] = strategy.method_label(method)
+    state["think"] = strategy.think_text(method)
+    state["phase"] = "ask"
+    state["question"] = first_question(concept)
+    _fill_models(state, diagnosis)
+    state["message"] = explanation
+    state["confused"] = ""
+    state["wrong_model"] = ""
+    if "a clear working model of how" in (state.get("right_model") or "").lower():
+        state["right_model"] = right
 
 
 def judge_turn(
@@ -167,9 +350,11 @@ def judge_turn(
     kind: str,
     turns: list[dict[str, str]],
 ) -> dict[str, str | int]:
-    fallback_probe = parse_labeled(diagnosis, "Probe") or (
-        f"Can you explain {topic or 'this idea'} without using the mix-up you just used?"
-    )
+    probe = parse_labeled(diagnosis, "Probe")
+    probe_q = ""
+    if probe and not is_blank_label(probe):
+        probe_q = probe if probe.endswith("?") else probe.rstrip(".") + "?"
+    fallback = probe_q if usable_question(probe_q) else default_followup(topic)
     try:
         raw = misconception.complete(
             JUDGE_PROMPT,
@@ -203,8 +388,10 @@ def judge_turn(
         parsed = guessed
     score = cap_score(kind, parsed)
     nxt = parse_labeled(raw, "Next question")
-    if not nxt or "?" not in nxt:
-        nxt = fallback_probe if fallback_probe.endswith("?") else fallback_probe.rstrip(".") + "?"
+    if not usable_question(nxt):
+        nxt = fallback
+    if not usable_question(nxt):
+        nxt = default_followup(topic, diagnosis, [t.get("question", "") for t in turns], answer)
     return {
         "score": score,
         "evidence": parse_labeled(raw, "Evidence") or "Score based on this turn's diagnosis.",
@@ -247,7 +434,7 @@ def teach_mixup(
     open_browser: bool,
     previous_score: int | None = None,
     dest: Path | None = None,
-) -> tuple[str, str, list[str], str]:
+) -> tuple[str, str, list[str], str, dict | None]:
     used = list(tried)
     previous = ""
     if current_method and strategy.needs_change(previous_score, current_method):
@@ -296,7 +483,8 @@ def teach_mixup(
         )
     if not any(strategy.same_method(method, item) for item in used):
         used.append(method)
-    return confused or last_confused, method, used, visual_html
+    plan = payload.get("visual_plan") if isinstance(payload.get("visual_plan"), dict) else None
+    return confused or last_confused, method, used, visual_html, plan
 
 
 def asked_questions(turns: list[dict[str, str]], current: str = "") -> list[str]:
@@ -317,6 +505,8 @@ def run_transfer_check(
         diagnosis=diagnosis,
         asked=asked_questions(turns),
         mixup=mixup,
+        last_answer=str((turns[-1] or {}).get("answer") or "") if turns else "",
+        last_question=str((turns[-1] or {}).get("question") or "") if turns else "",
     )
     form = str(check.get("form") or "new-question")
     example = str(check.get("question") or "")
@@ -348,9 +538,7 @@ def run_transfer_check(
             )
             fields = lesson.parse_diagnosis(t_diag)
             t_kind = lesson.diagnosis_kind(fields)
-            t_confused = fields.get("what's confused") or fields.get("whats confused") or ""
-            if t_confused.lower() in {"none", "n/a", "-"}:
-                t_confused = ""
+            t_confused = stated_mixup(fields)
         except (ValueError, RuntimeError):
             t_kind = "unknown"
     passed = bool(result["passed"]) and t_kind == "correct"
@@ -399,9 +587,7 @@ def evaluate_transfer(
             )
             fields = lesson.parse_diagnosis(t_diag)
             t_kind = lesson.diagnosis_kind(fields)
-            t_confused = fields.get("what's confused") or fields.get("whats confused") or ""
-            if t_confused.lower() in {"none", "n/a", "-"}:
-                t_confused = ""
+            t_confused = stated_mixup(fields)
         except (ValueError, RuntimeError):
             t_kind = "unknown"
     passed = bool(result["passed"]) and t_kind == "correct"
@@ -419,10 +605,10 @@ def evaluate_transfer(
 
 
 def empty_state(topic: str = "") -> dict[str, Any]:
-    cleaned = (topic or "").strip()
+    cleaned = topic_concept(topic) or (topic or "").strip()
     return {
         "topic": cleaned,
-        "question": first_question(cleaned),
+        "question": first_question(topic or cleaned),
         "turns": [],
         "last_confused": "",
         "current_method": "",
@@ -439,6 +625,8 @@ def empty_state(topic: str = "") -> dict[str, Any]:
         "transfer_form": "",
         "on_track": False,
         "visual_html": "",
+        "visual_plan": None,
+        "language": "",
         "method_label": "",
         "think": "",
         "evidence": "",
@@ -457,6 +645,7 @@ def view_state(state: dict[str, Any]) -> dict[str, Any]:
             }
         )
     visual = str(state.get("visual_html") or "")
+    plan = state.get("visual_plan") if isinstance(state.get("visual_plan"), dict) else None
     return {
         "phase": state.get("phase") or "ask",
         "question": state.get("question") or "",
@@ -473,7 +662,8 @@ def view_state(state: dict[str, Any]) -> dict[str, Any]:
         "evidence": state.get("evidence") or "",
         "onTrack": bool(state.get("on_track")),
         "visualHtml": visual,
-        "hasVisual": bool(visual),
+        "visualPlan": plan,
+        "hasVisual": bool(visual or plan),
         "transferForm": state.get("transfer_form") or "",
         "turns": turns,
     }
@@ -482,8 +672,10 @@ def view_state(state: dict[str, Any]) -> dict[str, Any]:
 def _fill_models(state: dict[str, Any], diagnosis: str) -> None:
     fields = lesson.parse_diagnosis(diagnosis)
     state["diagnosis"] = diagnosis
-    state["wrong_model"] = fields.get("wrong model") or ""
-    state["right_model"] = fields.get("right model") or ""
+    wrong = fields.get("wrong model") or ""
+    right = fields.get("right model") or ""
+    state["wrong_model"] = "" if is_blank_label(wrong) else wrong
+    state["right_model"] = "" if is_blank_label(right) else right
     state["method_label"] = strategy.method_label(str(state.get("current_method") or ""))
     state["think"] = strategy.think_text(str(state.get("current_method") or ""))
 
@@ -533,17 +725,16 @@ def _apply_lesson_answer(
     topic = topic or fields.get("topic") or ""
     if topic.lower() in {"unclear", "none"}:
         topic = ""
-    confused = fields.get("what's confused") or fields.get("whats confused") or ""
-    if confused.lower() in {"none", "n/a", "-"}:
-        confused = ""
+    confused = stated_mixup(fields)
     print("\nDetected\n--------\n" + diagnosis, flush=True)
 
     last_confused = str(state.get("last_confused") or "")
     current_method = str(state.get("current_method") or "")
     tried_methods: list[str] = list(state.get("tried_methods") or [])
     visual_html = str(state.get("visual_html") or "")
+    visual_plan = state.get("visual_plan") if isinstance(state.get("visual_plan"), dict) else None
     if should_teach(kind):
-        last_confused, current_method, tried_methods, drawn = teach_mixup(
+        last_confused, current_method, tried_methods, drawn, plan = teach_mixup(
             answer,
             diagnosis,
             confused,
@@ -555,6 +746,8 @@ def _apply_lesson_answer(
         )
         if drawn:
             visual_html = drawn
+        if plan:
+            visual_plan = plan
         state["message"] = "Look at the picture, press Play, then answer the next question."
     elif kind == "correct":
         state["message"] = "That matches the right idea. One more check to be sure."
@@ -591,6 +784,7 @@ def _apply_lesson_answer(
     state["kind"] = kind
     state["confused"] = confused
     state["visual_html"] = visual_html
+    state["visual_plan"] = visual_plan
     state["evidence"] = str(judged["evidence"])
     _fill_models(state, diagnosis)
 
@@ -600,11 +794,23 @@ def _apply_lesson_answer(
             diagnosis=diagnosis,
             asked=asked_questions(turns),
             mixup=confused,
+            last_answer=answer,
+            last_question=question,
         )
         form = str(check.get("form") or "new-question")
         state["phase"] = "transfer"
         state["transfer_form"] = form
-        state["question"] = str(check.get("question") or "")
+        transfer_q = str(check.get("question") or "")
+        if not usable_question(transfer_q):
+            transfer_q = transfer.fallback_probe(
+                topic,
+                diagnosis,
+                asked_questions(turns),
+                last_answer=answer,
+            )
+        if not usable_question(transfer_q):
+            transfer_q = default_followup(topic, diagnosis, asked_questions(turns), answer)
+        state["question"] = transfer_q
         if form == "new-example":
             state["message"] = "Nice. Here's a new case of the same idea."
         else:
@@ -612,7 +818,10 @@ def _apply_lesson_answer(
         return ""
 
     state["phase"] = "ask"
-    state["question"] = str(judged["next_question"])
+    follow = str(judged["next_question"])
+    if not usable_question(follow):
+        follow = default_followup(topic, diagnosis, asked_questions(turns), answer)
+    state["question"] = follow
     return ""
 
 
@@ -638,6 +847,7 @@ def _apply_transfer_answer(
     current_method = str(state.get("current_method") or "")
     tried_methods: list[str] = list(state.get("tried_methods") or [])
     visual_html = str(state.get("visual_html") or "")
+    visual_plan = state.get("visual_plan") if isinstance(state.get("visual_plan"), dict) else None
     transfer_ok = False
     if check["passed"]:
         transfer_ok = True
@@ -654,7 +864,7 @@ def _apply_transfer_answer(
         state["on_track"] = False
         state["phase"] = "ask"
         if should_teach(check_kind):
-            last_confused, current_method, tried_methods, drawn = teach_mixup(
+            last_confused, current_method, tried_methods, drawn, plan = teach_mixup(
                 str(check.get("answer") or answer),
                 str(check.get("diagnosis") or diagnosis),
                 check_confused,
@@ -666,7 +876,16 @@ def _apply_transfer_answer(
             )
             if drawn:
                 visual_html = drawn
+            if plan:
+                visual_plan = plan
         state["question"] = str(check.get("next_question") or state.get("question") or "")
+        if not usable_question(str(state.get("question") or "")):
+            state["question"] = default_followup(
+                topic,
+                str(state.get("diagnosis") or ""),
+                asked_questions(list(state.get("turns") or [])),
+                str(check.get("answer") or ""),
+            )
     state["turn_no"] = int(state.get("turn_no") or 0) + 1
     t_turn = {
         "turn": state["turn_no"],
@@ -691,6 +910,7 @@ def _apply_transfer_answer(
     state["current_method"] = current_method
     state["tried_methods"] = tried_methods
     state["visual_html"] = visual_html
+    state["visual_plan"] = visual_plan
     state["evidence"] = str(check.get("evidence") or "")
     extra_diag = str(check.get("diagnosis") or diagnosis)
     if extra_diag:
@@ -705,6 +925,8 @@ def _apply_transfer_answer(
 
 def run_loop(topic_hint: str = "", *, open_browser: bool = True) -> str:
     state = empty_state(topic_hint)
+    if str(state.get("topic") or "").strip():
+        seed_intro_lesson(state, open_browser=open_browser)
     print("Continuous teaching loop — we stop only when there is evidence you understand.", flush=True)
     print("If an explanation fails, the method changes instead of repeating.", flush=True)
     print("100% requires a transfer check on a new example.", flush=True)
@@ -755,6 +977,22 @@ def self_test() -> str:
         lines.append("- quit phrases: ok")
     else:
         lines.append("- FAIL quit phrases")
+    if (
+        not usable_question("none?")
+        and not usable_question("none")
+        and usable_question(default_followup("recursion"))
+    ):
+        lines.append("- blank next-question guard: ok")
+    else:
+        lines.append("- FAIL blank next-question guard")
+    probe_none = transfer.fallback_probe(
+        "recursion",
+        "Topic: recursion\nProbe: none\nWrong model: none\nRight model: none",
+    )
+    if usable_question(probe_none) and "none?" not in probe_none.lower():
+        lines.append("- transfer fallback skips Probe none: ok")
+    else:
+        lines.append("- FAIL transfer fallback Probe none")
     if should_teach("misconception") and should_teach("knowledge_gap") and not should_teach("correct"):
         lines.append("- visual only on mix-up / gap: ok")
     else:
@@ -814,22 +1052,70 @@ def self_test() -> str:
         lines.append("- web session can start with an opening question: ok")
     else:
         lines.append("- FAIL empty_state")
+    if topic_concept("how does recursion work?") == "recursion":
+        lines.append("- topic question strips to concept: ok")
+    else:
+        lines.append("- FAIL topic_concept")
+    concept = topic_concept("how does recursion work?")
+    fallback = f"In your own words, how does {concept} work?"
+    if "how does how" not in fallback.lower() and fallback.lower().count("work?") == 1:
+        lines.append("- first-question fallback does not double the topic: ok")
+    else:
+        lines.append("- FAIL first_question doubling")
     err = apply_answer(opening, "   ", open_browser=False)
     if err:
         lines.append("- empty web answer rejected: ok")
     else:
         lines.append("- FAIL empty web answer")
+    rec_plan = lesson.vplan.make_plan(
+        "I want to learn about recursion",
+        lesson.parse_diagnosis(
+            "Topic: recursion\nKind: knowledge gap\nWhat's confused: none\n"
+            "Wrong model: none\nRight model: a clear working model of how recursion works"
+        ),
+        "",
+        [],
+        use_llm=False,
+    )
+    rec_html = lesson.vplan.build_widget_html(rec_plan)
+    if "a clear working model of how" in (json.dumps(rec_plan) + rec_html).lower():
+        lines.append("- FAIL recursion intro still contains diagnosis dump")
+    elif rec_plan.get("genre") == "stack" and "factorial(" in rec_html.lower():
+        lines.append("- recursion intro is a stack widget: ok")
+    else:
+        lines.append("- FAIL recursion intro widget")
+    rec_view = view_state(empty_state("recursion"))
+    if "visualPlan" in rec_view:
+        lines.append("- web view includes visualPlan: ok")
+    else:
+        lines.append("- FAIL visualPlan missing from view")
+    if lesson.vplan.classify_genre({"topic": "recursion"}, "how does recursion work") == "stack":
+        lines.append("- intro path classifies recursion as stack: ok")
+    else:
+        lines.append("- FAIL recursion stack classify")
     return "\n".join(lines)
 
 
 def main(argv: list[str] | None = None) -> int:
-    misconception.load_env()
-    lesson.configure_stdio()
     args = parse_args(argv if argv is not None else sys.argv[1:])
     try:
+        if args.check:
+            print(misconception.describe_local_setup())
+            misconception.require_llm_keys()
+            print("Backend is ready to run locally.")
+            return 0
+        misconception.require_llm_keys()
+        lesson.configure_stdio()
         if args.self_test:
             print(self_test())
             return 0
+        if not sys.stdin.isatty() and not args.topic:
+            raise ValueError(
+                "Interactive terminal required (or pass a topic).\n"
+                "  npm run backend\n"
+                "  python3 backend/main.py \"octet rule\"\n"
+                "Web UI: npm run dev → /ai-tutor"
+            )
         topic = " ".join(args.topic).strip()
         print(run_loop(topic, open_browser=not args.no_open))
         return 0

@@ -12,13 +12,26 @@ from __future__ import annotations
 import json
 import sys
 import uuid
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Iterator
 
 BACKEND = Path(__file__).resolve().parent
 if str(BACKEND) not in sys.path:
     sys.path.insert(0, str(BACKEND))
 
 import Misconception as misconception  # noqa: E402
+
+
+@contextmanager
+def _stdout_as_stderr() -> Iterator[None]:
+    """Keep progress prints off stdout so the API response stays pure JSON."""
+    original = sys.stdout
+    sys.stdout = sys.stderr
+    try:
+        yield
+    finally:
+        sys.stdout = original
 
 
 def _load_loop():
@@ -83,8 +96,13 @@ def handle(req: dict) -> dict:
     action = str(req.get("action") or "").strip().lower()
     if action == "start":
         topic = str(req.get("topic") or "").strip()
+        language = str(req.get("language") or "").strip()
         session_id = uuid.uuid4().hex[:16]
         state = loop.empty_state(topic)
+        if language:
+            state["language"] = language
+        if topic:
+            loop.seed_intro_lesson(state, open_browser=False)
         _save(session_id, state)
         return _public(session_id, state)
     if action == "answer":
@@ -121,7 +139,8 @@ def main() -> int:
         req = json.loads(raw or "{}")
         if not isinstance(req, dict):
             raise ValueError("Request must be a JSON object.")
-        result = handle(req)
+        with _stdout_as_stderr():
+            result = handle(req)
         sys.stdout.write(json.dumps(result, ensure_ascii=True))
         return 0
     except (ValueError, RuntimeError, json.JSONDecodeError) as error:

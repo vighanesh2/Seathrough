@@ -196,7 +196,7 @@ function convertMatrixEnvironments(input: string): string {
  * True when the string still looks like TeX that Konva would show badly.
  */
 export function looksLikeLatex(text: string): boolean {
-  return /\\[a-zA-Z]+|\\frac|\$\$|\$[^$]+\$/.test(text);
+  return /\\[a-zA-Z]+|\\frac|\\\(|\\\[|\$\$|\$[^$]+\$/.test(text);
 }
 
 /**

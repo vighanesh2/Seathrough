@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowUp, RotateCcw } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
+import { TutorMathText } from "@/components/ai-tutor/TutorMathText";
 import { AccountMenu } from "@/components/lms/AccountMenu";
 import { AppHeader } from "@/components/lms/AppHeader";
 import { AppShell } from "@/components/lms/AppShell";
@@ -10,9 +11,10 @@ import { ThinkingLoader } from "@/components/ui/ThinkingLoader";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuestionAccess } from "@/components/usage/QuestionAccess";
+import { TutorVisual } from "@/components/ai-tutor/TutorVisual";
 import { answerTutor, resetTutor, startTutor } from "@/lib/ai-tutor/client";
 import type { TutorView } from "@/lib/ai-tutor/types";
-import { cn } from "@/lib/utils";
+import { isTutorVisualPlan } from "@/lib/ai-tutor/visualPlan";
 
 const WAIT_PHRASES = [
   "Looking at your idea",
@@ -21,43 +23,79 @@ const WAIT_PHRASES = [
   "Almost ready",
 ] as const;
 
-function scoreLabel(score: number, started: boolean) {
-  if (!started) return "Just starting";
-  if (score >= 100) return "You've got it";
-  if (score >= 70) return "Almost there";
-  if (score >= 40) return "Getting clearer";
-  return "Finding the mix-up";
+const START_PHRASES = [
+  "Getting ready",
+  "Finding a first question",
+  "Almost there",
+] as const;
+
+function realText(value?: string) {
+  const cleaned = (value || "").trim();
+  if (!cleaned) return "";
+  const blank = cleaned.toLowerCase().replace(/[.?!]+$/, "");
+  if (
+    blank === "none" ||
+    blank === "n/a" ||
+    blank === "na" ||
+    blank === "-" ||
+    blank === "null" ||
+    blank === "nil"
+  ) {
+    return "";
+  }
+  return cleaned;
+}
+
+function helpfulMessage(view: TutorView | null, hasVisual: boolean) {
+  if (!view?.message) return "";
+  const text = view.message.trim();
+  if (!text) return "";
+  if (/share what you think/i.test(text)) return "";
+  if (/look at the picture/i.test(text) && !hasVisual) return "";
+  return text;
 }
 
 export function TutorWorkspace() {
   const { user } = useAuth();
   const { openAuth, beginQuestion, cancelQuestion } = useQuestionAccess();
   const [view, setView] = useState<TutorView | null>(null);
+  const [topicDraft, setTopicDraft] = useState("");
   const [draft, setDraft] = useState("");
-  const [busy, setBusy] = useState(true);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const [bootFailed, setBootFailed] = useState(false);
+  const topicRef = useRef<HTMLTextAreaElement>(null);
   const boxRef = useRef<HTMLTextAreaElement>(null);
   const charged = useRef(false);
 
-  const boot = useCallback(async () => {
+  const inLesson = Boolean(view?.sessionId);
+
+  useEffect(() => {
+    if (!inLesson) {
+      topicRef.current?.focus();
+      return;
+    }
+    boxRef.current?.focus();
+  }, [inLesson, view?.question]);
+
+  async function onStart(event?: React.FormEvent) {
+    event?.preventDefault();
+    const topic = topicDraft.trim();
+    if (!topic || busy) return;
     setBusy(true);
     setError("");
-    setBootFailed(false);
     try {
-      const next = await startTutor();
+      const next = await startTutor(topic);
       setView(next);
+      setDraft("");
+      charged.current = false;
     } catch (caught) {
-      setBootFailed(true);
-      setError(caught instanceof Error ? caught.message : "Could not start the tutor.");
+      setError(
+        caught instanceof Error ? caught.message : "Could not start the tutor.",
+      );
     } finally {
       setBusy(false);
     }
-  }, []);
-
-  useEffect(() => {
-    void boot();
-  }, [boot]);
+  }
 
   async function onSubmit(event?: React.FormEvent) {
     event?.preventDefault();
@@ -79,7 +117,11 @@ export function TutorWorkspace() {
         cancelQuestion();
         charged.current = false;
       }
-      setError(caught instanceof Error ? caught.message : "The tutor could not continue.");
+      setError(
+        caught instanceof Error
+          ? caught.message
+          : "The tutor could not continue.",
+      );
     } finally {
       setBusy(false);
       boxRef.current?.focus();
@@ -88,28 +130,112 @@ export function TutorWorkspace() {
 
   async function onReset() {
     setBusy(true);
+    setError("");
     try {
       await resetTutor(view?.sessionId);
-      charged.current = false;
-      await boot();
+    } catch {
+      // Still return to the entry screen.
     } finally {
+      charged.current = false;
+      setView(null);
+      setDraft("");
+      setTopicDraft("");
       setBusy(false);
     }
   }
 
-  const started = (view?.turns?.length ?? 0) > 0;
-  const score = view?.score ?? 0;
   const visual = view?.visualHtml || "";
+  const plan = isTutorVisualPlan(view?.visualPlan) ? view!.visualPlan! : null;
+  const hasVisual = Boolean(plan || visual);
   const onTrack = Boolean(view?.onTrack);
-  const transfer = view?.phase === "transfer";
+  const confused = realText(view?.confused);
+  const wrongModel = realText(view?.wrongModel);
+  const noticed = Boolean(confused);
+  const message = helpfulMessage(view, hasVisual);
+  const answeredOnce = (view?.turns?.length ?? 0) > 0;
+
+  const account = (
+    <AccountMenu
+      onLogin={() => openAuth("login")}
+      onSignup={() => openAuth("signup")}
+    />
+  );
+
+  if (!inLesson) {
+    return (
+      <AppShell>
+        <div className="flex min-h-0 flex-1 flex-col">
+          <AppHeader current="ai-tutor" account={account} />
+
+          <main className="relative flex min-h-0 flex-1 items-center justify-center px-4 py-10">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_28%,rgba(27,108,168,0.10),transparent_55%)]"
+            />
+            <form onSubmit={onStart} className="relative w-full max-w-xl">
+              <h1 className="font-[family-name:var(--font-newsreader)] text-center text-[2.15rem] leading-tight tracking-tight text-ink sm:text-[2.6rem]">
+                What do you want to learn?
+              </h1>
+
+              <div className="mt-8 rounded-2xl border border-board-edge bg-white/95 p-2 shadow-[0_18px_40px_rgba(26,43,60,0.07)]">
+                <label htmlFor="tutor-topic" className="sr-only">
+                  Topic to learn
+                </label>
+                <Textarea
+                  id="tutor-topic"
+                  ref={topicRef}
+                  value={topicDraft}
+                  disabled={busy}
+                  onChange={(event) => setTopicDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      void onStart();
+                    }
+                  }}
+                  placeholder="e.g. the chain rule, recursion, how photosynthesis works…"
+                  className="min-h-[96px] resize-none border-0 bg-transparent px-3 py-3 text-[16px] shadow-none focus-visible:ring-0"
+                />
+                <div className="flex items-center justify-between gap-3 px-2 pb-1">
+                  <p className="text-[12px] text-muted">
+                    {user ? "Enter to start" : "A few free questions each day"}
+                  </p>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={busy || !topicDraft.trim()}
+                  >
+                    Start
+                    <ArrowUp className="size-3.5" />
+                  </Button>
+                </div>
+              </div>
+
+              {error ? (
+                <p className="mt-4 text-center text-sm text-error" role="alert">
+                  {error}
+                </p>
+              ) : null}
+            </form>
+
+            {busy ? (
+              <ThinkingLoader
+                variant="overlay"
+                phrases={START_PHRASES}
+                className="rounded-none"
+              />
+            ) : null}
+          </main>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell>
       <div className="flex min-h-0 flex-1 flex-col">
         <AppHeader
           current="ai-tutor"
-          eyebrow="Guided tutor"
-          title={view?.topic || "Let’s figure this out"}
           actions={
             <Button
               type="button"
@@ -123,160 +249,129 @@ export function TutorWorkspace() {
               New
             </Button>
           }
-          account={
-            <AccountMenu
-              onLogin={() => openAuth("login")}
-              onSignup={() => openAuth("signup")}
-            />
-          }
+          account={account}
         />
 
-        <main className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden p-4 lg:flex-row lg:gap-6 lg:p-6">
-          <section className="relative flex min-h-[280px] flex-1 flex-col overflow-hidden rounded-3xl border border-board-edge bg-white shadow-[0_16px_40px_rgba(26,43,60,0.06)]">
-            {visual ? (
-              <iframe
-                title="Lesson picture"
-                sandbox="allow-scripts"
-                srcDoc={visual}
-                className="h-full min-h-[280px] w-full flex-1 border-0 bg-[#f4efe6]"
-              />
-            ) : (
-              <div className="flex flex-1 flex-col items-center justify-center gap-3 px-8 text-center">
-                <p className="font-[family-name:var(--font-newsreader)] text-2xl text-ink">
-                  A picture will appear here
+        <main className="relative flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-4 py-8">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_20%,rgba(27,108,168,0.08),transparent_52%)]"
+          />
+
+          <div className="relative w-full max-w-xl">
+            {hasVisual ? (
+              <div className="mb-6 overflow-hidden rounded-2xl border border-board-edge bg-white p-4 shadow-[0_14px_32px_rgba(26,43,60,0.06)]">
+                {plan ? (
+                  <TutorVisual plan={plan} />
+                ) : (
+                  <iframe
+                    title="Lesson picture"
+                    sandbox="allow-scripts"
+                    srcDoc={visual}
+                    className="h-[min(42vh,320px)] w-full border-0 bg-[#f4efe6]"
+                  />
+                )}
+              </div>
+            ) : null}
+
+            {onTrack ? (
+              <div className="mb-6 rounded-2xl bg-success-soft px-5 py-4 text-center">
+                <p className="text-[15px] font-semibold text-success">
+                  You are on track
                 </p>
-                <p className="max-w-md text-sm leading-6 text-muted">
-                  Answer the question on the right. If a mix-up shows up, we draw it
-                  so you can press Play and see the difference.
+                <p className="mt-1 text-sm leading-6 text-ink-soft">
+                  You used the right idea on a new question.
                 </p>
               </div>
-            )}
-            {busy ? (
-              <ThinkingLoader
-                variant="overlay"
-                phrases={WAIT_PHRASES}
-                className="rounded-3xl"
+            ) : null}
+
+            <TutorMathText
+              as="p"
+              className="text-center font-[family-name:var(--font-newsreader)] text-[1.65rem] leading-snug tracking-tight text-ink sm:text-[1.9rem]"
+              text={view?.question || "Starting…"}
+            />
+
+            {message ? (
+              <TutorMathText
+                as="p"
+                className="mx-auto mt-3 max-w-md text-center text-[15px] leading-6 text-ink-soft"
+                text={message}
               />
             ) : null}
-          </section>
 
-          <aside className="flex w-full shrink-0 flex-col gap-4 lg:w-[22.5rem]">
-            <div className="rounded-2xl border border-board-edge bg-white/90 p-4">
-              <div className="flex items-baseline justify-between gap-3">
-                <p className="text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
-                  Understanding
-                </p>
-                <p className="text-[13px] font-medium text-ink-soft">
-                  {scoreLabel(score, started)}
-                  {started ? ` · ${score}%` : ""}
-                </p>
-              </div>
-              <div className="mt-3 h-2 overflow-hidden rounded-full bg-secondary">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all duration-500",
-                    onTrack ? "bg-success" : "bg-accent",
-                  )}
-                  style={{ width: `${started ? Math.max(8, score) : 6}%` }}
-                />
-              </div>
-            </div>
-
-            <div className="flex min-h-0 flex-1 flex-col rounded-2xl border border-board-edge bg-white/90 p-4">
-              {onTrack ? (
-                <div className="mb-4 rounded-xl bg-success-soft px-4 py-3">
-                  <p className="text-[15px] font-semibold text-success">You are on track</p>
-                  <p className="mt-1 text-sm leading-6 text-ink-soft">
-                    You used the right idea on a new question. Press Play on the
-                    picture anytime you want a reminder.
+            {noticed && answeredOnce && !onTrack ? (
+              <div className="mt-5 space-y-2 rounded-2xl bg-white/90 px-4 py-3 text-sm leading-6 text-ink-soft shadow-[0_10px_28px_rgba(26,43,60,0.05)]">
+                {confused ? (
+                  <p>
+                    Mix-up: <TutorMathText text={confused} />
                   </p>
-                </div>
-              ) : null}
+                ) : null}
+                {wrongModel ? (
+                  <p>
+                    Your model: <TutorMathText text={wrongModel} />
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
 
-              <p className="text-[11px] font-semibold tracking-[0.08em] text-muted uppercase">
-                {transfer ? "Check" : "Question"}
+            {error ? (
+              <p className="mt-4 text-center text-sm text-error" role="alert">
+                {error}
               </p>
-              <p className="mt-2 font-[family-name:var(--font-newsreader)] text-xl leading-snug text-ink">
-                {view?.question || "Starting…"}
-              </p>
-              {view?.message ? (
-                <p className="mt-3 text-sm leading-6 text-ink-soft">{view.message}</p>
-              ) : null}
+            ) : null}
 
-              {(view?.confused || view?.rightModel) && !onTrack ? (
-                <details className="mt-4 rounded-xl bg-paper px-3 py-2 text-sm text-ink-soft">
-                  <summary className="cursor-pointer select-none text-[13px] font-medium text-ink">
-                    What we noticed
-                  </summary>
-                  <div className="mt-2 space-y-2 pb-1 leading-6">
-                    {view.confused ? (
-                      <p>
-                        Mix-up: {view.confused}
-                      </p>
-                    ) : null}
-                    {view.rightModel ? <p>Instead: {view.rightModel}</p> : null}
-                    {view.methodLabel ? <p>Picture: {view.methodLabel}</p> : null}
+            {!onTrack ? (
+              <form onSubmit={onSubmit} className="mt-8">
+                <div className="rounded-2xl border border-board-edge bg-white/95 p-2 shadow-[0_18px_40px_rgba(26,43,60,0.07)]">
+                  <label htmlFor="tutor-answer" className="sr-only">
+                    Your answer
+                  </label>
+                  <Textarea
+                    id="tutor-answer"
+                    ref={boxRef}
+                    value={draft}
+                    disabled={busy || !view?.sessionId}
+                    onChange={(event) => setDraft(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && !event.shiftKey) {
+                        event.preventDefault();
+                        void onSubmit();
+                      }
+                    }}
+                    placeholder="Type your answer…"
+                    className="min-h-[96px] resize-none border-0 bg-transparent px-3 py-3 text-[16px] shadow-none focus-visible:ring-0"
+                  />
+                  <div className="flex items-center justify-between gap-3 px-2 pb-1">
+                    <p className="text-[12px] text-muted">
+                      {user ? "Enter to send" : "A few free questions each day"}
+                    </p>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      disabled={busy || !draft.trim() || !view?.sessionId}
+                    >
+                      Send
+                      <ArrowUp className="size-3.5" />
+                    </Button>
                   </div>
-                </details>
-              ) : null}
-
-              {error ? (
-                <p className="mt-3 text-sm text-error" role="alert">
-                  {error}
-                  {bootFailed ? (
-                    <>
-                      {" "}
-                      <button
-                        type="button"
-                        className="underline"
-                        onClick={() => void boot()}
-                      >
-                        Try again
-                      </button>
-                    </>
-                  ) : null}
-                </p>
-              ) : null}
-
-              <form onSubmit={onSubmit} className="mt-auto pt-4">
-                <label htmlFor="tutor-answer" className="sr-only">
-                  Your answer
-                </label>
-                <Textarea
-                  id="tutor-answer"
-                  ref={boxRef}
-                  value={draft}
-                  disabled={busy || onTrack || !view?.sessionId}
-                  onChange={(event) => setDraft(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" && !event.shiftKey) {
-                      event.preventDefault();
-                      void onSubmit();
-                    }
-                  }}
-                  placeholder={
-                    onTrack
-                      ? "You can start a new conversation anytime."
-                      : "Type your answer…"
-                  }
-                  className="min-h-[88px] resize-none bg-paper text-[15px]"
-                />
-                <div className="mt-2 flex items-center justify-between gap-2">
-                  <p className="text-[12px] text-muted">
-                    {user ? "Enter to send" : "A few free questions each day"}
-                  </p>
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={busy || onTrack || !draft.trim() || !view?.sessionId}
-                  >
-                    Send
-                    <ArrowUp className="size-3.5" />
-                  </Button>
                 </div>
               </form>
-            </div>
-          </aside>
+            ) : (
+              <div className="mt-8 flex justify-center">
+                <Button type="button" onClick={() => void onReset()}>
+                  Learn something else
+                </Button>
+              </div>
+            )}
+          </div>
+
+          {busy ? (
+            <ThinkingLoader
+              variant="overlay"
+              phrases={WAIT_PHRASES}
+              className="rounded-none"
+            />
+          ) : null}
         </main>
       </div>
     </AppShell>

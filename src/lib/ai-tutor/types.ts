@@ -1,3 +1,5 @@
+import type { TutorVisualPlan } from "@/lib/ai-tutor/visualPlan";
+
 export type TutorPhase = "ask" | "transfer" | "on_track" | "stopped";
 
 export type TutorTurn = {
@@ -16,6 +18,7 @@ export type TutorView = {
   kind?: string;
   confused?: string;
   topic?: string;
+  language?: string;
   wrongModel?: string;
   rightModel?: string;
   methodLabel?: string;
@@ -24,6 +27,7 @@ export type TutorView = {
   evidence?: string;
   onTrack?: boolean;
   visualHtml?: string;
+  visualPlan?: TutorVisualPlan | null;
   hasVisual?: boolean;
   transferForm?: string;
   turns?: TutorTurn[];

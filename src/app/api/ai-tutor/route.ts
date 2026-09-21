@@ -9,7 +9,26 @@ export const maxDuration = 300;
 const PYTHON_TIMEOUT_MS = 180_000;
 
 function pythonBin() {
-  return process.env.PYTHON_PATH?.trim() || process.env.PYTHON?.trim() || "python";
+  const configured =
+    process.env.PYTHON_PATH?.trim() || process.env.PYTHON?.trim();
+  if (configured) return configured;
+  // Prefer python3 on macOS/Linux where `python` is often missing.
+  return process.platform === "win32" ? "python" : "python3";
+}
+
+function extractJsonObject(text: string): unknown {
+  const trimmed = text.trim();
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    // Teaching-loop used to print progress before the JSON payload.
+    const start = trimmed.indexOf("{");
+    const end = trimmed.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      return JSON.parse(trimmed.slice(start, end + 1));
+    }
+    throw new Error("not-json");
+  }
 }
 
 function runSession(payload: Record<string, unknown>): Promise<TutorView> {
@@ -47,8 +66,11 @@ function runSession(payload: Record<string, unknown>): Promise<TutorView> {
     child.on("close", (code) => {
       clearTimeout(timer);
       const text = Buffer.concat(stdout).toString("utf8").trim();
+      const errText = Buffer.concat(stderr)
+        .toString("utf8")
+        .replace(/\s+/g, " ")
+        .slice(0, 220);
       if (!text) {
-        const errText = Buffer.concat(stderr).toString("utf8").replace(/\s+/g, " ").slice(0, 220);
         reject(
           new Error(
             errText && !/key|token|secret|bearer/i.test(errText)
@@ -59,14 +81,20 @@ function runSession(payload: Record<string, unknown>): Promise<TutorView> {
         return;
       }
       try {
-        const parsed = JSON.parse(text) as TutorView;
+        const parsed = extractJsonObject(text) as TutorView;
         if (code !== 0 && parsed.ok === false) {
           reject(new Error(parsed.error || "The tutor could not continue."));
           return;
         }
         resolve(parsed);
       } catch {
-        reject(new Error("The tutor returned something we could not read."));
+        reject(
+          new Error(
+            errText && !/key|token|secret|bearer/i.test(errText)
+              ? `The tutor returned something we could not read. ${errText}`
+              : "The tutor returned something we could not read.",
+          ),
+        );
       }
     });
 
