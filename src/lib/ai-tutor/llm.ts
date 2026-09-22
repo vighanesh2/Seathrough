@@ -21,19 +21,7 @@ export async function tutorComplete(
     ],
   });
   const content = completion.choices[0]?.message?.content;
-  const text =
-    typeof content === "string"
-      ? content.trim()
-      : Array.isArray(content)
-        ? content
-            .map((part) =>
-              typeof part === "object" && part && "text" in part
-                ? String((part as { text?: string }).text ?? "")
-                : String(part),
-            )
-            .join("")
-            .trim()
-        : "";
+  const text = (typeof content === "string" ? content : "").trim();
   if (!text) throw new Error("The model returned empty text.");
   return text;
 }

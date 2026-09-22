@@ -6,6 +6,7 @@ import {
   type Editor,
   type TLShapeId,
 } from "tldraw";
+import { getIndices, type IndexKey } from "@tldraw/utils";
 import {
   SHAPE_GAP,
   layoutLesson,
@@ -138,14 +139,15 @@ function createNode(
 
 function linePoints(
   coords: Array<{ x: number; y: number }>,
-): Record<string, { id: string; index: string; x: number; y: number }> {
+): Record<string, { id: string; index: IndexKey; x: number; y: number }> {
   const points: Record<
     string,
-    { id: string; index: string; x: number; y: number }
+    { id: string; index: IndexKey; x: number; y: number }
   > = {};
+  const indices = getIndices(coords.length);
   coords.forEach((point, i) => {
     const id = `a${i + 1}`;
-    points[id] = { id, index: id, x: point.x, y: point.y };
+    points[id] = { id, index: indices[i]!, x: point.x, y: point.y };
   });
   return points;
 }
@@ -241,13 +243,16 @@ function createNodeUnsafe(
   if (shape.type === "geo") {
     const label = shape.label ?? "";
     const code = looksLikeCode(label);
+    // right-triangle is handled above; remaining geos match tldraw's geo styles.
+    const geo =
+      shape.geo === "right-triangle" ? "triangle" : shape.geo;
     editor.createShape({
       id,
       type: "geo",
       x: shape.x + dx,
       y: shape.y + dy,
       props: {
-        geo: shape.geo,
+        geo,
         w: shape.w,
         h: shape.h,
         color: colorOf(shape, "blue"),

@@ -574,7 +574,7 @@ export function layoutShapes(shapes: ExperimentShape[]): ExperimentShape[] {
   placeCallouts(callouts, byId);
 
   const titles = keptNodes.filter(
-    (shape) =>
+    (shape): shape is Extract<ExperimentShape, { type: "text" }> =>
       shape.type === "text" &&
       (shape.role === "title" || shape.y < 70),
   );
