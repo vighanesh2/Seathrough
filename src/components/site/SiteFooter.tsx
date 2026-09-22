@@ -42,8 +42,8 @@ export function SiteFooter({ variant = "default" }: SiteFooterProps) {
             </p>
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-ink-soft">
-            <Link href="/lessons" className="hover:text-ink">
-              Start a lesson
+            <Link href="/smart-tutor" className="hover:text-ink">
+              Smart tutor
             </Link>
           </div>
         </div>
@@ -69,10 +69,10 @@ export function SiteFooter({ variant = "default" }: SiteFooterProps) {
             <ul className="mt-3 space-y-2.5">
               <li>
                 <Link
-                  href="/lessons"
+                  href="/smart-tutor"
                   className="block text-[16px] text-[#6a7d90] transition hover:text-[#1a2b3c] sm:text-[17px]"
                 >
-                  Start a lesson
+                  Smart tutor
                 </Link>
               </li>
             </ul>

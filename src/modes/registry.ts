@@ -1,10 +1,12 @@
 import { automaticDrawingMode } from "@/modules/automatic-drawing/mode";
+import { aiTutorMode } from "@/modules/ai-tutor/mode";
 import { drawEngineMode } from "@/modules/draw-engine/mode";
 import { figures3dMode } from "@/modules/figures-3d/mode";
 import { leetcodeMode } from "@/modules/leetcode/mode";
 import { lessonsMode } from "@/modules/lessons/mode";
 import { sceneExplainMode } from "@/modules/scene-explain/mode";
 import { screenshotExplainMode } from "@/modules/screenshot-explain/mode";
+import { smartTutorMode } from "@/modules/smart-tutor/mode";
 import { systemDesignMode } from "@/modules/system-design/mode";
 import type { ModeDefinition, ModeGroup, ModeId, ModeKind } from "@/modes/types";
 
@@ -13,7 +15,9 @@ import type { ModeDefinition, ModeGroup, ModeId, ModeKind } from "@/modes/types"
  * (or remove it from ALL_MODES). Home + ModeNav read only enabled entries.
  */
 const ALL_MODES: ModeDefinition[] = [
+  smartTutorMode,
   lessonsMode,
+  aiTutorMode,
   systemDesignMode,
   sceneExplainMode,
   screenshotExplainMode,
