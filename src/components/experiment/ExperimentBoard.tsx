@@ -147,7 +147,7 @@ export function ExperimentBoard() {
       screenRef.current = null;
       setExperimentAudioTap(null);
       rec?.stream.getTracks().forEach((track) => track.stop());
-      if (rec?.recorder.state !== "inactive") {
+      if (rec && rec.recorder.state !== "inactive") {
         try {
           rec.recorder.stop();
         } catch {
