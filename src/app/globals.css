@@ -420,6 +420,75 @@ body {
   animation: thinking-ellipsis 1.2s ease-in-out infinite;
 }
 
+/* Amazon-style 2×2 boxes */
+.boxes-loader {
+  display: grid;
+  grid-template-columns: 7px 7px;
+  gap: 3px;
+  width: 17px;
+  height: 17px;
+}
+
+.boxes-loader > span {
+  display: block;
+  border-radius: 2.5px;
+  background: #1b6ca8;
+  animation: boxes-loader-pulse 0.72s ease-in-out infinite;
+}
+
+.boxes-loader > span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.boxes-loader > span:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.boxes-loader > span:nth-child(3) {
+  animation-delay: 0.24s;
+}
+
+.boxes-loader > span:nth-child(4) {
+  animation-delay: 0.36s;
+}
+
+.experiment-board [data-slot="button"] {
+  border-radius: 0 !important;
+}
+
+.record-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #c24545;
+  animation: record-dot-pulse 1s ease-in-out infinite;
+}
+
+@keyframes record-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.45;
+    transform: scale(0.82);
+  }
+}
+
+@keyframes boxes-loader-pulse {
+  0%,
+  100% {
+    transform: scale(0.62);
+    opacity: 0.28;
+  }
+  50% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
 .page-enter {
   animation: page-enter 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -461,8 +530,15 @@ body {
   .thinking-orb-glow,
   .thinking-shimmer-beam,
   .thinking-ellipsis,
+  .boxes-loader > span,
+  .record-dot,
   .page-enter {
     animation: none !important;
+  }
+
+  .boxes-loader > span {
+    opacity: 0.55;
+    transform: none;
   }
 
   .page-enter {
@@ -484,16 +560,71 @@ body {
 .marketing-shell {
   position: relative;
   isolation: isolate;
-  background-color: #fafbfc;
+  background-color: #ffffff;
   font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
 }
 
-.marketing-shell :is(h1, h2, h3),
-.marketing-shell .font-display,
-.marketing-shell blockquote {
-  font-family: var(--font-newsreader), Newsreader, Georgia, "Times New Roman",
-    serif;
-  font-optical-sizing: auto;
+.marketing-shell :is(h1, h2, h3) {
+  font-family: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.marketing-rise {
+  animation: marketing-rise 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.marketing-rise-1 {
+  animation-delay: 0.08s;
+}
+
+.marketing-rise-2 {
+  animation-delay: 0.2s;
+}
+
+.marketing-rise-3 {
+  animation-delay: 0.34s;
+}
+
+@keyframes marketing-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-rise {
+    animation: none;
+  }
+
+  .draw-stroke path {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+.draw-stroke path {
+  fill: none;
+  stroke: #085080;
+  stroke-width: 2.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-line 1.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.draw-stroke-late path {
+  animation-delay: 0.45s;
+}
+
+@keyframes draw-line {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 .marketing-aurora {
@@ -611,7 +742,7 @@ body {
 
 html.marketing-page,
 html.marketing-page body {
-  background: #fafbfc !important;
+  background: #ffffff !important;
   background-image: none !important;
   --font-sans: var(--font-inter), Inter, ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-newsreader), Newsreader, Georgia, "Times New Roman",

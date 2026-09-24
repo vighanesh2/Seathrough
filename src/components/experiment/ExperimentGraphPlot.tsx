@@ -78,6 +78,8 @@ export function ExperimentGraphPlot({ graph }: ExperimentGraphPlotProps) {
                 boundingBox: box,
                 expression: graph.expression,
                 showTangent: graph.showTangent === true,
+                showSecant: graph.showSecant === true,
+                ...(graph.title ? { caption: graph.title } : {}),
                 xMin: /\b(ln|log|sqrt)\b/i.test(graph.expression)
                   ? Math.max(0.05, xMin)
                   : xMin,

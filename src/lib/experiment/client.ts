@@ -1,4 +1,11 @@
 import type { ExperimentFollowup, ExperimentLesson } from "@/lib/experiment/scene";
+import type { LessonAudioTap } from "@/components/experiment/screenRecorder";
+
+let audioTap: LessonAudioTap | null = null;
+
+export function setExperimentAudioTap(tap: LessonAudioTap | null) {
+  audioTap = tap;
+}
 
 export async function requestExperimentLesson(
   prompt: string,
@@ -118,6 +125,47 @@ export async function playExperimentAudio(
     char.charCodeAt(0),
   );
   const blob = new Blob([bytes], { type: spoken.mimeType });
+
+  if (audioTap) {
+    if (audioTap.context.state === "suspended") {
+      await audioTap.context.resume().catch(() => undefined);
+    }
+    const copy = bytes.buffer.slice(
+      bytes.byteOffset,
+      bytes.byteOffset + bytes.byteLength,
+    );
+    let buffer: AudioBuffer | null = null;
+    try {
+      buffer = await audioTap.context.decodeAudioData(copy);
+    } catch {
+      buffer = null;
+    }
+    if (buffer) {
+      const source = audioTap.context.createBufferSource();
+      source.buffer = buffer;
+      source.connect(audioTap.dest);
+      source.connect(audioTap.context.destination);
+      await new Promise<void>((resolve, reject) => {
+        const onAbort = () => {
+          try {
+            source.stop();
+          } catch {
+            /* already stopped */
+          }
+          reject(new DOMException("Aborted", "AbortError"));
+        };
+        if (signal?.aborted) {
+          onAbort();
+          return;
+        }
+        signal?.addEventListener("abort", onAbort, { once: true });
+        source.onended = () => resolve();
+        source.start();
+      });
+      return;
+    }
+  }
+
   const url = URL.createObjectURL(blob);
   try {
     const audio = new Audio(url);
@@ -138,4 +186,35 @@ export async function playExperimentAudio(
   } finally {
     URL.revokeObjectURL(url);
   }
+}
+
+export async function uploadSavedLessonVideo(input: {
+  video: Blob;
+  poster?: Blob;
+  lesson: ExperimentLesson;
+  durationMs?: number;
+  accessToken?: string | null;
+}): Promise<{ video: import("@/lib/experiment/savedVideos").SavedLessonVideo }> {
+  const form = new FormData();
+  form.set("video", input.video, "lesson.webm");
+  if (input.poster) form.set("poster", input.poster, "poster.jpg");
+  form.set("lesson", JSON.stringify(input.lesson));
+  if (input.lesson.question) form.set("question", input.lesson.question);
+  if (input.durationMs) form.set("durationMs", String(input.durationMs));
+
+  const res = await fetch("/api/experiment/videos", {
+    method: "POST",
+    ...(input.accessToken
+      ? { headers: { Authorization: `Bearer ${input.accessToken}` } }
+      : {}),
+    body: form,
+  });
+  const body = (await res.json().catch(() => ({}))) as {
+    video?: import("@/lib/experiment/savedVideos").SavedLessonVideo;
+    error?: string;
+  };
+  if (!res.ok || !body.video) {
+    throw new Error(body.error || "Could not save that video.");
+  }
+  return { video: body.video };
 }

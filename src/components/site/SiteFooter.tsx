@@ -52,7 +52,7 @@ export function SiteFooter({ variant = "default" }: SiteFooterProps) {
   }
 
   return (
-    <footer className="border-t border-[#e6ebf0] bg-white">
+    <footer className="border-t border-[#d5e0ea] bg-white">
       <div className="mx-auto max-w-6xl px-5 py-12 md:px-8 md:py-14">
         <div className="grid gap-10 sm:grid-cols-[1.4fr_1fr_auto] lg:grid-cols-[1.6fr_1fr_auto]">
           <div className="max-w-sm">

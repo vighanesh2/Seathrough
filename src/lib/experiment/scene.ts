@@ -1,11 +1,13 @@
 import { layoutLesson } from "@/lib/experiment/layout";
 import {
   coerceGraph,
-  graphFromPrompt,
+  overlayPromptGraph,
   mergeGraph,
+  mentionsSecantAndTangent,
   type ExperimentGraph,
 } from "@/lib/experiment/graph";
 import { clipSpeech, formatBoardText } from "@/lib/experiment/boardText";
+import { extractFunctionExpression } from "@/lib/topics/functionParse";
 
 export const EXPERIMENT_GEO = [
   "rectangle",
@@ -663,19 +665,6 @@ function ideaFromSay(say: string, title: string): string {
   return say.replace(/[.?!]+$/g, "").trim().slice(0, 100);
 }
 
-function fallbackAsk(title: string, expect: string): string {
-  if (/\bderivative/i.test(title)) {
-    return "What does a derivative measure at a point?";
-  }
-  if (/\brecursion/i.test(title)) {
-    return "What does a recursive function do?";
-  }
-  if (expect.length >= 12 && !isThinExpect(expect, title)) {
-    return `Why does that matter for ${title}?`;
-  }
-  return `What is the key idea of ${title}?`;
-}
-
 function checkForBeat(
   beat: ExperimentBeat,
   title: string,
@@ -702,6 +691,32 @@ function checkForBeat(
   return existing && !isWeakAsk(existing.ask, title) ? existing : undefined;
 }
 
+function beatStatesClaim(beat: ExperimentBeat): boolean {
+  return /\b(because|so that|means|measures|equals|causes|therefore|difference|compared|instead|unless|only if|is when)\b/i.test(
+    beat.say,
+  );
+}
+
+/** One check, and only on a step that states a claim. A picture tour gets none. */
+function keepChecksWhenNeeded(beats: ExperimentBeat[]) {
+  const withCheck = beats.flatMap((beat, index) =>
+    beat.check ? [{ beat, index }] : [],
+  );
+  if (!withCheck.length) return;
+  const onClaim = withCheck.filter(
+    (item) => beatStatesClaim(item.beat) && isSubstantialBeat(item.beat),
+  );
+  const keep =
+    onClaim.length > 0
+      ? onClaim[onClaim.length - 1]!.index
+      : beats.length === 1 && isSubstantialBeat(beats[0]!)
+        ? withCheck[0]!.index
+        : -1;
+  for (let i = 0; i < beats.length; i += 1) {
+    if (i !== keep) delete beats[i]!.check;
+  }
+}
+
 function normalizeLessonChecks(
   beats: ExperimentBeat[],
   title: string,
@@ -724,17 +739,7 @@ function normalizeLessonChecks(
     if (check) beat.check = check;
     else delete beat.check;
   }
-  if (beats.some((beat) => beat.check)) return;
-  const host =
-    [...beats].reverse().find(isSubstantialBeat) ?? beats[beats.length - 1]!;
-  const expect =
-    definitionFromSay(host.say, title) ||
-    ideaFromSay(host.say, title) ||
-    host.say.replace(/[.?!]+$/g, "").trim().slice(0, 100);
-  host.check = {
-    ask: fallbackAsk(title, expect),
-    expect: expect || "the idea just explained",
-  };
+  keepChecksWhenNeeded(beats);
 }
 
 function lessonMentionsRightTriangle(
@@ -772,18 +777,62 @@ function useRightTrianglesWhenNeeded(
   }
 }
 
+function promptAsksForPlot(title: string, question: string | undefined): boolean {
+  const blob = [question ?? "", title].join("\n");
+  if (extractFunctionExpression(blob)) return true;
+  if (mentionsSecantAndTangent(blob)) return true;
+  return /\b(graph|plot|sketch)\b/i.test(blob);
+}
+
+function isBlobCurveShape(shape: ExperimentShape): boolean {
+  if (shape.type !== "geo") return false;
+  if (shape.geo !== "ellipse" && shape.geo !== "oval") return false;
+  const label = (shape.label ?? "").trim();
+  return !label || /^(the\s+)?(curve|function|graph)$/i.test(label);
+}
+
+function stripFakeCurveDrawings(beats: ExperimentBeat[]) {
+  const hasPlot = beats.some((beat) => Boolean(beat.graph?.expression));
+  if (!hasPlot) return;
+  for (const beat of beats) {
+    const drop = new Set(
+      beat.shapes.filter(isBlobCurveShape).map((shape) => shape.id),
+    );
+    if (!drop.size) continue;
+    beat.shapes = beat.shapes.filter((shape) => {
+      if (drop.has(shape.id)) return false;
+      if (shape.type === "callout" && drop.has(shape.to)) return false;
+      if (shape.type === "arrow" && (drop.has(shape.from) || drop.has(shape.to))) {
+        return false;
+      }
+      if (shape.type === "callout" && /^(the\s+)?curve$/i.test(shape.text.trim())) {
+        return false;
+      }
+      return true;
+    });
+  }
+}
+
 function ensureLessonGraph(
   title: string,
   question: string | undefined,
   beats: ExperimentBeat[],
 ) {
-  const fromPrompt = graphFromPrompt([question ?? "", title].join("\n"));
-  if (!fromPrompt || !beats.length) return;
+  if (!beats.length) return;
+  const blob = [question ?? "", title].join("\n");
+  if (!promptAsksForPlot(title, question)) {
+    for (const beat of beats) {
+      if ((beat.graph?.points.length ?? 0) >= 2) continue;
+      delete beat.graph;
+    }
+    return;
+  }
   const host =
     beats.find((beat) => beat.graph) ??
     beats.find(isSubstantialBeat) ??
     beats[0]!;
-  host.graph = mergeGraph(host.graph, fromPrompt);
+  host.graph = overlayPromptGraph(host.graph, blob);
+  stripFakeCurveDrawings(beats);
 }
 
 function coerceBeatShapes(raw: unknown, startIndex: number): ExperimentShape[] {
@@ -973,10 +1022,6 @@ export function simpleShapeLesson(prompt: string): ExperimentLesson | null {
       {
         say: `Here is a ${name}. I'll put it on the board so you can see the shape.`,
         shapes: scene.shapes,
-        check: {
-          ask: `What shape is on the board?`,
-          expect: scene.title,
-        },
       },
     ],
   };
