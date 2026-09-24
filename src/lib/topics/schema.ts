@@ -104,6 +104,10 @@ export const functionGraphBoardParamsSchema = z.object({
   /** JessieCode expression in x, e.g. "x^4" or "sin(x)+x". */
   expression: z.string().min(1).max(80),
   showTangent: z.boolean().default(true),
+  /** Second glider plus a labeled secant through two points on the curve. */
+  showSecant: z.boolean().optional(),
+  /** Overrides the default `y = <expression>` caption. */
+  caption: z.string().max(80).optional(),
   xMin: z.number().finite(),
   xMax: z.number().finite(),
 });

@@ -1,5 +1,6 @@
 import { automaticDrawingMode } from "@/modules/automatic-drawing/mode";
 import { aiTutorMode } from "@/modules/ai-tutor/mode";
+import { dashboardMode } from "@/modules/dashboard/mode";
 import { drawEngineMode } from "@/modules/draw-engine/mode";
 import { figures3dMode } from "@/modules/figures-3d/mode";
 import { leetcodeMode } from "@/modules/leetcode/mode";
@@ -16,6 +17,7 @@ import type { ModeDefinition, ModeGroup, ModeId, ModeKind } from "@/modes/types"
  */
 const ALL_MODES: ModeDefinition[] = [
   smartTutorMode,
+  dashboardMode,
   lessonsMode,
   aiTutorMode,
   systemDesignMode,

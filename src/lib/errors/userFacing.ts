@@ -27,7 +27,7 @@ export function toUserFacingError(
 
   // Known safe / intentional product messages — keep as-is
   if (
-    /^(Prompt is required|Description is required|Description is too long|Conversation not found|Session not found|Lesson stream returned an empty body|Add OPENAI_API_KEY|Add GROQ_API_KEY|Enter a topic|Crash details are required|Sign in required|Prompt is too long|The scene planner|The scene agent|Couldn't get a stable 3D scene|Voice is not configured|Nothing to speak|Couldn't hear that|Start a lesson first|Not enough lesson context|This tutor can only help with learning topics|Invalid tutor input|An answer is required|No active concept|Could not draw that|Could not explain that|The board is still loading)/i.test(
+    /^(Prompt is required|Description is required|Description is too long|Conversation not found|Session not found|Lesson stream returned an empty body|Add OPENAI_API_KEY|Add GROQ_API_KEY|Enter a topic|Crash details are required|Sign in required|Prompt is too long|The scene planner|The scene agent|Couldn't get a stable 3D scene|Voice is not configured|Nothing to speak|Couldn't hear that|Start a lesson first|Not enough lesson context|This tutor can only help with learning topics|Invalid tutor input|An answer is required|No active concept|Could not draw that|Could not explain that|The board is still loading|Nothing to save yet|This browser cannot record|Could not save that video|Could not save that recording|Could not start recording|Recording was cancelled|Screen recording is not available|The recording was empty|A video file is required|That video is too large|A title is required|Video not found)/i.test(
       raw,
     )
   ) {

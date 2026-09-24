@@ -8,16 +8,21 @@ import {
   useState,
 } from "react";
 import dynamic from "next/dynamic";
-import { ArrowUp, Eraser, LoaderCircle, Mic, Square } from "lucide-react";
+import Link from "next/link";
+import { ArrowUp, Circle, Eraser, LayoutGrid, LoaderCircle, Mic, Square } from "lucide-react";
 import { ExperimentScript } from "@/components/experiment/ExperimentScript";
+import { BoxesLoader } from "@/components/ui/BoxesLoader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/components/AuthProvider";
 import {
   playExperimentAudio,
   requestExperimentLesson,
   requestExperimentListen,
   requestExperimentReact,
   requestExperimentSpeak,
+  setExperimentAudioTap,
+  uploadSavedLessonVideo,
 } from "@/lib/experiment/client";
 import { gradeAnswer } from "@/lib/experiment/grade";
 import type {
@@ -27,6 +32,15 @@ import type {
 import { toUserFacingError } from "@/lib/errors/userFacing";
 import type { ExperimentDrawSession } from "@/components/experiment/applyScene";
 import { visibleLessonGraph } from "@/lib/experiment/graph";
+import { fallbackLessonTitle } from "@/lib/experiment/lessonTitle";
+import { saveLocalVideo } from "@/lib/experiment/localSavedVideos";
+import {
+  createLessonAudioTap,
+  startScreenRecording,
+  stopScreenRecording,
+  type LessonAudioTap,
+  type ScreenRecordSession,
+} from "@/components/experiment/screenRecorder";
 
 const ExperimentGraphPlot = dynamic(
   () =>
@@ -44,10 +58,24 @@ const PLAN_PHRASES = [
 
 type Phase = "idle" | "planning" | "playing" | "paused" | "reacting";
 
+type BrowserSpeechRecognition = {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  onresult: ((event: {
+    results: ArrayLike<ArrayLike<{ transcript: string }>>;
+  }) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+};
+
 /**
  * Full-viewport tldraw whiteboard plus a right-hand teaching script.
  */
 export function ExperimentBoard() {
+  const { accessToken } = useAuth();
   const [TldrawComp, setTldrawComp] = useState<
     typeof import("tldraw").Tldraw | null
   >(null);
@@ -59,6 +87,13 @@ export function ExperimentBoard() {
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const recognitionRef = useRef<{ stop: () => void } | null>(null);
+  const phaseRef = useRef<Phase>("idle");
+  const draftRef = useRef("");
+  const captureRef = useRef<HTMLDivElement | null>(null);
+  const screenRef = useRef<(ScreenRecordSession & { tap: LessonAudioTap }) | null>(
+    null,
+  );
 
   const [draft, setDraft] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
@@ -69,11 +104,22 @@ export function ExperimentBoard() {
   const [pausedCheck, setPausedCheck] = useState<ExperimentCheck | null>(null);
   const [note, setNote] = useState("");
   const [voiceReady, setVoiceReady] = useState(false);
+  const [browserStt, setBrowserStt] = useState(false);
   const [listening, setListening] = useState(false);
   const [topic, setTopic] = useState("");
+  const [recording, setRecording] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const busy =
-    phase === "planning" || phase === "playing" || phase === "reacting";
+    phase === "planning" ||
+    phase === "playing" ||
+    phase === "reacting" ||
+    saving;
+  const boardWaiting =
+    !TldrawComp || phase === "planning" || phase === "reacting";
+  const canDictate = voiceReady || browserStt;
+  phaseRef.current = phase;
+  draftRef.current = draft;
 
   useEffect(() => {
     let alive = true;
@@ -90,10 +136,24 @@ export function ExperimentBoard() {
       .catch(() => {
         if (alive) setVoiceReady(false);
       });
+    setBrowserStt(
+      "SpeechRecognition" in window || "webkitSpeechRecognition" in window,
+    );
     return () => {
       alive = false;
       abortRef.current?.abort();
       stopMic();
+      const rec = screenRef.current;
+      screenRef.current = null;
+      setExperimentAudioTap(null);
+      rec?.stream.getTracks().forEach((track) => track.stop());
+      if (rec?.recorder.state !== "inactive") {
+        try {
+          rec.recorder.stop();
+        } catch {
+          /* unmounting */
+        }
+      }
     };
   }, []);
 
@@ -113,6 +173,12 @@ export function ExperimentBoard() {
     recorderRef.current = null;
     streamRef.current?.getTracks().forEach((track) => track.stop());
     streamRef.current = null;
+    try {
+      recognitionRef.current?.stop();
+    } catch {
+      /* already stopped */
+    }
+    recognitionRef.current = null;
     setListening(false);
   }
 
@@ -342,10 +408,169 @@ export function ExperimentBoard() {
     await playFrom(indexRef.current + 1, abortRef.current);
   }
 
+  async function persistRecording(file: {
+    blob: Blob;
+    mimeType: string;
+    durationMs: number;
+    poster?: Blob;
+  }) {
+    const current = lessonRef.current ?? {
+      title: topic.trim() || "Screen recording",
+      ...(topic.trim() ? { question: topic.trim() } : {}),
+      beats: [{ say: "Recorded from Smart tutor.", shapes: [] }],
+    };
+    if (accessToken) {
+      try {
+        await uploadSavedLessonVideo({
+          video: file.blob,
+          poster: file.poster,
+          lesson: current,
+          durationMs: file.durationMs,
+          accessToken,
+        });
+        setNote("Saved. Open Dashboard to watch it.");
+        return;
+      } catch {
+        /* keep a local copy */
+      }
+    }
+    await saveLocalVideo({
+      title: fallbackLessonTitle(current),
+      titleSource: "lesson",
+      question: current.question,
+      durationMs: file.durationMs,
+      mimeType: file.mimeType,
+      video: file.blob,
+      poster: file.poster,
+    });
+    setNote(
+      accessToken
+        ? "Saved on this device. Sign in to keep it in the cloud."
+        : "Saved on this device. Open Dashboard to watch it.",
+    );
+  }
+
+  async function stopRecording() {
+    const session = screenRef.current;
+    if (!session) {
+      setRecording(false);
+      setExperimentAudioTap(null);
+      return;
+    }
+    screenRef.current = null;
+    setRecording(false);
+    setSaving(true);
+    try {
+      const file = await stopScreenRecording(session);
+      await persistRecording(file);
+    } catch (caught) {
+      if (!(caught instanceof DOMException && caught.name === "AbortError")) {
+        setError(
+          toUserFacingError(caught, "Could not save that recording. Try again."),
+        );
+      }
+    } finally {
+      setExperimentAudioTap(null);
+      void session.tap.context.close().catch(() => undefined);
+      setSaving(false);
+    }
+  }
+
+  async function startRecording() {
+    if (recording || saving || screenRef.current) return;
+    setError("");
+    try {
+      const tap = createLessonAudioTap();
+      await tap.context.resume().catch(() => undefined);
+      setExperimentAudioTap(tap);
+      const session = await startScreenRecording(tap);
+      screenRef.current = { ...session, tap };
+      setRecording(true);
+      setNote("Recording. Click Stop when the lesson is done.");
+      const video = session.stream.getVideoTracks()[0];
+      video?.addEventListener("ended", () => {
+        if (screenRef.current) void stopRecording();
+      });
+    } catch (caught) {
+      setExperimentAudioTap(null);
+      const name = caught instanceof DOMException ? caught.name : "";
+      if (name === "NotAllowedError") {
+        setError("Recording was cancelled. Click Record and share this tab.");
+        return;
+      }
+      setError(
+        toUserFacingError(
+          caught,
+          "Could not start recording. Click Record and share this tab.",
+        ),
+      );
+    }
+  }
+
+  async function applyTranscript(transcript: string) {
+    const text = transcript.trim();
+    if (!text) {
+      setError("Couldn't hear that. Try again.");
+      return;
+    }
+    setDraft(text);
+    if (phaseRef.current === "paused") {
+      await submitAnswer(text);
+      return;
+    }
+    if (phaseRef.current === "idle") {
+      await startLesson(text);
+    }
+  }
+
+  function startBrowserDictation() {
+    const SpeechCtor = (window as Window & {
+      SpeechRecognition?: new () => BrowserSpeechRecognition;
+      webkitSpeechRecognition?: new () => BrowserSpeechRecognition;
+    }).SpeechRecognition ??
+      (window as Window & {
+        webkitSpeechRecognition?: new () => BrowserSpeechRecognition;
+      }).webkitSpeechRecognition;
+    if (!SpeechCtor) {
+      setError("Voice is not available in this browser.");
+      return;
+    }
+    const recognition = new SpeechCtor();
+    recognition.lang = "en-US";
+    recognition.interimResults = true;
+    recognition.continuous = false;
+    recognitionRef.current = recognition;
+    recognition.onresult = (event) => {
+      let text = "";
+      for (let i = 0; i < event.results.length; i += 1) {
+        text += event.results[i]?.[0]?.transcript ?? "";
+      }
+      setDraft(text);
+    };
+    recognition.onerror = () => {
+      recognitionRef.current = null;
+      setListening(false);
+      setError("Couldn't hear that. Try again.");
+    };
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setListening(false);
+      const text = draftRef.current.trim();
+      if (text) void applyTranscript(text);
+    };
+    recognition.start();
+    setListening(true);
+    setError("");
+  }
+
   async function toggleMic() {
-    if (!voiceReady || phase !== "paused") return;
+    if (!canDictate || busy) return;
     if (listening) {
       stopMic();
+      return;
+    }
+    if (!voiceReady) {
+      startBrowserDictation();
       return;
     }
     try {
@@ -372,8 +597,7 @@ export function ExperimentBoard() {
               blob,
               abortRef.current?.signal,
             );
-            setDraft(transcript);
-            await submitAnswer(transcript);
+            await applyTranscript(transcript);
           } catch (caught) {
             setError(
               toUserFacingError(caught, "Couldn't hear that. Try again."),
@@ -383,19 +607,23 @@ export function ExperimentBoard() {
       };
       recorder.start();
       setListening(true);
+      setError("");
       window.setTimeout(() => {
         if (recorderRef.current === recorder && recorder.state === "recording") {
           recorder.stop();
         }
-      }, 8000);
+      }, 10000);
     } catch {
       setError("Could not start the microphone. Try again.");
     }
   }
 
   const Tldraw = TldrawComp;
-  const placeholder =
-    phase === "paused" ? "Type or speak your answer…" : "Ask a question…";
+  const placeholder = listening
+    ? "Listening…"
+    : phase === "paused"
+      ? "Type or speak your answer…"
+      : "Ask a question or tap the mic…";
   const graph =
     lesson && currentBeat >= 0
       ? visibleLessonGraph(lesson.beats, currentBeat)
@@ -403,46 +631,96 @@ export function ExperimentBoard() {
 
   return (
     <div className="experiment-board fixed inset-0 flex bg-board">
-      <div className="relative h-full min-h-0 min-w-0 flex-1">
-        {Tldraw ? (
-          <div
-            className={`absolute inset-0 ${graph ? "invisible pointer-events-none" : ""}`}
-            aria-hidden={Boolean(graph)}
-          >
-            <Tldraw
-              hideUi
-              persistenceKey="seethrough-experiment"
-              onMount={(editor) => {
-                editorRef.current = editor;
-                editor.selectNone();
-                editor.setCurrentTool("hand");
-              }}
-            />
-          </div>
-        ) : (
-          <div className="flex h-full items-center justify-center font-sans text-sm text-muted">
-            Loading whiteboard…
-          </div>
-        )}
-
-        {graph ? (
-          <div className="absolute inset-0 z-10 flex bg-board px-5 pt-14 pb-[7.25rem]">
-            <div className="min-h-0 min-w-0 flex-1">
+      <div className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col">
+        <div
+          ref={captureRef}
+          className="relative flex min-h-0 min-w-0 flex-1 flex-col"
+        >
+          {graph ? (
+            <div className="relative z-10 h-[min(42vh,360px)] shrink-0 px-4 pt-12 pb-2">
               <ExperimentGraphPlot graph={graph} />
             </div>
-          </div>
-        ) : null}
+          ) : null}
 
-        <div className="pointer-events-none absolute top-3 left-3 z-30">
+          <div className="relative min-h-0 flex-1">
+            {Tldraw ? (
+              <Tldraw
+                hideUi
+                persistenceKey="seethrough-experiment"
+                onMount={(editor) => {
+                  editorRef.current = editor;
+                  editor.selectNone();
+                  editor.setCurrentTool("hand");
+                }}
+              />
+            ) : null}
+            {saving ? (
+              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-white/55">
+                <BoxesLoader label="Saving recording" />
+              </div>
+            ) : boardWaiting ? (
+              <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center">
+                <BoxesLoader
+                  label={
+                    !Tldraw
+                      ? "Loading whiteboard"
+                      : status || "Drawing on the board"
+                  }
+                />
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="pointer-events-none absolute top-3 left-3 z-30 flex gap-2">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={clearBoard}
-            className="pointer-events-auto h-8 gap-1.5 rounded-xl border-board-edge bg-white/95 px-2.5 text-[13px] text-ink shadow-[0_8px_20px_rgba(26,43,60,0.08)] backdrop-blur-sm"
+            className="pointer-events-auto h-8 gap-1.5 rounded-none border-board-edge bg-white/95 px-2.5 text-[13px] text-ink shadow-[0_8px_20px_rgba(26,43,60,0.08)] backdrop-blur-sm"
           >
             <Eraser className="size-3.5" />
             Clear
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (recording) void stopRecording();
+              else void startRecording();
+            }}
+            disabled={saving}
+            aria-pressed={recording}
+            aria-label={recording ? "Stop recording" : "Start recording"}
+            className="pointer-events-auto h-8 gap-1.5 rounded-none border-board-edge bg-white/95 px-2.5 text-[13px] text-ink shadow-[0_8px_20px_rgba(26,43,60,0.08)] backdrop-blur-sm disabled:opacity-50"
+          >
+            {recording ? (
+              <>
+                <span className="record-dot" aria-hidden />
+                Stop
+              </>
+            ) : (
+              <>
+                <Circle className="size-3.5 fill-[#c24545] text-[#c24545]" />
+                Record
+              </>
+            )}
+          </Button>
+        </div>
+        <div className="pointer-events-none absolute top-3 right-3 z-30">
+          <Button
+            asChild
+            type="button"
+            variant="outline"
+            size="sm"
+            className="pointer-events-auto h-8 gap-1.5 rounded-none border-board-edge bg-white/95 px-2.5 text-[13px] text-ink shadow-[0_8px_20px_rgba(26,43,60,0.08)] backdrop-blur-sm"
+          >
+            <Link href="/dashboard">
+              <LayoutGrid className="size-3.5" />
+              Dashboard
+            </Link>
           </Button>
         </div>
 
@@ -455,13 +733,13 @@ export function ExperimentBoard() {
           <div className="pointer-events-auto w-full max-w-[34rem]">
             {error ? (
               <p
-                className="mb-2 rounded-xl bg-white/90 px-3 py-2 text-center text-[13px] text-error shadow-[0_8px_20px_rgba(26,43,60,0.08)]"
+                className="mb-2 rounded-none bg-white/90 px-3 py-2 text-center text-[13px] text-error shadow-[0_8px_20px_rgba(26,43,60,0.08)]"
                 role="alert"
               >
                 {error}
               </p>
             ) : null}
-            {busy && status ? (
+            {busy && status && !boardWaiting ? (
               <p className="mb-2 text-center text-[12px] text-muted">
                 {status}
               </p>
@@ -477,19 +755,25 @@ export function ExperimentBoard() {
                 </button>
               </div>
             ) : null}
-            <div className="flex items-center gap-2 rounded-2xl border border-board-edge bg-white/95 p-1.5 shadow-[0_12px_32px_rgba(26,43,60,0.12)] backdrop-blur-sm">
+            <div className="flex items-center gap-2 rounded-none border border-board-edge bg-white/95 p-1.5 shadow-[0_12px_32px_rgba(26,43,60,0.12)] backdrop-blur-sm">
               <label htmlFor="experiment-prompt" className="sr-only">
                 {phase === "paused" ? "Answer" : "Question"}
               </label>
-              {phase === "paused" && voiceReady ? (
+              {canDictate && !busy ? (
                 <Button
                   type="button"
                   size="icon-sm"
                   variant={listening ? "default" : "ghost"}
-                  aria-label={listening ? "Stop listening" : "Answer with voice"}
+                  aria-label={
+                    listening
+                      ? "Stop listening"
+                      : phase === "paused"
+                        ? "Answer with voice"
+                        : "Ask with voice"
+                  }
                   aria-pressed={listening}
                   onClick={() => void toggleMic()}
-                  className="size-9 rounded-xl"
+                  className="size-9 rounded-none"
                 >
                   {listening ? (
                     <Square className="size-3.5" />
@@ -506,7 +790,7 @@ export function ExperimentBoard() {
                 autoComplete="off"
                 disabled={busy}
                 maxLength={800}
-                className="h-10 min-w-0 flex-1 border-0 bg-transparent px-3 text-[15px] shadow-none focus-visible:ring-0"
+                className="h-10 min-w-0 flex-1 rounded-none border-0 bg-transparent px-3 text-[15px] shadow-none focus-visible:ring-0"
               />
               <Button
                 type="submit"
@@ -519,7 +803,7 @@ export function ExperimentBoard() {
                       ? "Submit answer"
                       : "Send"
                 }
-                className="size-9 rounded-xl"
+                className="size-9 rounded-none bg-[#085080] text-white hover:bg-[#083068]"
               >
                 {busy ? (
                   <LoaderCircle className="size-4 animate-spin" />
@@ -532,7 +816,7 @@ export function ExperimentBoard() {
         </form>
       </div>
 
-      <div className="h-full w-[min(22rem,38vw)] shrink-0">
+      <div className="h-full w-[min(16rem,26vw)] shrink-0">
         <ExperimentScript
           lesson={lesson}
           currentBeat={currentBeat}

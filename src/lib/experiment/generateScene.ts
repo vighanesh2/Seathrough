@@ -6,7 +6,7 @@ import {
   type ExperimentFollowup,
   type ExperimentLesson,
 } from "@/lib/experiment/scene";
-import { graphFromPrompt, mergeGraph } from "@/lib/experiment/graph";
+import { graphFromPrompt, overlayPromptGraph, mentionsSecantAndTangent } from "@/lib/experiment/graph";
 
 function optionalEnv(name: string): string | undefined {
   const value = process.env[name]?.trim();
@@ -66,28 +66,46 @@ Never rewind to a more basic definition after you already used the idea (do not 
 Never put stage directions in "say" (“Look at the board”, “Draw a line through (2,3) and (5,11)”). "say" is only explanation.
 
 Pick a visual genre:
+B) PROCESS / CONCEPT — OOP, classes, objects, recursion, algorithms, cycles.
+   Separate boxes with arrows. Do not overlap. Never stack letters inside a skinny ellipse.
+   Class vs object: two rectangles side by side (Class | Instance), field rows inside none —
+   list fields as their own rectangles UNDER the class box with ≥40px gaps.
+   If you use a car metaphor: body rectangle, engine rectangle to the LEFT, two CIRCLES for
+   wheels UNDER the body. Names are callouts, not text inside the wheels.
+
 A) STRUCTURE DIAGRAM — organs, body parts, machines, cells, plants, Earth layers, engines, computers, atoms, maps, volcanoes, vehicles.
    Build ONE figure in the center from touching/overlapping geo shapes that share cluster:"<name>".
    Parts use short or empty labels. Put the real names as callouts around the figure, each pointing at a part.
-B) PROCESS / CONCEPT — OOP, recursion, algorithms, cycles.
-   Separate boxes with arrows. Do not overlap.
+   Do not use this genre for Java/Python class or OOP lessons.
 C) GEOMETRY — Pythagorean theorem, similar triangles, trig.
    NEVER use geo:"triangle" for a right triangle. That shape is isosceles.
    Use geo:"right-triangle" (right angle at the bottom-left, with a square corner).
    Put side labels a, b, c as callouts: a on the bottom, b on the left, c on the hypotenuse.
-D) GRAPHS — y = f(x), parabolas, sine, motion, growth, derivatives.
+D) GRAPHS — named formula or they asked to graph/plot it: plot THAT f(x).
    Do NOT draw axes with rectangles or fake point-dots.
-   Put the plot on the first teaching beat as:
-   "graph": { "title":"y = x^2", "expression":"x^2", "xLabel":"x", "yLabel":"y", "showTangent": true }
-   The board renders this with a real graphing library.
+   Put the plot as:
+   "graph": { "title":"y = sin(x)", "expression":"sin(x)", "xLabel":"x", "yLabel":"y", "showTangent": true }
+   NEVER invent y = x^2, x^4, or any stock curve just because the word “tangent” appeared.
+   EXCEPTION — they asked the difference between a secant and a tangent (no f named):
+   use an EXAMPLE plot with both lines:
+   "graph": { "title":"Example: y = x^2", "expression":"x^2", "showTangent": true, "showSecant": true }
+   Say it is an example. NEVER draw an ellipse/oval labeled “Curve”.
 
-Example — "what is a derivative" (genre D):
-- Graph y = x^2 with showTangent true. Keep that SAME graph for every beat.
+Example — "what is a derivative" (no formula named, not “secant vs tangent”):
+- No graph. Teach with words and a tiny slope diagram of boxes/arrows if needed.
 - Beat 1: A derivative is the slope of a curve at one point.
 - Beat 2: A secant between a and a+h has slope (f(a+h)-f(a))/h.
 - Beat 3: As h shrinks, that secant becomes the tangent; that slope is f'(a).
-- Checks: "What does a derivative measure?" / "What happens to the secant as h goes to 0?"
-- NEVER define “a function is a rule”. NEVER say “draw a line through (2,3) and (5,11)”.
+- NEVER define “a function is a rule”. NEVER invent a parabola.
+
+Example — "difference between secant and tangent":
+- graph.expression "x^2", showSecant true, showTangent true, title "Example: y = x^2".
+- Beat 1: Here’s an example curve, y = x².
+- Beat 2: A secant through A and B cuts the curve at two points.
+- Beat 3: A tangent at A touches at one point and matches the slope there.
+
+Example — "derivative of sin(x)" or "graph y = sin(x)":
+- graph.expression MUST be "sin(x)". showTangent true for derivatives.
 
 Shape types:
 1) geo { "id":"lv", "type":"geo", "geo":"ellipse", "x":280, "y":220, "w":150, "h":170,
@@ -116,17 +134,21 @@ Example — "Pythagorean theorem" (genre C):
 
 Rules:
 - Never explain a physical thing as one lonely box. Draw its parts.
-- Concept boxes (genre B) stay separate with ≥40px gaps.
+- Concept boxes (genre B) stay separate with ≥40px gaps. NEVER overlap boxes, callouts, or wheel labels.
+- A class/object diagram is always genre B: no overlapping “car” blobs, no vertical letter-stacking.
 - Unique ids. Callouts/arrows only to ids that already exist (this beat or earlier).
 - Spoken "say" is the right-hand script. Diagram part labels stay 1–8 characters.
 - Put code in one rectangle using real JSON line breaks, never the two characters \\n.
-- After a teaching beat, pause with "check" that tests THAT step. Skip the check only if the beat is a tiny takeaway.
+- A check is optional. Add "check" only on the one step a student could mix up: a rule, a cause, a comparison, or a definition they might reverse.
+  Do not check a beat that only names parts, draws the picture, or restates the title.
+  Most lessons get one check, on that step. A short visual explanation can have none.
   Recursion example: "check": { "ask": "What stops a recursive function?", "expect": "the base case" }
   Derivative example: "check": { "ask": "What does a derivative measure at a point?", "expect": "the slope of the tangent" }
   NEVER use "in your own words, what did that last step mean?".
   NEVER put the check question in "say". NEVER repeat the same "say" on two beats.
 - When talking about a drawn part, set "highlight": ["shape-id"].
-- For graphs (motion, growth, y=x², sine, derivative), use genre D "graph" with expression.
+- For graphs: named f(x) or graph/plot → that expression. Secant vs tangent with no f → example y=x^2 with showSecant and showTangent. Never an oval labeled Curve.
+  If they asked about sin(x), expression is "sin(x)". Never invent x^2 or x^4 unless this is the secant/tangent example.
   NEVER fake a coordinate plane with geo rectangles.
 - JSON only.`;
 
@@ -201,11 +223,10 @@ function stampPromptGraph(
   prompt: string,
 ): ExperimentLesson {
   if (!lesson.question) lesson.question = prompt.slice(0, 160);
-  const graph = graphFromPrompt(prompt);
-  if (!graph || !lesson.beats.length) return lesson;
+  if (!lesson.beats.length) return lesson;
   const host =
     lesson.beats.find((beat) => beat.graph) ?? lesson.beats[0]!;
-  host.graph = mergeGraph(host.graph, graph);
+  host.graph = overlayPromptGraph(host.graph, prompt);
   return lesson;
 }
 
@@ -218,7 +239,7 @@ export async function generateExperimentLesson(
     throw new Error("Prompt is too long (max 800 characters)");
   }
 
-  if (!graphFromPrompt(trimmed)) {
+  if (!graphFromPrompt(trimmed) && !mentionsSecantAndTangent(trimmed)) {
     const simple = simpleShapeLesson(trimmed);
     if (simple) return simple;
   }

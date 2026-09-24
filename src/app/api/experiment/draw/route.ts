@@ -1,5 +1,6 @@
 import { generateExperimentLesson } from "@/lib/experiment/generateScene";
 import { simpleShapeLesson } from "@/lib/experiment/scene";
+import { mentionsSecantAndTangent } from "@/lib/experiment/graph";
 import { envPresence } from "@/lib/env";
 import { toUserFacingError } from "@/lib/errors/userFacing";
 
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     const simple = simpleShapeLesson(prompt);
-    if (simple) {
+    if (simple && !mentionsSecantAndTangent(prompt)) {
       return Response.json({ lesson: simple });
     }
 

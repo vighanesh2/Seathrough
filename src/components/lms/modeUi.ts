@@ -6,6 +6,7 @@ import {
   Camera,
   Code2,
   HeartPulse,
+  LayoutDashboard,
   Lightbulb,
   Network,
   PenLine,
@@ -26,6 +27,11 @@ export const MODE_UI: Record<ModeId, ModeUi> = {
   "smart-tutor": {
     icon: Sparkles,
     hint: "Ask a question. The tutor draws, talks, and checks you understood.",
+    tone: "blue",
+  },
+  dashboard: {
+    icon: LayoutDashboard,
+    hint: "Watch lessons you saved as videos, and rename the titles.",
     tone: "blue",
   },
   lessons: {

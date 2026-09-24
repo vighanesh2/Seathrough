@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ChevronDown, Menu } from "lucide-react";
 import { listModesByGroup } from "@/modes/registry";
 import { AccountMenu } from "@/components/lms/AccountMenu";
@@ -30,7 +31,7 @@ type SiteHeaderProps = {
 };
 
 const NAV_LINK =
-  "text-[15px] font-medium tracking-[-0.01em] text-[#1a2b3c]/90 transition-colors hover:text-[#1a2b3c]";
+  "text-[15px] font-medium tracking-[-0.01em] text-[#1a2b3c] transition-colors hover:text-[#1b6ca8]";
 
 function FeatureRow({
   href,
@@ -54,16 +55,16 @@ function FeatureRow({
         event.preventDefault();
         onPick(href);
       }}
-      className="group flex items-start gap-3 rounded-lg px-3 py-2.5 no-underline outline-none transition-colors hover:bg-[#f2f4f7] focus-visible:bg-[#f2f4f7]"
+      className="group flex items-start gap-3 rounded-lg px-3 py-2.5 no-underline outline-none transition-colors hover:bg-[#f4f7fb] focus-visible:bg-[#f4f7fb]"
     >
-      <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#eef4f9] text-[#1b6ca8]">
+      <span className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-[#d4e8f6] text-[#0f4f7c]">
         <Icon className="size-4" />
       </span>
       <span className="min-w-0 flex-1">
         <span className="flex items-center gap-2 text-[14px] font-medium tracking-[-0.01em] text-[#1a2b3c]">
           <span>{title}</span>
           {badge ? (
-            <span className="rounded-full bg-[#e4f5ee] px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] text-[#2a7a5c] uppercase">
+            <span className="rounded-full bg-[#d5efe4] px-1.5 py-0.5 text-[9px] font-bold tracking-[0.08em] text-[#2a7a5c] uppercase">
               {badge}
             </span>
           ) : null}
@@ -83,6 +84,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
   const more = listModesByGroup("more");
   const labs = listModesByGroup("lab");
   const marketing = variant === "marketing";
+  const pathname = usePathname();
 
   function pick(href: string) {
     setFeaturesOpen(false);
@@ -94,7 +96,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
       className={cn(
         "sticky top-0 z-50 border-b",
         marketing
-          ? "border-[#e6ebf0] bg-white"
+          ? "border-transparent bg-white"
           : "border-border/80 bg-glass backdrop-blur-md",
       )}
     >
@@ -102,16 +104,37 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
         className={cn(
           "relative mx-auto flex items-center",
           marketing
-            ? "h-20 max-w-6xl px-5 md:px-8"
+            ? "marketing-rise h-[4.25rem] max-w-6xl px-6 md:px-8"
             : "min-h-16 max-w-7xl gap-6 px-5 py-2.5 lg:px-10",
         )}
       >
-        <BrandMark compact size="lg" />
+        <BrandMark compact={!marketing} size={marketing ? "sm" : "lg"} />
 
         <nav
-          className="absolute top-1/2 left-1/2 hidden -translate-x-1/2 -translate-y-1/2 items-center gap-8 md:flex"
+          className={cn(
+            "hidden items-center md:flex",
+            marketing
+              ? "ml-auto gap-7"
+              : "absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 gap-8",
+          )}
           aria-label="Primary"
         >
+          {marketing
+            ? studios.map((mode) => (
+                <button
+                  key={mode.id}
+                  type="button"
+                  onClick={() => openStudio(mode.href)}
+                  className={cn(
+                    "text-[14px] font-medium outline-none transition-colors hover:text-[#111111] focus-visible:text-[#111111]",
+                    pathname === mode.href ? "text-[#111111]" : "text-[#3a3a3a]",
+                  )}
+                >
+                  {mode.navLabel}
+                </button>
+              ))
+            : null}
+          {!marketing ? (
           <Popover open={featuresOpen} onOpenChange={setFeaturesOpen}>
             <PopoverTrigger asChild>
               <button
@@ -119,10 +142,10 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
                 className={cn(
                   "inline-flex items-center gap-1 outline-none transition-colors",
                   NAV_LINK,
-                  featuresOpen && "text-[#1a2b3c]",
+                  featuresOpen && "text-[#1b6ca8]",
                 )}
               >
-                Features
+                Try it out!
                 <ChevronDown
                   className={cn(
                     "size-3.5 text-[#6a7d90] transition duration-200",
@@ -135,7 +158,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
               align="center"
               sideOffset={14}
               collisionPadding={16}
-              className="w-88 rounded-xl border-[#e6ebf0] p-1.5 shadow-[0_12px_40px_-12px_rgba(26,43,60,0.18)]"
+              className="w-88 rounded-xl border border-[#d5e0ea] bg-white p-1.5 text-[#1a2b3c] shadow-[0_16px_40px_-16px_rgba(26,43,60,0.28)] ring-0"
             >
               <p className="px-3 pt-2 pb-1 text-[11px] font-medium tracking-[0.06em] text-[#8a9aab] uppercase">
                 Start learning
@@ -199,15 +222,26 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
               ) : null}
             </PopoverContent>
           </Popover>
+          ) : null}
         </nav>
 
-        <div className="ml-auto flex items-center gap-2">
+        <div
+          className={cn(
+            "flex items-center",
+            marketing ? "ml-auto gap-7 md:ml-7" : "ml-auto gap-2",
+          )}
+        >
           <Sheet>
             <SheetTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-[#1a2b3c] hover:bg-[#f2f4f7] md:hidden"
+                className={cn(
+                  "md:hidden",
+                  marketing
+                    ? "text-[#1a2b3c] hover:bg-[#f4f7fb]"
+                    : "text-[#1a2b3c] hover:bg-[#f2f4f7]",
+                )}
                 aria-label="Open menu"
               >
                 <Menu className="size-5" />

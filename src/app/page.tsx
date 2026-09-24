@@ -4,7 +4,7 @@ import { MarketingHome } from "@/components/site/MarketingHome";
 export const metadata: Metadata = {
   title: "SeeThrough",
   description:
-    "Type a question. Watch a board, a system map, or a 3D scene form as it is explained.",
+    "Ask a question. SeeThrough explains it with a visualization so you can watch and learn.",
 };
 
 export default function HomePage() {

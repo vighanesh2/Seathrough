@@ -12,6 +12,8 @@ import {
 import { gradeAnswer } from "../src/lib/experiment/grade";
 import { formatBoardText } from "../src/lib/experiment/boardText";
 import { coerceLesson, type ExperimentShape } from "../src/lib/experiment/scene";
+import { extractFunctionExpression } from "../src/lib/topics/functionParse";
+import { clipTitle, fallbackLessonTitle } from "../src/lib/experiment/lessonTitle";
 
 function assert(cond: boolean, msg: string) {
   if (!cond) throw new Error(msg);
@@ -337,6 +339,97 @@ function assertSeparated(shapes: ExperimentShape[], label: string) {
   );
 }
 
+{
+  const packed = layoutShapes([
+    {
+      id: "engine",
+      type: "geo",
+      geo: "rectangle",
+      x: 240,
+      y: 80,
+      w: 90,
+      h: 90,
+      label: "Engine",
+      cluster: "car",
+    },
+    {
+      id: "body",
+      type: "geo",
+      geo: "rectangle",
+      x: 280,
+      y: 100,
+      w: 220,
+      h: 80,
+      label: "Body",
+      cluster: "car",
+    },
+    {
+      id: "wheelL",
+      type: "geo",
+      geo: "ellipse",
+      x: 300,
+      y: 140,
+      w: 40,
+      h: 220,
+      label: "Wheel",
+      cluster: "car",
+    },
+    {
+      id: "wheelR",
+      type: "geo",
+      geo: "ellipse",
+      x: 380,
+      y: 140,
+      w: 40,
+      h: 220,
+      label: "Wheel",
+      cluster: "car",
+    },
+    {
+      id: "klass",
+      type: "geo",
+      geo: "rectangle",
+      x: 500,
+      y: 80,
+      w: 70,
+      h: 70,
+      label: "myCar",
+      cluster: "car",
+    },
+    {
+      id: "engine_name",
+      type: "callout",
+      x: 200,
+      y: 90,
+      text: "Engine",
+      to: "engine",
+      side: "left",
+    },
+  ]);
+  const wheel = packed.find((shape) => shape.id === "wheelL");
+  assert(wheel?.type === "geo", "wheel kept");
+  if (wheel?.type === "geo") {
+    assert(wheel.w >= 72, "wheel is wide enough for a horizontal label");
+    assert(wheel.h <= wheel.w + 8, "wheel is a circle, not a tall letter stack");
+  }
+  const pairs = overlappingPairs(packed, SHAPE_GAP);
+  const allowed = pairs.filter(([a, b]) => {
+    const sa = packed.find((shape) => shape.id === a);
+    const sb = packed.find((shape) => shape.id === b);
+    return (
+      sa?.type === "geo" &&
+      sb?.type === "geo" &&
+      sa.geo === "ellipse" &&
+      sb.geo === "ellipse"
+    );
+  });
+  const bad = pairs.filter((pair) => !allowed.some(([a, b]) => a === pair[0] && b === pair[1]));
+  assert(
+    bad.length === 0,
+    `class/car diagram overlapped ${bad.map((pair) => pair.join("+")).join(", ")}`,
+  );
+}
+
 assert(gradeAnswer("left ventricle", "Left ventricle") === "continue", "exact-ish grade");
 assert(gradeAnswer("pump", "left ventricle") !== "continue", "weak answer is not continue");
 assert(gradeAnswer("", "heart") === "simplify", "empty answer simplifies");
@@ -506,12 +599,113 @@ assert(gradeAnswer("", "heart") === "simplify", "empty answer simplifies");
   assert(!says.some((say) => /function is a rule/i.test(say)), "no leftover function primer");
   assert(says.some((say) => /secant/i.test(say)), "keeps the secant idea");
   assert(
-    lesson.beats.some((beat) => beat.graph?.showTangent && beat.graph.expression === "x^2"),
-    "derivative lessons plot a curve with a tangent",
+    !lesson.beats.some((beat) => Boolean(beat.graph)),
+    "generic derivative questions do not invent a curve",
   );
   assert(
     !lesson.beats.some((beat) => /in your own words/i.test(beat.check?.ask ?? "")),
     "no generic stacked quiz",
+  );
+}
+
+{
+  assert(
+    extractFunctionExpression("Explain the derivative of sin(x)") === "sin(x)",
+    "sin(x) is read from a derivative question",
+  );
+  const lesson = coerceLesson({
+    title: "Derivative of sin(x)",
+    question: "Explain the derivative of sin(x)",
+    beats: [
+      {
+        say: "The derivative of sin(x) is the slope of y = sin(x) at a point.",
+        graph: { title: "y = x^2", expression: "x^2" },
+      },
+    ],
+  });
+  assert(
+    lesson.beats.some((beat) => beat.graph?.expression === "sin(x)"),
+    "the plot follows the asked function, not a default parabola",
+  );
+}
+
+{
+  const lesson = coerceLesson({
+    title: "Tangent Line",
+    question: "What is a tangent line?",
+    beats: [
+      {
+        say: "A tangent line touches a curve at exactly one point and has the same slope as the curve there.",
+        graph: { title: "y = x^4", expression: "x^4" },
+      },
+    ],
+  });
+  assert(
+    !lesson.beats.some((beat) => Boolean(beat.graph)),
+    "unnamed tangent questions do not force a stock curve",
+  );
+}
+
+{
+  assert(clipTitle('  "Secant vs Tangent"  ') === "Secant vs Tangent", "clip title quotes");
+  assert(
+    fallbackLessonTitle({
+      title: "Explanation",
+      question: "Difference between secant and tangent",
+      beats: [],
+    }) === "Difference between secant and tangent",
+    "fallback title uses the question",
+  );
+}
+
+{
+  const lesson = coerceLesson({
+    title: "Secant vs Tangent",
+    question: "Difference between secant and tangent",
+    beats: [
+      {
+        say: "A secant line cuts a curve at two distinct points.",
+        shapes: [
+          {
+            id: "curve",
+            type: "geo",
+            geo: "ellipse",
+            x: 280,
+            y: 180,
+            w: 260,
+            h: 160,
+            label: "Curve",
+          },
+          {
+            id: "curve_name",
+            type: "callout",
+            text: "Curve",
+            to: "curve",
+            side: "left",
+          },
+        ],
+        check: {
+          ask: "What does a secant line intersect a curve at?",
+          expect: "two distinct points",
+        },
+      },
+    ],
+  });
+  const graph = lesson.beats.find((beat) => beat.graph)?.graph;
+  assert(graph?.expression === "x^2", "secant vs tangent uses an example curve");
+  assert(graph?.showSecant === true, "secant line is on the plot");
+  assert(graph?.showTangent === true, "tangent line is on the plot");
+  assert(/example/i.test(graph?.title ?? ""), "the plot is labeled as an example");
+  assert(
+    !lesson.beats.some((beat) =>
+      beat.shapes.some(
+        (shape) =>
+          (shape.type === "geo" &&
+            (shape.geo === "ellipse" || shape.geo === "oval")) ||
+          (shape.type === "callout" && /curve/i.test(shape.text)),
+      ),
+    ),
+    "does not draw an oval labeled Curve",
   );
 }
 

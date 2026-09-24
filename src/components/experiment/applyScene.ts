@@ -8,6 +8,7 @@ import {
 } from "tldraw";
 import {
   SHAPE_GAP,
+  isOrganicGeo,
   layoutLesson,
   shapeBounds,
 } from "@/lib/experiment/layout";
@@ -432,11 +433,24 @@ export async function applyExperimentShapes(
       session.clusterOf.set(id, cluster);
       for (const extra of extras) session.clusterOf.set(extra, cluster);
     }
-    const isPart = shape.type === "geo" && Boolean(cluster);
-    if (!isPart) {
+    const isOrganicPart =
+      shape.type === "geo" && Boolean(cluster) && isOrganicGeo(shape);
+    if (!isOrganicPart) {
       const skip = new Set<TLShapeId>();
       for (const [placedId, placedCluster] of session.clusterOf) {
-        if (cluster && placedCluster === cluster) skip.add(placedId);
+        if (!cluster || placedCluster !== cluster) continue;
+        const placed = editor.getShape(placedId);
+        if (placed?.type === "geo") {
+          const geo = (placed.props as { geo?: string }).geo;
+          if (
+            geo === "ellipse" ||
+            geo === "oval" ||
+            geo === "heart" ||
+            geo === "cloud"
+          ) {
+            skip.add(placedId);
+          }
+        }
       }
       nudgeClearOfPlaced(editor, id, session.created, { skip });
     }
@@ -537,13 +551,9 @@ export async function playExperimentBeat(
   beat: ExperimentBeat,
   session: ExperimentDrawSession,
 ) {
-  if (beat.graph) {
-    await sleep(180);
-    return;
-  }
   if (beat.shapes.length) {
     await applyExperimentShapes(editor, beat.shapes, session);
-  } else {
+  } else if (!beat.graph) {
     await sleep(180);
   }
   if (beat.highlight?.length) {

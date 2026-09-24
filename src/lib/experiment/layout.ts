@@ -8,8 +8,6 @@ import { looksLikeCode } from "@/lib/experiment/boardText";
 
 /** Clear space between labels, notes, and separate concept boxes. */
 export const SHAPE_GAP = 40;
-/** Figure parts in the same diagram may touch or slightly overlap. */
-const PART_TOUCH = 8;
 
 const MAX_GEO_INNER_CHARS = 26;
 const GEO_CHAR_W = 16;
@@ -23,9 +21,9 @@ const MIN_GEO_W = 120;
 const MIN_GEO_H = 64;
 const MAX_GEO_W = 460;
 const MAX_GEO_H = 280;
-const MIN_PART_W = 48;
-const MIN_PART_H = 40;
-const MAX_PART_LABEL = 14;
+const MIN_PART_W = 72;
+const MIN_PART_H = 56;
+const MAX_INNER_LABEL = 4;
 
 export type ShapeBox = {
   id: string;
@@ -101,11 +99,22 @@ function measureText(text: string): { w: number; h: number } {
   };
 }
 
-function isFigureGeo(shape: Extract<ExperimentShape, { type: "geo" }>) {
+export function isOrganicGeo(shape: ExperimentShape | undefined): boolean {
+  if (!shape || shape.type !== "geo") return false;
   return (
-    shape.geo !== "rectangle" &&
-    !shape.geo.startsWith("arrow-")
+    shape.geo === "ellipse" ||
+    shape.geo === "oval" ||
+    shape.geo === "heart" ||
+    shape.geo === "cloud"
   );
+}
+
+/** Heart-style chambers may overlap. Boxes, callouts, and labels may not. */
+export function allowsOrganicOverlap(
+  a: ExperimentShape | undefined,
+  b: ExperimentShape | undefined,
+): boolean {
+  return sameCluster(a, b) && isOrganicGeo(a) && isOrganicGeo(b);
 }
 
 function fitText(shape: Extract<ExperimentShape, { type: "text" }>) {
@@ -129,10 +138,16 @@ function fitGeo(
   const raw = shape.label?.trim() ?? "";
   const code = looksLikeCode(raw);
   if (asPart && !code) {
-    shape.w = Math.min(320, Math.max(MIN_PART_W, shape.w));
-    shape.h = Math.min(280, Math.max(MIN_PART_H, shape.h));
-    if (raw.length > MAX_PART_LABEL) {
-      delete shape.label;
+    const minW = raw
+      ? Math.max(MIN_PART_W, Math.ceil(raw.length * 14 + 36))
+      : MIN_PART_W;
+    shape.w = Math.min(320, Math.max(minW, shape.w));
+    if (isOrganicGeo(shape)) {
+      const circle = Math.max(shape.w, MIN_PART_W);
+      shape.w = circle;
+      shape.h = Math.min(140, Math.max(MIN_PART_H, Math.min(shape.h, circle)));
+    } else {
+      shape.h = Math.min(220, Math.max(MIN_PART_H, shape.h));
     }
     return;
   }
@@ -144,12 +159,20 @@ function fitGeo(
   const lines = code
     ? raw.split("\n")
     : wrapLines(raw, MAX_GEO_INNER_CHARS);
-  if (!code) shape.label = lines.join("\n");
-  const longest = Math.max(...lines.map((line) => line.length), 1);
+  if (!code) {
+    const oneLine = raw.replace(/\s+/g, " ");
+    if (oneLine.length <= 22) shape.label = oneLine;
+    else shape.label = lines.join("\n");
+  }
+  const longest = Math.max(
+    ...((shape.label ?? raw).split("\n").map((line) => line.length) || [1]),
+    1,
+  );
   const maxW = code ? 620 : MAX_GEO_W;
   const maxH = code ? 420 : MAX_GEO_H;
   const charW = code ? 11 : GEO_CHAR_W;
   const lineH = code ? 22 : GEO_LINE_H;
+  const lineCount = (shape.label ?? raw).split("\n").length;
   shape.w = Math.min(
     maxW,
     Math.max(MIN_GEO_W, shape.w, Math.ceil(longest * charW + GEO_PAD_X)),
@@ -159,9 +182,12 @@ function fitGeo(
     Math.max(
       MIN_GEO_H,
       shape.h,
-      Math.ceil(lines.length * lineH + GEO_PAD_Y),
+      Math.ceil(lineCount * lineH + GEO_PAD_Y),
     ),
   );
+  if (isOrganicGeo(shape) && !code) {
+    shape.h = Math.min(shape.h, Math.max(MIN_GEO_H, Math.round(shape.w * 0.9)));
+  }
 }
 
 export function shapeBounds(shape: ExperimentShape): ShapeBox | null {
@@ -263,21 +289,6 @@ function autoClusterGeos(geos: Extract<ExperimentShape, { type: "geo" }>[]) {
   for (const geo of geos) {
     uf.add(geo.id);
     if (geo.cluster) uf.union(geo.id, `cluster:${geo.cluster}`);
-  }
-  for (let i = 0; i < geos.length; i += 1) {
-    const a = geos[i]!;
-    for (let j = i + 1; j < geos.length; j += 1) {
-      const b = geos[j]!;
-      const touching = rectsOverlap(a, b, PART_TOUCH);
-      if (!touching) continue;
-      if (a.cluster && b.cluster) {
-        uf.union(a.id, b.id);
-        continue;
-      }
-      if (isFigureGeo(a) || isFigureGeo(b) || a.cluster || b.cluster) {
-        uf.union(a.id, b.id);
-      }
-    }
   }
 
   let auto = 0;
@@ -408,7 +419,7 @@ function extractPartCallouts(nodes: ExperimentShape[]): ExperimentShape[] {
   for (const shape of nodes) {
     if (shape.type !== "geo" || !shape.cluster) continue;
     const label = shape.label?.trim() ?? "";
-    if (label.length <= MAX_PART_LABEL) continue;
+    if (label.length <= MAX_INNER_LABEL) continue;
     if (looksLikeCode(label) || label.includes("\n")) continue;
     const key = `${shape.id}:${label.toLowerCase()}`;
     if (existing.has(key)) {
@@ -472,12 +483,72 @@ function placeCallouts(
           ? figure.x - SHAPE_GAP - size.w
           : figure.x + figure.w + SHAPE_GAP;
       callout.y = y;
-      y += size.h + 18;
+      y += size.h + SHAPE_GAP;
     }
   };
 
   layoutColumn(left, "left");
   layoutColumn(right, "right");
+}
+
+function pushCalloutsClear(
+  callouts: Extract<ExperimentShape, { type: "callout" }>[],
+  nodes: ExperimentShape[],
+  byId: Map<string, ExperimentShape>,
+) {
+  if (!callouts.length) return;
+  const blockers = nodes
+    .filter((shape) => shape.type !== "callout")
+    .map(shapeBounds)
+    .filter((box): box is ShapeBox => Boolean(box));
+
+  for (let pass = 0; pass < 24; pass += 1) {
+    let moved = false;
+    for (const callout of callouts) {
+      fitCallout(callout);
+      const size = measureText(callout.text);
+      const self = {
+        id: callout.id,
+        x: callout.x,
+        y: callout.y,
+        w: size.w,
+        h: size.h,
+      };
+      for (const other of callouts) {
+        if (other.id === callout.id) continue;
+        const otherSize = measureText(other.text);
+        const box = {
+          id: other.id,
+          x: other.x,
+          y: other.y,
+          w: otherSize.w,
+          h: otherSize.h,
+        };
+        if (!rectsOverlap(self, box, SHAPE_GAP)) continue;
+        other.y = self.y + self.h + SHAPE_GAP;
+        moved = true;
+      }
+      for (const blocker of blockers) {
+        if (!rectsOverlap(self, blocker, SHAPE_GAP)) continue;
+        if (callout.side === "left" || callout.side === "top") {
+          callout.x = Math.min(callout.x, blocker.x - SHAPE_GAP - size.w);
+        } else {
+          callout.x = Math.max(callout.x, blocker.x + blocker.w + SHAPE_GAP);
+        }
+        if (
+          rectsOverlap(
+            { ...self, x: callout.x },
+            blocker,
+            SHAPE_GAP,
+          )
+        ) {
+          callout.y = blocker.y + blocker.h + SHAPE_GAP;
+        }
+        moved = true;
+      }
+    }
+    if (!moved) break;
+  }
 }
 
 function sameCluster(
@@ -544,9 +615,9 @@ export function layoutShapes(shapes: ExperimentShape[]): ExperimentShape[] {
   const keptNodes = allNodes.filter((shape) => !drop.has(shape.id));
   const byId = new Map(keptNodes.map((shape) => [shape.id, shape]));
 
-  const clusteredIds = new Set(
+  const organicIds = new Set(
     keptNodes
-      .filter((shape) => shape.type === "geo" && shape.cluster)
+      .filter((shape) => isOrganicGeo(shape) && shape.type === "geo" && shape.cluster)
       .map((shape) => shape.id),
   );
 
@@ -555,12 +626,10 @@ export function layoutShapes(shapes: ExperimentShape[]): ExperimentShape[] {
     .map((shape) => boxes.get(shape.id))
     .filter((box): box is ShapeBox => Boolean(box));
 
-  unpackNested(movable, clusteredIds);
-  resolveCollisions(movable, (a, b) => {
-    const sa = byId.get(a);
-    const sb = byId.get(b);
-    return sameCluster(sa, sb);
-  });
+  unpackNested(movable, organicIds);
+  resolveCollisions(movable, (a, b) =>
+    allowsOrganicOverlap(byId.get(a), byId.get(b)),
+  );
 
   for (const box of movable) {
     const shape = byId.get(box.id);
@@ -572,6 +641,7 @@ export function layoutShapes(shapes: ExperimentShape[]): ExperimentShape[] {
       shape.type === "callout",
   );
   placeCallouts(callouts, byId);
+  pushCalloutsClear(callouts, keptNodes, byId);
 
   const titles = keptNodes.filter(
     (shape) =>

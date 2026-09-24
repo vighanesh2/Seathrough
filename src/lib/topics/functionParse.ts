@@ -26,13 +26,13 @@ const NAMED_CURVES: ReadonlyArray<{
   { expr: "x^2", match: /\b(parabola|quadratic|x\s*squared)\b/ },
   { expr: "x^3", match: /\b(cubic|x\s*cubed)\b/ },
   { expr: "x^4", match: /\b(quartic|x\s*to the fourth)\b/ },
-  { expr: "sin(x)", match: /\b(sine|sinusoid|sin\s*wave)\b/ },
-  { expr: "cos(x)", match: /\b(cosine|cos\s*wave)\b/ },
-  { expr: "tan(x)", match: /\b(tangent\s+(curve|graph|function)|tan\s*wave)\b/ },
+  { expr: "sin(x)", match: /\b(sine|sinusoid|sin\s*wave|sin\s*\(\s*x\s*\)|sin\s+x)\b/ },
+  { expr: "cos(x)", match: /\b(cosine|cos\s*wave|cos\s*\(\s*x\s*\)|cos\s+x)\b/ },
+  { expr: "tan(x)", match: /\b(tangent\s+(curve|graph|function)|tan\s*wave|tan\s*\(\s*x\s*\))\b/ },
   { expr: "abs(x)", match: /\b(absolute\s*value|v\s*shape)\b/ },
   { expr: "sqrt(x)", match: /\b(square\s*root)\b/ },
-  { expr: "exp(x)", match: /\b(exponential)\b/ },
-  { expr: "ln(x)", match: /\b(natural\s*log|logarithm)\b/ },
+  { expr: "exp(x)", match: /\b(exponential|exp\s*\(\s*x\s*\))\b/ },
+  { expr: "ln(x)", match: /\b(natural\s*log|logarithm|ln\s*\(\s*x\s*\))\b/ },
   { expr: "1/x", match: /\b(reciprocal|hyperbola|inverse\s*proportion)\b/ },
   { expr: "2*x+1", match: /\b(straight\s*line|linear\s*(function|graph)|line\s*graph)\b/ },
 ];
@@ -110,8 +110,9 @@ function extractNamedCurve(blob: string): string | null {
 
   const lower = blob.toLowerCase();
   const graphIntent =
-    /\b(graph|plot|draw|sketch|show|visualize)\b/.test(lower) ||
-    /\b(curve|function|wave)\b/.test(lower);
+    /\b(graph|plot|draw|sketch|show|visualize|derivative|differentiate|integral)\b/.test(
+      lower,
+    ) || /\b(curve|function|wave)\b/.test(lower);
   const bareName = /\b(parabola|sine|cosine|cubic|quartic|exponential|reciprocal)\b/.test(
     lower,
   );
@@ -197,6 +198,7 @@ export function extractFunctionExpression(prompt: string): string | null {
   const patterns = [
     /\b(?:graphing|graph|plot|draw|sketch)\s+(?:the\s+)?(?:curve\s+)?(?:of\s+)?(?:the\s+)?(?:function\s+)?y\s*=\s*([^.;?\n]+)/i,
     /\b(?:graphing|graph|plot|draw|sketch)\s+(?:the\s+)?(?:function\s+)?f\s*\(\s*x\s*\)\s*=\s*([^.;?\n]+)/i,
+    /\b(?:derivative|differentiate|differentiation|integral|antiderivative)\s+of\s+(?:the\s+)?(?:function\s+)?(?:y\s*=\s*)?([^.;?\n]+)/i,
     /\by\s*=\s*([^.;?\n]+)/i,
     /\bf\s*\(\s*x\s*\)\s*=\s*([^.;?\n]+)/i,
     /\b(?:graphing|graph|plot|draw|sketch)\s+((?:[-\d.]+)?\s*x(?:\s*\^\s*[-\d.]+)?(?:\s*[+\-*/^()\dx\s]+)*)/i,

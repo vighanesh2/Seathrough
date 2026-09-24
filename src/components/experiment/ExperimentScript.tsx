@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { ExperimentCheck, ExperimentLesson } from "@/lib/experiment/scene";
+import { BoxesLoader } from "@/components/ui/BoxesLoader";
 
 type ExperimentScriptProps = {
   lesson: ExperimentLesson | null;
@@ -58,10 +59,16 @@ export function ExperimentScript({
         className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-3"
       >
         {!lesson ? (
-          <p className="text-[14px] leading-6 text-muted">
-            Ask a question. The tutor talks in short steps, draws on the board,
-            then pauses to check you understood.
-          </p>
+          streaming ? (
+            <div className="flex justify-start pt-2">
+              <BoxesLoader />
+            </div>
+          ) : (
+            <p className="text-[14px] leading-6 text-muted">
+              Ask a question. The tutor talks in short steps, draws on the board,
+              then pauses to check you understood.
+            </p>
+          )
         ) : null}
 
         {visible.map((beat, index) => {

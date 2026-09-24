@@ -1,3 +1,4 @@
+export { dashboardMode } from "@/modules/dashboard/mode";
 export { smartTutorMode } from "@/modules/smart-tutor/mode";
 export { lessonsMode } from "@/modules/lessons/mode";
 export { aiTutorMode } from "@/modules/ai-tutor/mode";

@@ -18,6 +18,7 @@ export type ExperimentGraph = {
   expression?: string;
   points: ExperimentGraphPoint[];
   showTangent?: boolean;
+  showSecant?: boolean;
 };
 
 function num(value: unknown, fallback = 0): number {
@@ -83,6 +84,7 @@ export function coerceGraph(raw: unknown): ExperimentGraph | null {
     obj.showTangent === true ||
     obj.tangent === true ||
     obj.derivative === true;
+  const showSecant = obj.showSecant === true || obj.secant === true;
 
   return {
     ...(title ? { title } : {}),
@@ -91,6 +93,7 @@ export function coerceGraph(raw: unknown): ExperimentGraph | null {
     ...(expression ? { expression } : {}),
     points,
     ...(showTangent ? { showTangent: true } : {}),
+    ...(showSecant ? { showSecant: true } : {}),
   };
 }
 
@@ -108,20 +111,39 @@ export function boundingBoxForGraph(graph: ExperimentGraph): BoundingBox {
   return [minX - padX, maxY + padY, maxX + padX, minY - padY];
 }
 
-export function graphFromPrompt(prompt: string): ExperimentGraph | null {
-  const calculus =
-    /\b(derivative|differentiate|differentiation|tangent line|secant line|instantaneous (rate|slope)|f'\s*\()/i.test(
-      prompt,
-    );
-  const expression = extractFunctionExpression(prompt) ?? (calculus ? "x^2" : null);
-  if (!expression) return null;
+/** Secant vs tangent needs a real curve with both lines, not an oval labeled “Curve”. */
+export function mentionsSecantAndTangent(prompt: string): boolean {
+  return /\bsecant\b/i.test(prompt) && /\btangent\b/i.test(prompt);
+}
+
+export function exampleSecantTangentGraph(expression = "x^2"): ExperimentGraph {
   return {
-    title: calculus ? `Slope of y = ${expression}` : `y = ${expression}`,
+    title: `Example: y = ${expression}`,
     xLabel: "x",
     yLabel: "y",
     expression,
     points: [],
-    showTangent: calculus || /\b(tangent|derivative|slope)\b/i.test(prompt),
+    showTangent: true,
+    showSecant: true,
+  };
+}
+
+export function graphFromPrompt(prompt: string): ExperimentGraph | null {
+  const expression = extractFunctionExpression(prompt);
+  if (!expression) return null;
+  const calculus =
+    /\b(derivative|differentiate|differentiation|tangent|secant|instantaneous (rate|slope)|f'\s*\()/i.test(
+      prompt,
+    );
+  const showSecant = /\bsecant\b/i.test(prompt);
+  return {
+    title: `y = ${expression}`,
+    xLabel: "x",
+    yLabel: "y",
+    expression,
+    points: [],
+    showTangent: calculus,
+    ...(showSecant ? { showSecant: true } : {}),
   };
 }
 
@@ -132,13 +154,42 @@ export function mergeGraph(
   if (!current) return extra;
   if (!extra) return current;
   return {
-    title: extra.title || current.title,
-    xLabel: extra.xLabel || current.xLabel,
-    yLabel: extra.yLabel || current.yLabel,
-    expression: extra.expression || current.expression,
-    points: extra.points.length ? extra.points : current.points,
+    title: current.title || extra.title,
+    xLabel: current.xLabel || extra.xLabel,
+    yLabel: current.yLabel || extra.yLabel,
+    expression: current.expression || extra.expression,
+    points: current.points.length ? current.points : extra.points,
     showTangent: extra.showTangent || current.showTangent,
+    showSecant: extra.showSecant || current.showSecant,
   };
+}
+
+/** Apply a named f(x), or an example curve when they asked secant vs tangent. */
+export function overlayPromptGraph(
+  graph: ExperimentGraph | undefined,
+  prompt: string,
+): ExperimentGraph | undefined {
+  const specified = extractFunctionExpression(prompt);
+  if (specified) {
+    const fromPrompt = graphFromPrompt(prompt);
+    return {
+      title: mentionsSecantAndTangent(prompt)
+        ? `Example: y = ${specified}`
+        : `y = ${specified}`,
+      xLabel: graph?.xLabel || "x",
+      yLabel: graph?.yLabel || "y",
+      expression: specified,
+      points: graph?.points ?? [],
+      showTangent: Boolean(fromPrompt?.showTangent || graph?.showTangent),
+      showSecant: Boolean(
+        fromPrompt?.showSecant || graph?.showSecant || mentionsSecantAndTangent(prompt),
+      ),
+    };
+  }
+  if (mentionsSecantAndTangent(prompt)) {
+    return exampleSecantTangentGraph();
+  }
+  return graph;
 }
 
 export function visibleLessonGraph(
