@@ -8,6 +8,7 @@ export type ModeId =
   | "smart-tutor"
   | "dashboard"
   | "ai-tutor"
+  | "developer"
   | "screenshot-explain"
   | "leetcode"
   | "figures-3d"

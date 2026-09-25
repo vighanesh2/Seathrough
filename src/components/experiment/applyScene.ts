@@ -246,6 +246,9 @@ function createNodeUnsafe(
   if (shape.type === "geo") {
     const label = shape.label ?? "";
     const code = looksLikeCode(label);
+    // right-triangle is handled above; remaining geos match tldraw's geo styles.
+    const geo =
+      shape.geo === "right-triangle" ? "triangle" : shape.geo;
     editor.createShape({
       id,
       type: "geo",
