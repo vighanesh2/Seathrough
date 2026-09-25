@@ -1,5 +1,13 @@
 import type { ExperimentFollowup, ExperimentLesson } from "@/lib/experiment/scene";
 import type { LessonAudioTap } from "@/components/experiment/screenRecorder";
+import type {
+  IntakeAnswers,
+  SystemDesignIntake,
+} from "@/lib/experiment/systemDesign/sections";
+
+export type ExperimentDrawResult =
+  | { kind: "lesson"; lesson: ExperimentLesson }
+  | { kind: "intake"; intake: SystemDesignIntake };
 
 let audioTap: LessonAudioTap | null = null;
 
@@ -10,31 +18,49 @@ export function setExperimentAudioTap(tap: LessonAudioTap | null) {
 export async function requestExperimentLesson(
   prompt: string,
   signal?: AbortSignal,
-): Promise<ExperimentLesson> {
+  answers?: IntakeAnswers,
+  kind: "tutor" | "system" = "tutor",
+): Promise<ExperimentDrawResult> {
   const res = await fetch("/api/experiment/draw", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({
+      prompt,
+      ...(answers ? { answers } : {}),
+      ...(kind === "system" ? { mode: "system" } : {}),
+    }),
     signal,
   });
 
-  let body: { lesson?: ExperimentLesson; error?: string } = {};
+  let body: {
+    lesson?: ExperimentLesson;
+    intake?: SystemDesignIntake;
+    error?: string;
+  } = {};
   try {
     body = (await res.json()) as {
       lesson?: ExperimentLesson;
+      intake?: SystemDesignIntake;
       error?: string;
     };
   } catch {
     throw new Error("Could not explain that. Try another question.");
   }
 
-  if (!res.ok || !body.lesson?.beats?.length) {
+  if (!res.ok) {
     throw new Error(
       body.error || "Could not explain that. Try another question.",
     );
   }
-
-  return body.lesson;
+  if (body.intake?.questions?.length && !answers) {
+    return { kind: "intake", intake: body.intake };
+  }
+  if (!body.lesson?.beats?.length) {
+    throw new Error(
+      body.error || "Could not explain that. Try another question.",
+    );
+  }
+  return { kind: "lesson", lesson: body.lesson };
 }
 
 export async function requestExperimentSpeak(

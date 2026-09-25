@@ -13,6 +13,7 @@ export type ModeId =
   | "figures-3d"
   | "scene-explain"
   | "system-design"
+  | "developer"
   | "automatic-drawing"
   | "draw-engine";
 

@@ -4,16 +4,17 @@ import type { ModeDefinition } from "@/modes/types";
 export const systemDesignMode: ModeDefinition = {
   id: "system-design",
   href: "/system-design",
-  navLabel: "Systems",
+  navLabel: "System design",
   title: "System design",
   description:
-    "Describe an architecture. Watch services, stores, and traffic assemble on the board.",
+    "Ask for a system. Each diagram stays on the board, from the architecture down to what happens when it fails.",
   kind: "learning",
   group: "studio",
-  order: 20,
-  enabled: false,
+  order: 3,
+  enabled: true,
+  badge: "new",
   usesWhiteboard: false,
   metaTitle: "System design | SeeThrough",
   metaDescription:
-    "Describe a system — load balancers, caches, queues — and watch the architecture draw itself.",
+    "Watch a system design stay on one board: architecture, data, the request, and what happens when someone is offline.",
 };

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Workspace } from "@/modules/system-design";
+import { ExperimentBoard } from "@/components/experiment/ExperimentBoard";
 import { systemDesignMode } from "@/modules/system-design/mode";
 
 export const metadata: Metadata = {
@@ -8,7 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function SystemDesignPage() {
-  return (
-    <Workspace />
-  );
+  return <ExperimentBoard kind="system" />;
 }

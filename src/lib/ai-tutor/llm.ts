@@ -20,7 +20,7 @@ export async function tutorComplete(
       { role: "user", content: user },
     ],
   });
-  const content = completion.choices[0]?.message?.content;
+  const content: unknown = completion.choices[0]?.message?.content;
   const text =
     typeof content === "string"
       ? content.trim()

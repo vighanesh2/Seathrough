@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Pencil, Play, Trash2 } from "lucide-react";
+import { Download, Maximize, Minimize, Pause, Pencil, Play, Trash2, Volume2, VolumeX } from "lucide-react";
 import { useAuth } from "@/components/AuthProvider";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { StudioAccessProvider } from "@/components/site/StudioAccess";
@@ -15,6 +15,7 @@ import {
   listLocalVideos,
   renameLocalVideo,
 } from "@/lib/experiment/localSavedVideos";
+import { fixWebmDuration } from "@/lib/experiment/fixWebmDuration";
 import { clipTitle } from "@/lib/experiment/lessonTitle";
 
 type ListedVideo = SavedLessonVideo & { local?: boolean };
@@ -28,6 +29,311 @@ function formatWhen(iso: string): string {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function formatClock(seconds: number): string {
+  if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+  const total = Math.floor(seconds);
+  const minutes = Math.floor(total / 60);
+  const remain = total % 60;
+  return `${minutes}:${String(remain).padStart(2, "0")}`;
+}
+
+function LessonVideo({
+  video,
+  onError,
+}: {
+  video: ListedVideo;
+  onError: () => void;
+}) {
+  const ref = useRef<HTMLVideoElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [muted, setMuted] = useState(false);
+  const [current, setCurrent] = useState(0);
+  const [src, setSrc] = useState<string | null>(null);
+  const [fullscreen, setFullscreen] = useState(false);
+  const lengthSeconds = (video.durationMs ?? 0) / 1000;
+
+  useEffect(() => {
+    frameRef.current?.focus();
+  }, [video.id]);
+
+  useEffect(() => {
+    const onChange = () => setFullscreen(document.fullscreenElement === frameRef.current);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    let created: string | null = null;
+    setSrc(null);
+    setCurrent(0);
+    setPlaying(false);
+
+    async function prepare() {
+      if (!video.videoUrl) return;
+      let next = video.videoUrl;
+      if ((video.durationMs ?? 0) > 1000) {
+        try {
+          const response = await fetch(video.videoUrl);
+          const blob = await response.blob();
+          const patched = await fixWebmDuration(blob, video.durationMs ?? 0);
+          if (patched !== blob) {
+            created = URL.createObjectURL(patched);
+            next = created;
+          }
+        } catch {
+          /* play the original file */
+        }
+      }
+      if (cancelled) {
+        if (created) URL.revokeObjectURL(created);
+        return;
+      }
+      setSrc(next);
+    }
+
+    void prepare();
+    return () => {
+      cancelled = true;
+      ref.current?.pause();
+      if (created) URL.revokeObjectURL(created);
+    };
+  }, [video.id, video.videoUrl, video.durationMs]);
+
+  async function downloadVideo() {
+    const url = src || video.videoUrl;
+    if (!url) return;
+    const ext = /mp4/i.test(video.mimeType || "") ? "mp4" : "webm";
+    const name = `${video.title.replace(/[^\w\s-]+/g, "").trim() || "lesson"}.${ext}`;
+    let href = url;
+    let created: string | null = null;
+    if (!url.startsWith("blob:")) {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      created = URL.createObjectURL(blob);
+      href = created;
+    }
+    const link = document.createElement("a");
+    link.href = href;
+    link.download = name;
+    link.click();
+    if (created) window.setTimeout(() => URL.revokeObjectURL(created), 1000);
+  }
+
+  function togglePlay() {
+    const element = ref.current;
+    if (!element) return;
+    if (element.paused) void element.play().catch(() => undefined);
+    else element.pause();
+  }
+
+  function seekTo(clientX: number) {
+    const element = ref.current;
+    const track = trackRef.current;
+    if (!element || !track) return;
+    const length = lengthSeconds > 0 ? lengthSeconds : element.duration;
+    if (!Number.isFinite(length) || length <= 0) return;
+    const rect = track.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    element.currentTime = ratio * length;
+    setCurrent(element.currentTime);
+  }
+
+  const knownDuration = lengthSeconds > 0 ? lengthSeconds : 0;
+  const progress = knownDuration > 0 ? Math.min(1, current / knownDuration) : 0;
+
+  return (
+    <div
+      ref={frameRef}
+      tabIndex={0}
+      className={`bg-[#f7f4ee] outline-none ${fullscreen ? "flex h-full flex-col" : ""}`}
+      onKeyDown={(event) => {
+        const element = ref.current;
+        if (!element) return;
+        if (event.key === " " || event.key === "k") {
+          event.preventDefault();
+          togglePlay();
+        } else if (event.key === "ArrowRight") {
+          element.currentTime = Math.min(knownDuration || element.duration || 0, element.currentTime + 5);
+        } else if (event.key === "ArrowLeft") {
+          element.currentTime = Math.max(0, element.currentTime - 5);
+        } else if (event.key === "m") {
+          element.muted = !element.muted;
+          setMuted(element.muted);
+        }
+      }}
+    >
+      {src ? (
+        <video
+          ref={ref}
+          key={src}
+          src={src}
+          poster={video.posterUrl}
+          autoPlay
+          playsInline
+          preload="auto"
+          className={`w-full cursor-pointer bg-[#1c1915] ${fullscreen ? "min-h-0 flex-1 object-contain" : "max-h-[68vh]"}`}
+          onClick={togglePlay}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onEnded={() => setPlaying(false)}
+          onTimeUpdate={() => {
+            const element = ref.current;
+            if (!element) return;
+            const at = element.currentTime;
+            if (knownDuration > 0 && at >= knownDuration - 0.05) {
+              element.pause();
+              setCurrent(knownDuration);
+              setPlaying(false);
+              return;
+            }
+            setCurrent(at);
+          }}
+          onError={onError}
+        />
+      ) : (
+        <div className="flex max-h-[68vh] min-h-48 w-full items-center justify-center bg-[#1c1915] text-[13px] text-white/70">
+          Opening the lesson…
+        </div>
+      )}
+      <div className="border-t border-[#e4dccf] px-4 py-3">
+        <div
+          ref={trackRef}
+          className="group relative h-3 cursor-pointer"
+          role="slider"
+          aria-label="Seek"
+          aria-valuemin={0}
+          aria-valuemax={Math.round(knownDuration)}
+          aria-valuenow={Math.round(current)}
+          tabIndex={0}
+          onPointerDown={(event) => {
+            event.currentTarget.setPointerCapture(event.pointerId);
+            seekTo(event.clientX);
+          }}
+          onPointerMove={(event) => {
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) seekTo(event.clientX);
+          }}
+        >
+          <div className="absolute top-1 right-0 left-0 h-1 bg-[#e4dccf]" />
+          <div
+            className="absolute top-1 left-0 h-1 bg-[#085080]"
+            style={{ width: `${progress * 100}%` }}
+          />
+          <div
+            className="absolute top-0 size-3 border border-[#085080] bg-white"
+            style={{ left: `calc(${progress * 100}% - 6px)` }}
+          />
+        </div>
+        <div className="mt-2 flex items-center gap-3">
+          <button
+            type="button"
+            className="flex size-8 items-center justify-center bg-[#085080] text-white outline-none hover:bg-[#083068] focus-visible:ring-2 focus-visible:ring-[#085080]/40"
+            aria-label={playing ? "Pause" : "Play"}
+            onClick={togglePlay}
+          >
+            {playing ? <Pause className="size-3.5" /> : <Play className="ml-0.5 size-3.5" />}
+          </button>
+          <p className="font-[family-name:var(--font-ibm-plex-mono)] text-[12px] tracking-wide text-[#5c5348]">
+            {formatClock(current)}
+            <span className="px-1 text-[#b3a894]">/</span>
+            {formatClock(knownDuration)}
+          </p>
+          <button
+            type="button"
+            className="ml-auto flex size-8 items-center justify-center text-[#5c5348] outline-none hover:text-[#111111] focus-visible:ring-2 focus-visible:ring-[#085080]/40"
+            aria-label={muted ? "Unmute" : "Mute"}
+            onClick={() => {
+              const element = ref.current;
+              if (!element) return;
+              element.muted = !element.muted;
+              setMuted(element.muted);
+            }}
+          >
+            {muted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+          </button>
+          <button
+            type="button"
+            className="flex size-8 items-center justify-center text-[#5c5348] outline-none hover:text-[#111111] focus-visible:ring-2 focus-visible:ring-[#085080]/40"
+            aria-label="Download"
+            onClick={() => void downloadVideo()}
+          >
+            <Download className="size-4" />
+          </button>
+          <button
+            type="button"
+            className="flex size-8 items-center justify-center text-[#5c5348] outline-none hover:text-[#111111] focus-visible:ring-2 focus-visible:ring-[#085080]/40"
+            aria-label={fullscreen ? "Exit full screen" : "Full screen"}
+            onClick={() => {
+              const frame = frameRef.current;
+              if (!frame) return;
+              if (document.fullscreenElement === frame) void document.exitFullscreen();
+              else void frame.requestFullscreen();
+            }}
+          >
+            {fullscreen ? <Minimize className="size-4" /> : <Maximize className="size-4" />}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function VideoThumb({ video }: { video: ListedVideo }) {
+  const [shot, setShot] = useState(video.posterUrl ?? "");
+
+  useEffect(() => {
+    if (!video.videoUrl) return;
+    let cancelled = false;
+    const element = document.createElement("video");
+    element.muted = true;
+    element.playsInline = true;
+    element.preload = "auto";
+    element.src = video.videoUrl;
+
+    const paint = () => {
+      if (cancelled || !element.videoWidth) return;
+      const canvas = document.createElement("canvas");
+      canvas.width = 640;
+      canvas.height = 360;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.drawImage(element, 0, 0, canvas.width, canvas.height);
+      setShot(canvas.toDataURL("image/jpeg", 0.72));
+    };
+
+    const onReady = () => {
+      paint();
+      const length = element.duration;
+      const at = Number.isFinite(length) && length > 0.4 ? Math.min(1.2, length * 0.2) : 0;
+      if (at > 0) {
+        try {
+          element.currentTime = at;
+        } catch {
+          /* the first frame is enough */
+        }
+      }
+    };
+
+    element.addEventListener("loadeddata", onReady);
+    element.addEventListener("seeked", paint);
+    return () => {
+      cancelled = true;
+      element.removeEventListener("loadeddata", onReady);
+      element.removeEventListener("seeked", paint);
+      element.src = "";
+    };
+  }, [video.id, video.videoUrl]);
+
+  return shot ? (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={shot} alt="" className="size-full object-cover" />
+  ) : (
+    <span className="absolute inset-0 bg-[#f4f5f7]" />
+  );
 }
 
 function formatDuration(ms?: number): string {
@@ -48,6 +354,13 @@ export function SavedVideosDashboard() {
 
 function SavedVideosDashboardView() {
   const { accessToken, user, loading } = useAuth();
+
+  useEffect(() => {
+    document.documentElement.classList.add("marketing-page");
+    return () => {
+      document.documentElement.classList.remove("marketing-page");
+    };
+  }, []);
   const { openAuth } = useQuestionAccess();
   const [videos, setVideos] = useState<ListedVideo[]>([]);
   const [error, setError] = useState("");
@@ -89,6 +402,17 @@ function SavedVideosDashboardView() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!playing) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== "Escape" || document.fullscreenElement) return;
+      setPlaying(null);
+      setPlayError("");
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [playing]);
 
   async function commitRename(video: ListedVideo) {
     const title = clipTitle(draftTitle);
@@ -221,19 +545,8 @@ function SavedVideosDashboardView() {
                   }}
                   aria-label={`Play ${video.title}`}
                 >
-                  {video.posterUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={video.posterUrl}
-                      alt=""
-                      className="size-full object-cover"
-                    />
-                  ) : (
-                    <span className="absolute inset-0 flex items-center justify-center text-[13px] text-muted">
-                      {video.title}
-                    </span>
-                  )}
-                  <span className="absolute inset-0 flex items-center justify-center bg-[#1a2b3c]/15">
+                  <VideoThumb video={video} />
+                  <span className="absolute inset-0 flex items-center justify-center">
                     <span className="flex size-11 items-center justify-center bg-white text-[#085080]">
                       <Play className="size-4 fill-current" />
                     </span>
@@ -310,8 +623,8 @@ function SavedVideosDashboardView() {
             className="w-full max-w-3xl overflow-hidden bg-white"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-center justify-between gap-3 bg-white px-4 py-3">
-              <p className="truncate text-[15px] font-medium text-[#111111]">
+            <div className="flex items-center justify-between gap-3 bg-[#f7f4ee] px-4 py-3">
+              <p className="truncate font-[family-name:var(--font-newsreader)] text-[1.2rem] tracking-tight text-[#111111]">
                 {playing.title}
               </p>
               <Button
@@ -331,25 +644,14 @@ function SavedVideosDashboardView() {
                 {playError}
               </p>
             ) : (
-              <video
-                key={playing.id}
-                poster={playing.posterUrl}
-                controls
-                autoPlay
-                playsInline
-                preload="auto"
-                className="max-h-[70vh] w-full bg-black"
+              <LessonVideo
+                video={playing}
                 onError={() =>
                   setPlayError(
                     "This copy cannot be played. Record the lesson again with Record, then Stop.",
                   )
                 }
-              >
-                <source
-                  src={playing.videoUrl}
-                  type={playing.mimeType || "video/webm"}
-                />
-              </video>
+              />
             )}
           </div>
         </div>

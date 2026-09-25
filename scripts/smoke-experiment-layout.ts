@@ -73,8 +73,8 @@ function assertSeparated(shapes: ExperimentShape[], label: string) {
   const packed = layoutShapes([left, right]);
   const red = packed.find((shape) => shape.id === "red");
   const blue = packed.find((shape) => shape.id === "blue");
-  assert(red?.type !== "arrow" && blue?.type !== "arrow", "cars stayed geos");
-  if (red && red.type !== "arrow" && blue && blue.type !== "arrow") {
+  assert(red?.type === "geo" && blue?.type === "geo", "cars stayed geos");
+  if (red?.type === "geo" && blue?.type === "geo") {
     assert(Math.abs(red.y - blue.y) < 8, "side-by-side cars should stay on a row");
     assert(blue.x >= red.x + red.w + SHAPE_GAP - 1, "side-by-side gap kept");
   }
@@ -560,7 +560,9 @@ assert(gradeAnswer("", "heart") === "simplify", "empty answer simplifies");
     .flatMap((beat) => beat.shapes)
     .find((shape) => shape.type === "geo" && shape.id === "tri");
   assert(tri?.type === "geo" && tri.geo === "right-triangle", "uses a right triangle");
-  assert(tri.type === "geo" && tri.h < tri.w, "right triangle is not equilateral");
+  if (tri?.type === "geo") {
+    assert(tri.h < tri.w, "right triangle is not equilateral");
+  }
 }
 
 {

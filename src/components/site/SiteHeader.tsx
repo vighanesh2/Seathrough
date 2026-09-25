@@ -126,11 +126,16 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
                   type="button"
                   onClick={() => openStudio(mode.href)}
                   className={cn(
-                    "text-[14px] font-medium outline-none transition-colors hover:text-[#111111] focus-visible:text-[#111111]",
+                    "inline-flex items-center gap-1.5 text-[14px] font-medium outline-none transition-colors hover:text-[#111111] focus-visible:text-[#111111]",
                     pathname === mode.href ? "text-[#111111]" : "text-[#3a3a3a]",
                   )}
                 >
                   {mode.navLabel}
+                  {mode.id === "system-design" && mode.badge === "new" ? (
+                    <span className="rounded-full bg-[#085080] px-1.5 py-0.5 text-[10px] font-semibold tracking-[0.06em] text-white uppercase">
+                      New
+                    </span>
+                  ) : null}
                 </button>
               ))
             : null}

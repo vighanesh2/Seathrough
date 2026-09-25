@@ -75,6 +75,14 @@ export function SiteFooter({ variant = "default" }: SiteFooterProps) {
                   Smart tutor
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/system-design"
+                  className="block text-[16px] text-[#6a7d90] transition hover:text-[#1a2b3c] sm:text-[17px]"
+                >
+                  System design
+                </Link>
+              </li>
             </ul>
           </div>
 
