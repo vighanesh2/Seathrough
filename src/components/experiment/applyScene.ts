@@ -6,7 +6,7 @@ import {
   type Editor,
   type TLShapeId,
 } from "tldraw";
-import { getIndices, type IndexKey } from "@tldraw/utils";
+import type { TLLineShapePoint } from "@tldraw/tlschema";
 import {
   SHAPE_GAP,
   isOrganicGeo,
@@ -28,6 +28,7 @@ export type ExperimentDrawSession = {
   idMap: Map<string, TLShapeId>;
   created: TLShapeId[];
   clusterOf: Map<TLShapeId, string>;
+  diagram?: ExperimentBeat["diagram"];
 };
 
 function sleep(ms: number) {
@@ -140,15 +141,16 @@ function createNode(
 
 function linePoints(
   coords: Array<{ x: number; y: number }>,
-): Record<string, { id: string; index: IndexKey; x: number; y: number }> {
-  const points: Record<
-    string,
-    { id: string; index: IndexKey; x: number; y: number }
-  > = {};
-  const indices = getIndices(coords.length);
+): Record<string, TLLineShapePoint> {
+  const points: Record<string, TLLineShapePoint> = {};
   coords.forEach((point, i) => {
     const id = `a${i + 1}`;
-    points[id] = { id, index: indices[i]!, x: point.x, y: point.y };
+    points[id] = {
+      id,
+      index: id as TLLineShapePoint["index"],
+      x: point.x,
+      y: point.y,
+    };
   });
   return points;
 }
@@ -253,7 +255,7 @@ function createNodeUnsafe(
       x: shape.x + dx,
       y: shape.y + dy,
       props: {
-        geo,
+        geo: shape.geo === "right-triangle" ? "triangle" : shape.geo,
         w: shape.w,
         h: shape.h,
         color: colorOf(shape, "blue"),
@@ -333,6 +335,7 @@ function connectArrow(
   toId: TLShapeId,
   label: string | undefined,
   color: ExperimentColor,
+  lane?: "above" | "below",
 ) {
   const startBounds = editor.getShapePageBounds(fromId);
   const endBounds = editor.getShapePageBounds(toId);
@@ -347,13 +350,14 @@ function connectArrow(
   const endAnchor = vertical
     ? { x: 0.5, y: dy >= 0 ? 0 : 1 }
     : { x: dx >= 0 ? 0 : 1, y: 0.5 };
+  const shift = lane === "above" ? -22 : lane === "below" ? 22 : 0;
   const start = {
     x: startBounds.minX + startBounds.width * startAnchor.x,
-    y: startBounds.minY + startBounds.height * startAnchor.y,
+    y: startBounds.minY + startBounds.height * startAnchor.y + shift,
   };
   const end = {
     x: endBounds.minX + endBounds.width * endAnchor.x,
-    y: endBounds.minY + endBounds.height * endAnchor.y,
+    y: endBounds.minY + endBounds.height * endAnchor.y + shift,
   };
   const origin = {
     x: Math.min(start.x, end.x),
@@ -482,7 +486,14 @@ export async function applyExperimentShapes(
     const fromId = session.idMap.get(shape.from);
     const toId = session.idMap.get(shape.to);
     if (!fromId || !toId) continue;
-    connectArrow(editor, fromId, toId, shape.label, colorOf(shape, "grey"));
+    connectArrow(
+      editor,
+      fromId,
+      toId,
+      shape.label,
+      colorOf(shape, "grey"),
+      shape.lane,
+    );
     await sleep(70);
   }
 }
@@ -530,7 +541,8 @@ export function prepareExperimentSession(
   editor: Editor,
   lesson: ExperimentLesson,
 ): ExperimentDrawSession {
-  layoutLesson(lesson);
+  const systemDesign = lesson.beats.some((beat) => beat.section);
+  if (!systemDesign) layoutLesson(lesson);
   const allShapes = lesson.beats.flatMap((beat) => beat.shapes);
   const { dx, dy } = sceneOffset(editor, {
     title: lesson.title,
@@ -556,6 +568,8 @@ export async function playExperimentBeat(
   beat: ExperimentBeat,
   session: ExperimentDrawSession,
 ) {
+  if (beat.diagram) session.diagram = beat.diagram;
+  const before = session.created.length;
   if (beat.shapes.length) {
     await applyExperimentShapes(editor, beat.shapes, session);
   } else if (!beat.graph) {
@@ -564,7 +578,8 @@ export async function playExperimentBeat(
   if (beat.highlight?.length) {
     await highlightExperimentIds(editor, session, beat.highlight);
   }
-  if (session.created.length) zoomCreated(editor, session.created);
+  const added = session.created.slice(before);
+  if (added.length) zoomCreated(editor, added);
 }
 
 export async function applyExperimentScene(

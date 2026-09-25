@@ -1,3 +1,5 @@
+import { fixWebmDuration } from "@/lib/experiment/fixWebmDuration";
+
 export type ScreenRecording = {
   blob: Blob;
   mimeType: string;
@@ -140,7 +142,9 @@ export function stopScreenRecording(
       if (settled) return;
       settled = true;
       const mimeType = session.mimeType || "video/webm";
-      const blob = playableBlob(session.chunks, mimeType);
+      const durationMs = Math.max(400, Math.round(performance.now() - session.startedAt));
+      const raw = playableBlob(session.chunks, mimeType);
+      const blob = await fixWebmDuration(raw, durationMs).catch(() => raw);
       session.stream.getTracks().forEach((track) => track.stop());
       if (!blob.size) {
         reject(new Error("The recording was empty. Try Record again."));
@@ -150,7 +154,7 @@ export function stopScreenRecording(
       resolve({
         blob,
         mimeType: blob.type || "video/webm",
-        durationMs: Math.max(400, Math.round(performance.now() - session.startedAt)),
+        durationMs,
         poster,
       });
     };

@@ -11,6 +11,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { ArrowUp, Circle, Eraser, LayoutGrid, LoaderCircle, Mic, Square } from "lucide-react";
 import { ExperimentScript } from "@/components/experiment/ExperimentScript";
+import { SystemDesignIntakeForm } from "@/components/experiment/SystemDesignIntakeForm";
 import { BoxesLoader } from "@/components/ui/BoxesLoader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ import { toUserFacingError } from "@/lib/errors/userFacing";
 import type { ExperimentDrawSession } from "@/components/experiment/applyScene";
 import { visibleLessonGraph } from "@/lib/experiment/graph";
 import { fallbackLessonTitle } from "@/lib/experiment/lessonTitle";
+import type { IntakeAnswers, SystemDesignIntake } from "@/lib/experiment/systemDesign/sections";
 import { saveLocalVideo } from "@/lib/experiment/localSavedVideos";
 import {
   createLessonAudioTap,
@@ -56,7 +58,7 @@ const PLAN_PHRASES = [
   "Drawing on the board",
 ] as const;
 
-type Phase = "idle" | "planning" | "playing" | "paused" | "reacting";
+type Phase = "idle" | "planning" | "playing" | "paused" | "reacting" | "intake";
 
 type BrowserSpeechRecognition = {
   lang: string;
@@ -74,7 +76,11 @@ type BrowserSpeechRecognition = {
 /**
  * Full-viewport tldraw whiteboard plus a right-hand teaching script.
  */
-export function ExperimentBoard() {
+export function ExperimentBoard({
+  kind = "tutor",
+}: {
+  kind?: "tutor" | "system";
+} = {}) {
   const { accessToken } = useAuth();
   const [TldrawComp, setTldrawComp] = useState<
     typeof import("tldraw").Tldraw | null
@@ -109,6 +115,8 @@ export function ExperimentBoard() {
   const [topic, setTopic] = useState("");
   const [recording, setRecording] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [intake, setIntake] = useState<SystemDesignIntake | null>(null);
+  const [designPrompt, setDesignPrompt] = useState("");
 
   const busy =
     phase === "planning" ||
@@ -207,6 +215,8 @@ export function ExperimentBoard() {
     setPhase("idle");
     setTopic("");
     setDraft("");
+    setIntake(null);
+    setDesignPrompt("");
   }
 
   function onPromptKey(event: KeyboardEvent<HTMLElement>) {
@@ -298,10 +308,20 @@ export function ExperimentBoard() {
     setPausedCheck(null);
     setNote("");
     setTopic(text);
+    setIntake(null);
+    setDesignPrompt("");
 
     try {
-      const next = await requestExperimentLesson(text, ac.signal);
+      const result = await requestExperimentLesson(text, ac.signal, undefined, kind);
       if (ac.signal.aborted) return;
+      if (result.kind === "intake") {
+        setIntake(result.intake);
+        setDesignPrompt(text);
+        setPhase("intake");
+        setStatus("");
+        return;
+      }
+      const next = result.lesson;
       lessonRef.current = next;
       setLesson(next);
       const { prepareExperimentSession } = await import(
@@ -323,6 +343,50 @@ export function ExperimentBoard() {
           caught,
           "Could not explain that. Try another question.",
         ),
+      );
+    }
+  }
+
+  async function submitDesign(answers: IntakeAnswers) {
+    const editor = editorRef.current;
+    const prompt = designPrompt.trim();
+    if (!editor || !prompt) return;
+    if (Object.values(answers).some((value) => !value.trim())) {
+      setError("Answer all four questions.");
+      return;
+    }
+
+    abortRef.current?.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
+    setPhase("planning");
+    setError("");
+    setStatus("Designing the system");
+
+    try {
+      const result = await requestExperimentLesson(prompt, ac.signal, answers, kind);
+      if (ac.signal.aborted) return;
+      if (result.kind !== "lesson") {
+        throw new Error("Could not design that system. Try again.");
+      }
+      setIntake(null);
+      lessonRef.current = result.lesson;
+      setLesson(result.lesson);
+      const { prepareExperimentSession } = await import(
+        "@/components/experiment/applyScene"
+      );
+      sessionRef.current = prepareExperimentSession(editor, result.lesson);
+      await playFrom(0, ac);
+    } catch (caught) {
+      if (
+        ac.signal.aborted ||
+        (caught instanceof DOMException && caught.name === "AbortError")
+      ) {
+        return;
+      }
+      setPhase("intake");
+      setError(
+        toUserFacingError(caught, "Could not design that system. Try again."),
       );
     }
   }
@@ -623,7 +687,9 @@ export function ExperimentBoard() {
     ? "Listening…"
     : phase === "paused"
       ? "Type or speak your answer…"
-      : "Ask a question or tap the mic…";
+      : kind === "system"
+        ? "Describe a system, like a chat app or a URL shortener…"
+        : "Ask a question or tap the mic…";
   const graph =
     lesson && currentBeat >= 0
       ? visibleLessonGraph(lesson.beats, currentBeat)
@@ -646,7 +712,7 @@ export function ExperimentBoard() {
             {Tldraw ? (
               <Tldraw
                 hideUi
-                persistenceKey="seethrough-experiment"
+                persistenceKey={kind === "system" ? "seethrough-system-design" : "seethrough-experiment"}
                 onMount={(editor) => {
                   editorRef.current = editor;
                   editor.selectNone();
@@ -816,14 +882,32 @@ export function ExperimentBoard() {
         </form>
       </div>
 
-      <div className="h-full w-[min(16rem,26vw)] shrink-0">
-        <ExperimentScript
-          lesson={lesson}
-          currentBeat={currentBeat}
-          streaming={phase === "playing" || phase === "planning"}
-          pausedCheck={pausedCheck}
-          note={note}
-        />
+      <div
+        className={`h-full shrink-0 ${
+          intake ? "w-[min(22rem,34vw)]" : "w-[min(16rem,26vw)]"
+        }`}
+      >
+        {intake && phase === "intake" ? (
+          <SystemDesignIntakeForm
+            intake={intake}
+            busy={false}
+            error={error}
+            onSubmit={(answers) => void submitDesign(answers)}
+          />
+        ) : (
+          <ExperimentScript
+            lesson={lesson}
+            currentBeat={currentBeat}
+            streaming={phase === "playing" || phase === "planning"}
+            pausedCheck={pausedCheck}
+            note={note}
+            intro={
+              kind === "system"
+                ? "Describe a system. Four short questions come first, then the design is drawn on the board."
+                : undefined
+            }
+          />
+        )}
       </div>
     </div>
   );

@@ -559,7 +559,7 @@ assert(gradeAnswer("", "heart") === "simplify", "empty answer simplifies");
   const tri = lesson.beats
     .flatMap((beat) => beat.shapes)
     .find((shape) => shape.type === "geo" && shape.id === "tri");
-  assert(Boolean(tri && tri.type === "geo" && tri.geo === "right-triangle"), "uses a right triangle");
+  assert(tri?.type === "geo" && tri.geo === "right-triangle", "uses a right triangle");
   if (tri?.type === "geo") {
     assert(tri.h < tri.w, "right triangle is not equilateral");
   }

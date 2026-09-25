@@ -108,6 +108,8 @@ export type ExperimentShape =
       to: string;
       label?: string;
       color?: ExperimentColor;
+      /** Second arrow between the same boxes, so the two labels stay apart. */
+      lane?: "above" | "below";
     };
 
 export function isDrawableNode(
@@ -139,6 +141,19 @@ export type ExperimentCheck = {
 
 export type ExperimentBeat = {
   say: string;
+  /** Section heading for a system-design lesson. Spoken text stays in say. */
+  section?: string;
+  /** When this changes, the board is cleared and a new diagram is drawn. */
+  diagram?:
+    | "architecture"
+    | "data"
+    | "flow"
+    | "sequence"
+    | "scale"
+    | "reliability"
+    | "security"
+    | "observe"
+    | "deploy";
   example?: string;
   shapes: ExperimentShape[];
   highlight?: string[];

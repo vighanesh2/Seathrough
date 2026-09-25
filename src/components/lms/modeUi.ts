@@ -8,6 +8,7 @@ import {
   HeartPulse,
   LayoutDashboard,
   Lightbulb,
+  Monitor,
   Network,
   PenLine,
   Sparkles,
@@ -51,8 +52,13 @@ export const MODE_UI: Record<ModeId, ModeUi> = {
   },
   "system-design": {
     icon: Network,
-    hint: "Describe an architecture. Watch boxes and traffic assemble.",
+    hint: "Watch a full design stay on the board, diagram under diagram.",
     tone: "copper",
+  },
+  developer: {
+    icon: Monitor,
+    hint: "Two agents take work from a project manager and code at their desks.",
+    tone: "ink",
   },
   "scene-explain": {
     icon: Atom,

@@ -10,6 +10,7 @@ type ExperimentScriptProps = {
   streaming?: boolean;
   pausedCheck?: ExperimentCheck | null;
   note?: string;
+  intro?: string;
 };
 
 export function ExperimentScript({
@@ -18,6 +19,7 @@ export function ExperimentScript({
   streaming = false,
   pausedCheck = null,
   note = "",
+  intro = "Ask a question. The tutor talks in short steps, draws on the board, then pauses to check you understood.",
 }: ExperimentScriptProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const beats = lesson?.beats ?? [];
@@ -65,8 +67,7 @@ export function ExperimentScript({
             </div>
           ) : (
             <p className="text-[14px] leading-6 text-muted">
-              Ask a question. The tutor talks in short steps, draws on the board,
-              then pauses to check you understood.
+              {intro}
             </p>
           )
         ) : null}
@@ -87,6 +88,11 @@ export function ExperimentScript({
                 {String(index + 1).padStart(2, "0")}
               </span>
               <div className="min-w-0">
+                {beat.section ? (
+                  <p className="mb-1 text-[11px] font-medium tracking-wide text-muted uppercase">
+                    {beat.section}
+                  </p>
+                ) : null}
                 <p
                   className={`text-[15px] leading-7 ${
                     active ? "text-ink" : "text-[#1e3a5f]"
