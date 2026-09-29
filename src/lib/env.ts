@@ -64,6 +64,36 @@ export function getLlmConfig() {
 }
 
 /**
+ * Film writer for /video. Optional EXPLAIN_VIDEO_* vars point it at any OpenAI-compatible
+ * endpoint (a stronger code model) without changing the rest of the app; otherwise it uses
+ * the app's LLM. `tokensPerMinute` is the per-request ceiling (prompt + output) to stay under,
+ * or null when the provider has no tight per-minute cap.
+ */
+export function getExplainVideoLlmConfig() {
+  const apiKey = optional("EXPLAIN_VIDEO_API_KEY");
+  const tpmOverride = Number(optional("EXPLAIN_VIDEO_TPM") ?? "");
+  const tpm = Number.isFinite(tpmOverride) && tpmOverride > 0 ? tpmOverride : null;
+  if (apiKey) {
+    return {
+      apiKey,
+      baseURL: optional("EXPLAIN_VIDEO_BASE_URL"),
+      model: optional("EXPLAIN_VIDEO_MODEL") ?? "gpt-4.1",
+      groq: (optional("EXPLAIN_VIDEO_BASE_URL") ?? "").includes("groq.com"),
+      tokensPerMinute: tpm,
+    };
+  }
+  const base = getLlmConfig();
+  const groq = base.provider === "groq";
+  return {
+    apiKey: base.apiKey,
+    baseURL: base.baseURL,
+    model: optional("EXPLAIN_VIDEO_MODEL") ?? base.model,
+    groq,
+    tokensPerMinute: tpm ?? (groq ? 8000 : null),
+  };
+}
+
+/**
  * Multimodal / vision model for screenshot extraction.
  * Prefers OpenAI when configured; otherwise Groq vision (Qwen 3.6).
  * Note: meta-llama/llama-4-scout-17b-16e-instruct was shut down on Groq 2026-07-17.
@@ -114,6 +144,7 @@ export function envPresence() {
     LLM_PROVIDER: optional("LLM_PROVIDER") ?? "groq",
     GROQ_API_KEY: Boolean(optional("GROQ_API_KEY")),
     OPENAI_API_KEY: Boolean(optional("OPENAI_API_KEY")),
+    EXPLAIN_VIDEO_API_KEY: Boolean(optional("EXPLAIN_VIDEO_API_KEY")),
     TAVILY_API_KEY: Boolean(optional("TAVILY_API_KEY")),
     DEEPGRAM_API_KEY: Boolean(optional("DEEPGRAM_API_KEY")),
     NEXT_PUBLIC_SUPABASE_URL: Boolean(optional("NEXT_PUBLIC_SUPABASE_URL")),

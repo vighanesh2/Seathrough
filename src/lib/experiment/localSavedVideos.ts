@@ -1,4 +1,5 @@
 import type { SavedLessonVideo } from "@/lib/experiment/savedVideos";
+import type { SavedVideoKind } from "@/lib/experiment/savedVideoKind";
 
 const DB_NAME = "seethrough-saved-videos";
 const STORE = "videos";
@@ -35,6 +36,7 @@ function urlsFor(row: LocalSavedVideo): LocalSavedVideo {
     : row.videoBlob;
   return {
     ...row,
+    kind: row.kind ?? "lesson",
     local: true,
     videoBlob,
     mimeType: videoBlob?.type || row.mimeType || "video/webm",
@@ -46,6 +48,7 @@ function urlsFor(row: LocalSavedVideo): LocalSavedVideo {
 }
 
 export async function saveLocalVideo(input: {
+  kind?: SavedVideoKind;
   title: string;
   titleSource: SavedLessonVideo["titleSource"];
   question?: string;
@@ -66,6 +69,7 @@ export async function saveLocalVideo(input: {
     : undefined;
   const record: LocalSavedVideo = {
     id,
+    kind: input.kind ?? "lesson",
     title: input.title,
     titleSource: input.titleSource,
     question: input.question,
@@ -93,7 +97,7 @@ export async function saveLocalVideo(input: {
   return record;
 }
 
-export async function listLocalVideos(): Promise<LocalSavedVideo[]> {
+export async function listLocalVideos(kind: SavedVideoKind = "lesson"): Promise<LocalSavedVideo[]> {
   const db = await openDb();
   const rows = await new Promise<LocalSavedVideo[]>((resolve, reject) => {
     const tx = db.transaction(STORE, "readonly");
@@ -103,6 +107,7 @@ export async function listLocalVideos(): Promise<LocalSavedVideo[]> {
   });
   db.close();
   return rows
+    .filter((row) => (row.kind ?? "lesson") === kind)
     .map((row) => urlsFor({ ...row, local: true }))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }

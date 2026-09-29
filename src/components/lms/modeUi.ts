@@ -12,6 +12,7 @@ import {
   Network,
   PenLine,
   Sparkles,
+  Film,
   WandSparkles,
 } from "lucide-react";
 import type { ModeId } from "@/modes/types";
@@ -83,6 +84,11 @@ export const MODE_UI: Record<ModeId, ModeUi> = {
   "draw-engine": {
     icon: WandSparkles,
     hint: "Timed board commands — for trying the draw engine.",
+    tone: "ink",
+  },
+  "explain-video": {
+    icon: Film,
+    hint: "Type a topic. Watch a short explainer film.",
     tone: "ink",
   },
 };

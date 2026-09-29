@@ -290,6 +290,44 @@ body {
   animation: stroke-draw 1600ms ease-out 400ms both;
 }
 
+@keyframes save-tick-pop {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.save-tick {
+  transform-origin: 50% 50%;
+  animation: save-tick-pop 420ms cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+.save-tick-ring {
+  stroke-dasharray: 64;
+  stroke-dashoffset: 64;
+  animation: stroke-draw 380ms ease-out both;
+}
+
+.save-tick-check {
+  stroke-dasharray: 20;
+  stroke-dashoffset: 20;
+  animation: stroke-draw 300ms ease-out 260ms both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .save-tick,
+  .save-tick-ring,
+  .save-tick-check {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
 .animate-orbit {
   transform-origin: 50% 50%;
   animation: orbit-spin 18s linear infinite;

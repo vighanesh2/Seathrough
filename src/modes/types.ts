@@ -15,7 +15,8 @@ export type ModeId =
   | "scene-explain"
   | "system-design"
   | "automatic-drawing"
-  | "draw-engine";
+  | "draw-engine"
+  | "explain-video";
 
 export type ModeKind = "learning" | "tool";
 

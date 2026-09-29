@@ -1,4 +1,5 @@
 import { automaticDrawingMode } from "@/modules/automatic-drawing/mode";
+import { explainVideoMode } from "@/modules/explain-video/mode";
 import { aiTutorMode } from "@/modules/ai-tutor/mode";
 import { dashboardMode } from "@/modules/dashboard/mode";
 import { drawEngineMode } from "@/modules/draw-engine/mode";
@@ -27,6 +28,7 @@ const ALL_MODES: ModeDefinition[] = [
   figures3dMode,
   automaticDrawingMode,
   drawEngineMode,
+  explainVideoMode,
 ];
 
 function byOrder(a: ModeDefinition, b: ModeDefinition) {

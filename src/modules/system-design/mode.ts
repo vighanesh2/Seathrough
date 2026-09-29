@@ -12,7 +12,6 @@ export const systemDesignMode: ModeDefinition = {
   group: "studio",
   order: 3,
   enabled: true,
-  badge: "new",
   usesWhiteboard: false,
   metaTitle: "System design | SeeThrough",
   metaDescription:
