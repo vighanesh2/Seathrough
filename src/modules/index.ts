@@ -9,3 +9,4 @@ export { leetcodeMode } from "@/modules/leetcode/mode";
 export { figures3dMode } from "@/modules/figures-3d/mode";
 export { automaticDrawingMode } from "@/modules/automatic-drawing/mode";
 export { drawEngineMode } from "@/modules/draw-engine/mode";
+export { explainVideoMode } from "@/modules/explain-video/mode";

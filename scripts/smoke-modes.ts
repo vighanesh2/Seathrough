@@ -7,9 +7,11 @@ import {
 } from "../src/modes/registry";
 
 const learning = listEnabledModes("learning");
-assert.equal(learning.length, 2);
+assert.equal(learning.length, 4);
 assert.equal(learning[0]?.id, "smart-tutor");
 assert.equal(learning[1]?.id, "dashboard");
+assert.equal(learning[2]?.id, "system-design");
+assert.equal(learning[3]?.id, "explain-video");
 assert.equal(getMode("smart-tutor")?.href, "/smart-tutor");
 assert.equal(getMode("dashboard")?.href, "/dashboard");
 assert.equal(getMode("smart-tutor")?.enabled, true);
@@ -23,7 +25,7 @@ assert.equal(getMode("ai-tutor")?.href, "/ai-tutor");
 assert.equal(getMode("ai-tutor")?.enabled, false);
 assert.equal(getMode("figures-3d")?.enabled, false);
 assert.equal(getMode("screenshot-explain")?.enabled, false);
-assert.equal(getMode("system-design")?.enabled, false);
+assert.equal(getMode("system-design")?.enabled, true);
 assert.equal(getMode("leetcode")?.enabled, false);
 assert.equal(getMode("automatic-drawing")?.enabled, false);
 assert.equal(getMode("draw-engine")?.enabled, false);
@@ -31,17 +33,23 @@ assert.equal(getMode("scene-explain")?.enabled, false);
 assert.equal(getMode("scene-explain")?.href, "/lessons?view=3d");
 
 const studios = listModesByGroup("studio");
-assert.equal(studios.length, 2);
+assert.equal(studios.length, 4);
 assert.equal(studios[0]?.id, "smart-tutor");
 assert.equal(studios[1]?.id, "dashboard");
+assert.equal(studios[2]?.id, "system-design");
+assert.equal(studios[3]?.id, "explain-video");
+assert.equal(getMode("explain-video")?.href, "/video");
+assert.equal(getMode("explain-video")?.enabled, true);
 assert.ok(!studios.some((m) => m.id === "lessons"));
 assert.ok(!studios.some((m) => m.id === "figures-3d"));
 assert.ok(!studios.some((m) => m.id === "ai-tutor"));
 
 const siblings = listSiblingModes("smart-tutor");
 assert.ok(siblings.every((m) => m.id !== "smart-tutor"));
-assert.equal(siblings.length, 1);
+assert.equal(siblings.length, 3);
 assert.equal(siblings[0]?.id, "dashboard");
+assert.equal(siblings[1]?.id, "system-design");
+assert.equal(siblings[2]?.id, "explain-video");
 assert.ok(!listEnabledModes().some((m) => m.id === "lessons"));
 assert.ok(!listEnabledModes().some((m) => m.id === "ai-tutor"));
 assert.ok(!listEnabledModes().some((m) => m.id === "figures-3d"));

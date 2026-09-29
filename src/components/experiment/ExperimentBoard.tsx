@@ -509,7 +509,7 @@ export function ExperimentBoard({
     });
     setNote(
       accessToken
-        ? "Saved on this device. Sign in to keep it in the cloud."
+        ? "Saved on this device. Sign in to keep it saved to your account."
         : "Saved on this device. Open Dashboard to watch it.",
     );
   }

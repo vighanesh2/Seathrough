@@ -10,6 +10,7 @@ import { useQuestionAccess } from "@/components/usage/QuestionAccess";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { SavedLessonVideo } from "@/lib/experiment/savedVideos";
+import { EXPLAIN_VIDEO_KIND, type SavedVideoKind } from "@/lib/experiment/savedVideoKind";
 import {
   deleteLocalVideo,
   listLocalVideos,
@@ -197,7 +198,7 @@ function LessonVideo({
         />
       ) : (
         <div className="flex max-h-[68vh] min-h-48 w-full items-center justify-center bg-[#1c1915] text-[13px] text-white/70">
-          Opening the lesson…
+          Opening the video…
         </div>
       )}
       <div className="border-t border-[#e4dccf] px-4 py-3">
@@ -286,12 +287,13 @@ function VideoThumb({ video }: { video: ListedVideo }) {
   const [shot, setShot] = useState(video.posterUrl ?? "");
 
   useEffect(() => {
-    if (!video.videoUrl) return;
+    if (video.posterUrl || !video.videoUrl) return;
     let cancelled = false;
     const element = document.createElement("video");
     element.muted = true;
     element.playsInline = true;
-    element.preload = "auto";
+    element.preload = "metadata";
+    if (/^https?:/i.test(video.videoUrl)) element.crossOrigin = "anonymous";
     element.src = video.videoUrl;
 
     const paint = () => {
@@ -301,8 +303,12 @@ function VideoThumb({ video }: { video: ListedVideo }) {
       canvas.height = 360;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-      ctx.drawImage(element, 0, 0, canvas.width, canvas.height);
-      setShot(canvas.toDataURL("image/jpeg", 0.72));
+      try {
+        ctx.drawImage(element, 0, 0, canvas.width, canvas.height);
+        setShot(canvas.toDataURL("image/jpeg", 0.72));
+      } catch {
+        /* Signed cloud URLs taint the canvas; the <video> fallback still shows a frame. */
+      }
     };
 
     const onReady = () => {
@@ -326,14 +332,25 @@ function VideoThumb({ video }: { video: ListedVideo }) {
       element.removeEventListener("seeked", paint);
       element.src = "";
     };
-  }, [video.id, video.videoUrl]);
+  }, [video.id, video.videoUrl, video.posterUrl]);
 
-  return shot ? (
+  if (shot) {
     // eslint-disable-next-line @next/next/no-img-element
-    <img src={shot} alt="" className="size-full object-cover" />
-  ) : (
-    <span className="absolute inset-0 bg-[#f4f5f7]" />
-  );
+    return <img src={shot} alt="" className="size-full object-cover" />;
+  }
+  if (video.videoUrl) {
+    return (
+      <video
+        src={video.videoUrl}
+        poster={video.posterUrl}
+        muted
+        playsInline
+        preload="metadata"
+        className="pointer-events-none size-full object-cover"
+      />
+    );
+  }
+  return <span className="absolute inset-0 bg-[#f4f5f7]" />;
 }
 
 function formatDuration(ms?: number): string {
@@ -344,16 +361,62 @@ function formatDuration(ms?: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-export function SavedVideosDashboard() {
+export type DashboardTab = "lessons" | "explain";
+
+const TABS: {
+  id: DashboardTab;
+  label: string;
+  kind: SavedVideoKind;
+  endpoint: string;
+  intro: string;
+  newLabel: string;
+  newHref: string;
+  emptyTitle: string;
+  emptyBody: string;
+  emptyCta: string;
+  playError: string;
+}[] = [
+  {
+    id: "lessons",
+    label: "Lessons",
+    kind: "lesson",
+    endpoint: "/api/experiment/videos",
+    intro: "Lessons you recorded in Smart tutor. Click a title to rename it.",
+    newLabel: "New lesson",
+    newHref: "/smart-tutor",
+    emptyTitle: "No saved videos yet",
+    emptyBody:
+      "Ask something in Smart tutor, hit Record and share this tab, then Stop when you are done. The video lands here.",
+    emptyCta: "Open Smart tutor",
+    playError: "This copy cannot be played. Record the lesson again with Record, then Stop.",
+  },
+  {
+    id: "explain",
+    label: "Video explainer",
+    kind: EXPLAIN_VIDEO_KIND,
+    endpoint: "/api/explain-video/saved",
+    intro: "Explainer films you saved from Video explainer. Click a title to rename it.",
+    newLabel: "New video",
+    newHref: "/video",
+    emptyTitle: "No saved explainer videos yet",
+    emptyBody: "Type a topic in Video explainer, let the film finish, then press Save. It lands here.",
+    emptyCta: "Make a video",
+    playError: "This copy cannot be played. Make the video again and press Save.",
+  },
+];
+
+export function SavedVideosDashboard({ initialTab = "lessons" }: { initialTab?: DashboardTab }) {
   return (
     <StudioAccessProvider>
-      <SavedVideosDashboardView />
+      <SavedVideosDashboardView initialTab={initialTab} />
     </StudioAccessProvider>
   );
 }
 
-function SavedVideosDashboardView() {
+function SavedVideosDashboardView({ initialTab }: { initialTab: DashboardTab }) {
   const { accessToken, user, loading } = useAuth();
+  const [tab, setTab] = useState<DashboardTab>(initialTab);
+  const current = TABS.find((item) => item.id === tab) ?? TABS[0]!;
 
   useEffect(() => {
     document.documentElement.classList.add("marketing-page");
@@ -370,14 +433,17 @@ function SavedVideosDashboardView() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftTitle, setDraftTitle] = useState("");
 
+  const loadRun = useRef(0);
   const load = useCallback(async () => {
+    const run = ++loadRun.current;
     setBusy(true);
     setError("");
+    setVideos([]);
     try {
-      const local = await listLocalVideos();
+      const local = await listLocalVideos(current.kind);
       let remote: SavedLessonVideo[] = [];
       if (accessToken) {
-        const res = await fetch("/api/experiment/videos", {
+        const res = await fetch(current.endpoint, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
         const body = (await res.json()) as {
@@ -391,17 +457,29 @@ function SavedVideosDashboardView() {
         ...remote,
         ...local.filter((item) => !remoteIds.has(item.id)),
       ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-      setVideos(merged);
+      if (run === loadRun.current) setVideos(merged);
     } catch {
-      setError("Could not load saved videos.");
+      if (run === loadRun.current) setError("Could not load saved videos.");
     } finally {
-      setBusy(false);
+      if (run === loadRun.current) setBusy(false);
     }
-  }, [accessToken]);
+  }, [accessToken, current.kind, current.endpoint]);
 
   useEffect(() => {
     void load();
   }, [load]);
+
+  function chooseTab(next: DashboardTab) {
+    if (next === tab) return;
+    setTab(next);
+    setPlaying(null);
+    setPlayError("");
+    setEditingId(null);
+    const url = new URL(window.location.href);
+    if (next === "lessons") url.searchParams.delete("tab");
+    else url.searchParams.set("tab", next);
+    window.history.replaceState(window.history.state, "", url);
+  }
 
   useEffect(() => {
     if (!playing) return;
@@ -480,16 +558,52 @@ function SavedVideosDashboardView() {
               Dashboard
             </h1>
             <p className="mt-4 max-w-sm text-[15px] leading-6 text-[#5c6370]">
-              Lessons you recorded in Smart tutor. Click a title to rename it.
+              {current.intro}
             </p>
           </div>
           <Link
-            href="/smart-tutor"
+            href={current.newHref}
             className="inline-flex h-11 shrink-0 items-center bg-[#085080] px-5 text-[14px] font-medium text-white outline-none transition hover:bg-[#083068] focus-visible:ring-2 focus-visible:ring-[#085080]/40"
           >
-            New lesson
+            {current.newLabel}
           </Link>
         </div>
+
+        <div role="tablist" aria-label="Saved videos" className="mt-10 flex gap-6 border-b border-[#e6e8ee]">
+          {TABS.map((item) => {
+            const selected = item.id === tab;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                id={`dashboard-tab-${item.id}`}
+                aria-selected={selected}
+                aria-controls="dashboard-panel"
+                tabIndex={selected ? 0 : -1}
+                onClick={() => chooseTab(item.id)}
+                onKeyDown={(event) => {
+                  if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+                  event.preventDefault();
+                  const index = TABS.findIndex((entry) => entry.id === tab);
+                  const step = event.key === "ArrowRight" ? 1 : -1;
+                  const next = TABS[(index + step + TABS.length) % TABS.length]!;
+                  chooseTab(next.id);
+                  document.getElementById(`dashboard-tab-${next.id}`)?.focus();
+                }}
+                className={`-mb-px border-b-2 pb-3 text-[15px] font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-[#085080]/40 ${
+                  selected
+                    ? "border-[#085080] text-[#111111]"
+                    : "border-transparent text-[#5c6370] hover:text-[#111111]"
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div id="dashboard-panel" role="tabpanel" aria-labelledby={`dashboard-tab-${tab}`}>
 
         {signedOutHint ? (
           <p className="mt-8 text-[14px] text-[#5c6370]">
@@ -501,7 +615,7 @@ function SavedVideosDashboardView() {
             >
               Sign in
             </button>{" "}
-            to keep them in the cloud.
+            to keep them saved to your account.
           </p>
         ) : null}
 
@@ -516,21 +630,20 @@ function SavedVideosDashboardView() {
         ) : null}
 
         {empty ? (
-          <div className="mt-12 border border-[#e6e8ee] px-6 py-16 text-center">
-            <p className="text-[16px] font-medium text-[#111111]">No saved videos yet</p>
+          <div className="mt-8 border border-[#e6e8ee] px-6 py-16 text-center">
+            <p className="text-[16px] font-medium text-[#111111]">{current.emptyTitle}</p>
             <p className="mx-auto mt-2 max-w-md text-[15px] leading-6 text-[#5c6370]">
-              Ask something in Smart tutor, hit Record and share this tab, then
-              Stop when you are done. The video lands here.
+              {current.emptyBody}
             </p>
             <Link
-              href="/smart-tutor"
+              href={current.newHref}
               className="mt-6 inline-flex h-11 items-center bg-[#085080] px-5 text-[14px] font-medium text-white outline-none transition hover:bg-[#083068] focus-visible:ring-2 focus-visible:ring-[#085080]/40"
             >
-              Open Smart tutor
+              {current.emptyCta}
             </Link>
           </div>
         ) : (
-          <ul className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {videos.map((video) => (
               <li
                 key={video.id}
@@ -609,6 +722,7 @@ function SavedVideosDashboardView() {
             ))}
           </ul>
         )}
+        </div>
       </main>
 
       {playing?.videoUrl ? (
@@ -646,11 +760,7 @@ function SavedVideosDashboardView() {
             ) : (
               <LessonVideo
                 video={playing}
-                onError={() =>
-                  setPlayError(
-                    "This copy cannot be played. Record the lesson again with Record, then Stop.",
-                  )
-                }
+                onError={() => setPlayError(current.playError)}
               />
             )}
           </div>

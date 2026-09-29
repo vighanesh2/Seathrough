@@ -1,10 +1,14 @@
 import { getServiceSupabase } from "@/lib/supabase/server";
 import type { ExperimentLesson } from "@/lib/experiment/scene";
+import { EXPLAIN_VIDEO_KIND, type SavedVideoKind } from "@/lib/experiment/savedVideoKind";
 
 export type SavedVideoTitleSource = "ai" | "user" | "lesson";
 
+export { EXPLAIN_VIDEO_KIND, type SavedVideoKind };
+
 export type SavedLessonVideo = {
   id: string;
+  kind: SavedVideoKind;
   title: string;
   titleSource: SavedVideoTitleSource;
   question?: string;
@@ -33,9 +37,17 @@ function asTitleSource(value: unknown): SavedVideoTitleSource {
   return "lesson";
 }
 
+function asKind(value: unknown): SavedVideoKind {
+  return value === EXPLAIN_VIDEO_KIND ? EXPLAIN_VIDEO_KIND : "lesson";
+}
+
+const COLUMNS =
+  "id, title, title_source, question, created_at, duration_ms, mime_type, storage_path, poster_path, kind:lesson->>kind";
+
 function rowToVideo(row: Record<string, unknown>): SavedLessonVideo {
   return {
     id: String(row.id),
+    kind: asKind(row.kind),
     title: String(row.title || "Saved lesson"),
     titleSource: asTitleSource(row.title_source),
     question: typeof row.question === "string" ? row.question : undefined,
@@ -64,7 +76,8 @@ export async function insertSavedLessonVideo(input: {
   title: string;
   titleSource: SavedVideoTitleSource;
   question?: string;
-  lesson: ExperimentLesson;
+  /** The lesson, or for an explain video `{ kind: "explain-video", topic, plan }`. */
+  lesson: ExperimentLesson | ({ kind: typeof EXPLAIN_VIDEO_KIND } & Record<string, unknown>);
   video: Buffer;
   videoMime: string;
   poster?: Buffer;
@@ -108,9 +121,7 @@ export async function insertSavedLessonVideo(input: {
       mime_type: input.videoMime,
       duration_ms: input.durationMs ?? null,
     })
-    .select(
-      "id, title, title_source, question, created_at, duration_ms, mime_type, storage_path, poster_path",
-    )
+    .select(COLUMNS)
     .single();
 
   if (error) throw error;
@@ -127,15 +138,19 @@ export async function insertSavedLessonVideo(input: {
 
 export async function listSavedLessonVideos(
   userId: string,
+  kind: SavedVideoKind = "lesson",
   limit = 40,
 ): Promise<SavedLessonVideo[]> {
   const supabase = getServiceSupabase();
-  const { data, error } = await supabase
+  const query = supabase
     .from("saved_lesson_videos")
-    .select(
-      "id, title, title_source, question, created_at, duration_ms, mime_type, storage_path, poster_path",
-    )
-    .eq("user_id", userId)
+    .select(COLUMNS)
+    .eq("user_id", userId);
+  const filtered =
+    kind === EXPLAIN_VIDEO_KIND
+      ? query.eq("lesson->>kind", EXPLAIN_VIDEO_KIND)
+      : query.or(`lesson->>kind.is.null,lesson->>kind.neq.${EXPLAIN_VIDEO_KIND}`);
+  const { data, error } = await filtered
     .order("created_at", { ascending: false })
     .limit(limit);
   if (error) {
@@ -170,9 +185,7 @@ export async function renameSavedLessonVideo(input: {
     .update({ title: input.title, title_source: "user" })
     .eq("id", input.id)
     .eq("user_id", input.userId)
-    .select(
-      "id, title, title_source, question, created_at, duration_ms, mime_type, storage_path, poster_path",
-    )
+    .select(COLUMNS)
     .maybeSingle();
   if (error) throw error;
   if (!data) return null;
