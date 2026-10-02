@@ -230,6 +230,34 @@ function text(id: string, t0: number, body: string): DrawCommand {
     mathToSpeech("∫_a^b f(x) dx").includes("integral"),
     "integrals are spoken",
   );
+  assert.equal(
+    mathToSpeech("client -> API -> Redis"),
+    "client to API to Redis",
+  );
+  assert.equal(
+    mathToSpeech("client → API → Redis lookup → redirect"),
+    "client to API to Redis lookup to redirect",
+  );
+  assert.equal(mathToSpeech("A => B"), "A to B");
+  assert.ok(
+    !mathToSpeech("Create: client -> API -> store").includes("greater"),
+    "arrows are not read as greater than",
+  );
+  assert.equal(mathToSpeech("x > 5"), "x greater than 5");
+  assert.equal(mathToSpeech("x <= 5"), "x less than or equal to 5");
+  assert.equal(mathToSpeech("long_url and conversation_id"), "long url and conversation id");
+  assert.ok(mathToSpeech("x_1").includes("sub"), "math subscripts stay subscripts");
+  assert.ok(
+    !mathToSpeech("sub-100ms").includes("minus"),
+    "compound measures keep their hyphen",
+  );
+  assert.ok(
+    mathToSpeech("sub-100ms").includes("milliseconds"),
+    "ms is spoken as milliseconds",
+  );
+  assert.equal(mathToSpeech("a few million clicks/day"), "a few million clicks per day");
+  assert.equal(mathToSpeech("read/write path"), "read and write path");
+  assert.equal(mathToSpeech("~1M users"), "about 1 million users");
 }
 
 console.log("tutor sync smoke checks passed");

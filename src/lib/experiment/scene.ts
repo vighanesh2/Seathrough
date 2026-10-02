@@ -110,21 +110,31 @@ export type ExperimentShape =
       color?: ExperimentColor;
       /** Second arrow between the same boxes, so the two labels stay apart. */
       lane?: "above" | "below";
+    }
+  | {
+      /** An arrow whose path was laid out ahead of time; drawn exactly, never rerouted. */
+      id: string;
+      type: "route";
+      from: string;
+      to: string;
+      points: { x: number; y: number }[];
+      label?: { text: string; x: number; y: number; w: number; h: number };
+      color?: ExperimentColor;
     };
 
 export function isDrawableNode(
   shape: ExperimentShape,
-): shape is Exclude<ExperimentShape, { type: "arrow" }> {
-  return shape.type !== "arrow";
+): shape is Exclude<ExperimentShape, { type: "arrow" } | { type: "route" }> {
+  return shape.type !== "arrow" && shape.type !== "route";
 }
 
 export function nodeCluster(shape: ExperimentShape): string | undefined {
-  if (shape.type === "arrow" || shape.type === "callout") return undefined;
+  if (shape.type === "arrow" || shape.type === "callout" || shape.type === "route") return undefined;
   return shape.cluster;
 }
 
 export function nodeRole(shape: ExperimentShape): ExperimentRole | undefined {
-  if (shape.type === "arrow" || shape.type === "callout") return undefined;
+  if (shape.type === "arrow" || shape.type === "callout" || shape.type === "route") return undefined;
   return shape.role;
 }
 
@@ -143,6 +153,8 @@ export type ExperimentBeat = {
   say: string;
   /** Section heading for a system-design lesson. Spoken text stays in say. */
   section?: string;
+  /** Stable key for a system-design sheet, so an edit can redraw just that sheet. */
+  sheet?: string;
   /** When this changes, the board is cleared and a new diagram is drawn. */
   diagram?:
     | "architecture"

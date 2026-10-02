@@ -4,9 +4,11 @@ import type {
   IntakeAnswers,
   SystemDesignIntake,
 } from "@/lib/experiment/systemDesign/sections";
+import type { SystemDesignRevision } from "@/lib/experiment/systemDesign/revise";
+import type { SystemDesignSpec } from "@/lib/experiment/systemDesign/spec";
 
 export type ExperimentDrawResult =
-  | { kind: "lesson"; lesson: ExperimentLesson }
+  | { kind: "lesson"; lesson: ExperimentLesson; spec?: SystemDesignSpec }
   | { kind: "intake"; intake: SystemDesignIntake };
 
 let audioTap: LessonAudioTap | null = null;
@@ -35,14 +37,11 @@ export async function requestExperimentLesson(
   let body: {
     lesson?: ExperimentLesson;
     intake?: SystemDesignIntake;
+    design?: { spec?: SystemDesignSpec };
     error?: string;
   } = {};
   try {
-    body = (await res.json()) as {
-      lesson?: ExperimentLesson;
-      intake?: SystemDesignIntake;
-      error?: string;
-    };
+    body = (await res.json()) as typeof body;
   } catch {
     throw new Error("Could not explain that. Try another question.");
   }
@@ -60,7 +59,43 @@ export async function requestExperimentLesson(
       body.error || "Could not explain that. Try another question.",
     );
   }
-  return { kind: "lesson", lesson: body.lesson };
+  return {
+    kind: "lesson",
+    lesson: body.lesson,
+    ...(body.design?.spec ? { spec: body.design.spec } : {}),
+  };
+}
+
+export async function requestSystemDesignRevision(
+  input: {
+    prompt: string;
+    answers: IntakeAnswers;
+    spec: SystemDesignSpec;
+    edits: string[];
+    instruction: string;
+  },
+  signal?: AbortSignal,
+): Promise<SystemDesignRevision> {
+  const res = await fetch("/api/experiment/revise", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(input),
+    signal,
+  });
+  let body: { revision?: SystemDesignRevision; error?: string } = {};
+  try {
+    body = (await res.json()) as typeof body;
+  } catch {
+    throw new Error("Could not change the design. Try again.");
+  }
+  if (!res.ok || !body.revision) {
+    throw new Error(body.error || "Could not change the design. Try again.");
+  }
+  const revision = body.revision;
+  if (revision.kind === "revised" && !revision.lesson?.beats?.length) {
+    throw new Error("Could not change the design. Try again.");
+  }
+  return revision;
 }
 
 export async function requestExperimentSpeak(

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import type { ExperimentCheck, ExperimentLesson } from "@/lib/experiment/scene";
+import type { DesignMessage } from "@/lib/experiment/systemDesign/session";
 import { BoxesLoader } from "@/components/ui/BoxesLoader";
 
 type ExperimentScriptProps = {
@@ -11,7 +12,28 @@ type ExperimentScriptProps = {
   pausedCheck?: ExperimentCheck | null;
   note?: string;
   intro?: string;
+  messages?: DesignMessage[];
 };
+
+function Message({ message }: { message: DesignMessage }) {
+  if (message.role === "user") {
+    return (
+      <div className="animate-fade-up flex flex-col items-end">
+        <p className="max-w-[92%] whitespace-pre-wrap rounded-2xl rounded-br-sm bg-[#085080] px-3 py-2 text-[14px] leading-6 text-white">
+          {message.text}
+        </p>
+        {message.failed ? (
+          <p className="mt-1 text-[11px] text-error">Not applied</p>
+        ) : null}
+      </div>
+    );
+  }
+  return (
+    <p className="animate-fade-up border-l-2 border-[#9dbbd3] pl-3 text-[14px] leading-6 text-[#1e3a5f]">
+      {message.text}
+    </p>
+  );
+}
 
 export function ExperimentScript({
   lesson,
@@ -20,16 +42,27 @@ export function ExperimentScript({
   pausedCheck = null,
   note = "",
   intro = "Ask a question. The tutor talks in short steps, draws on the board, then pauses to check you understood.",
+  messages = [],
 }: ExperimentScriptProps) {
   const scrollerRef = useRef<HTMLDivElement>(null);
   const beats = lesson?.beats ?? [];
   const visible = beats.slice(0, Math.max(0, currentBeat + 1));
+  const lastVisible = visible.length - 1;
+  const question = lesson?.question?.trim() ?? "";
+  const ownPromptMissing =
+    Boolean(question) &&
+    !messages.some((message) => message.role === "user" && message.text === question);
+  const thread: DesignMessage[] = ownPromptMissing
+    ? [{ id: "original-question", role: "user", text: question, afterBeat: -1 }, ...messages]
+    : messages;
+  const placed = (message: DesignMessage) => Math.min(message.afterBeat, lastVisible);
+  const leading = thread.filter((message) => placed(message) < 0);
 
   useEffect(() => {
     const el = scrollerRef.current;
     if (!el) return;
     el.scrollTop = el.scrollHeight;
-  }, [visible.length, currentBeat, pausedCheck, note]);
+  }, [visible.length, currentBeat, pausedCheck, note, messages.length]);
 
   return (
     <aside
@@ -42,9 +75,9 @@ export function ExperimentScript({
           <h2 className="mt-0.5 truncate font-[family-name:var(--font-newsreader)] text-[1.15rem] tracking-tight text-ink">
             {lesson?.title || "Ask a question"}
           </h2>
-          {lesson?.question ? (
-            <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-muted">
-              {lesson.question}
+          {question && !thread.some((message) => message.role === "user") ? (
+            <p className="mt-1 line-clamp-3 text-[12px] leading-5 text-muted">
+              {question}
             </p>
           ) : null}
         </div>
@@ -60,52 +93,61 @@ export function ExperimentScript({
         ref={scrollerRef}
         className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-3"
       >
-        {!lesson ? (
-          streaming ? (
-            <div className="flex justify-start pt-2">
-              <BoxesLoader />
-            </div>
-          ) : (
-            <p className="text-[14px] leading-6 text-muted">
-              {intro}
-            </p>
-          )
+        {!lesson && !streaming && !leading.length ? (
+          <p className="text-[14px] leading-6 text-muted">
+            {intro}
+          </p>
+        ) : null}
+
+        {leading.map((message) => (
+          <Message key={message.id} message={message} />
+        ))}
+
+        {!lesson && streaming ? (
+          <div className="flex justify-start pt-2">
+            <BoxesLoader />
+          </div>
         ) : null}
 
         {visible.map((beat, index) => {
           const active = index === currentBeat;
+          const after = thread.filter((message) => placed(message) === index);
           return (
-            <div
-              key={`${lesson?.title ?? "beat"}-${index}`}
-              className={`animate-fade-up flex gap-3 ${
-                active ? "" : "opacity-80"
-              }`}
-            >
-              <span
-                className="mt-0.5 w-4 shrink-0 font-mono text-[11px] text-[#8a9aab]"
-                aria-hidden
+            <div key={`${lesson?.title ?? "beat"}-${index}`} className="space-y-4">
+              <div
+                className={`animate-fade-up flex gap-3 ${
+                  active ? "" : "opacity-80"
+                }`}
               >
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <div className="min-w-0">
-                {beat.section ? (
-                  <p className="mb-1 text-[11px] font-medium tracking-wide text-muted uppercase">
-                    {beat.section}
-                  </p>
-                ) : null}
-                <p
-                  className={`text-[15px] leading-7 ${
-                    active ? "text-ink" : "text-[#1e3a5f]"
-                  }`}
+                <span
+                  className="mt-0.5 w-4 shrink-0 font-mono text-[11px] text-[#8a9aab]"
+                  aria-hidden
                 >
-                  {beat.say}
-                </p>
-                {beat.example ? (
-                  <pre className="mt-2 overflow-x-auto whitespace-pre-wrap rounded-lg bg-white px-3 py-2.5 font-mono text-[12px] leading-relaxed text-[#4a6580]">
-                    {beat.example}
-                  </pre>
-                ) : null}
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <div className="min-w-0">
+                  {beat.section ? (
+                    <p className="mb-1 text-[11px] font-medium tracking-wide text-muted uppercase">
+                      {beat.section}
+                    </p>
+                  ) : null}
+                  <p
+                    className={`text-[15px] leading-7 ${
+                      active ? "text-ink" : "text-[#1e3a5f]"
+                    }`}
+                  >
+                    {beat.say}
+                  </p>
+                  {beat.example ? (
+                    <pre className="mt-2 overflow-x-auto whitespace-pre-wrap rounded-lg bg-white px-3 py-2.5 font-mono text-[12px] leading-relaxed text-[#4a6580]">
+                      {beat.example}
+                    </pre>
+                  ) : null}
+                </div>
               </div>
+              {after.map((message) => (
+                <Message key={message.id} message={message} />
+              ))}
             </div>
           );
         })}

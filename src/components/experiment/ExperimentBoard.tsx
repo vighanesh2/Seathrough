@@ -3,13 +3,26 @@
 import {
   FormEvent,
   KeyboardEvent,
+  PointerEvent as ReactPointerEvent,
   useEffect,
   useRef,
   useState,
 } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
-import { ArrowUp, Circle, Eraser, LayoutGrid, LoaderCircle, Mic, Square } from "lucide-react";
+import {
+  ArrowUp,
+  Check,
+  Circle,
+  Eraser,
+  FileDown,
+  LayoutGrid,
+  LoaderCircle,
+  Mic,
+  Save,
+  Square,
+  Undo2,
+} from "lucide-react";
 import { ExperimentScript } from "@/components/experiment/ExperimentScript";
 import { SystemDesignIntakeForm } from "@/components/experiment/SystemDesignIntakeForm";
 import { BoxesLoader } from "@/components/ui/BoxesLoader";
@@ -22,9 +35,15 @@ import {
   requestExperimentListen,
   requestExperimentReact,
   requestExperimentSpeak,
+  requestSystemDesignRevision,
   setExperimentAudioTap,
   uploadSavedLessonVideo,
 } from "@/lib/experiment/client";
+import { changedSheets } from "@/lib/experiment/systemDesign/diff";
+import {
+  MAX_EDIT_HISTORY,
+  type SystemDesignSpec,
+} from "@/lib/experiment/systemDesign/spec";
 import { gradeAnswer } from "@/lib/experiment/grade";
 import type {
   ExperimentCheck,
@@ -35,6 +54,16 @@ import type { ExperimentDrawSession } from "@/components/experiment/applyScene";
 import { visibleLessonGraph } from "@/lib/experiment/graph";
 import { fallbackLessonTitle } from "@/lib/experiment/lessonTitle";
 import type { IntakeAnswers, SystemDesignIntake } from "@/lib/experiment/systemDesign/sections";
+import {
+  MAX_SAVED_MESSAGES,
+  type DesignMessage,
+  type SavedDesignSession,
+} from "@/lib/experiment/systemDesign/session";
+import {
+  openDesignSession,
+  saveDesignSession,
+  type SavedDesignRef,
+} from "@/lib/experiment/systemDesign/sessionClient";
 import { saveLocalVideo } from "@/lib/experiment/localSavedVideos";
 import {
   createLessonAudioTap,
@@ -58,7 +87,61 @@ const PLAN_PHRASES = [
   "Drawing on the board",
 ] as const;
 
-type Phase = "idle" | "planning" | "playing" | "paused" | "reacting" | "intake";
+type Phase =
+  | "idle"
+  | "planning"
+  | "playing"
+  | "paused"
+  | "reacting"
+  | "intake"
+  | "revising"
+  | "opening";
+
+type DesignState = {
+  prompt: string;
+  answers: IntakeAnswers;
+  spec: SystemDesignSpec;
+  /** Changes asked for so far; later edits are told about them so they are not undone. */
+  edits: string[];
+};
+
+type DesignVersion = { spec: SystemDesignSpec; edits: string[] };
+
+/** A design edit that has come back from the server and waits for a section boundary. */
+type RevisionOutcome =
+  | {
+      kind: "revised";
+      spec: SystemDesignSpec;
+      edits: string[];
+      lesson: ExperimentLesson;
+      summary: string;
+    }
+  | { kind: "undo" }
+  | { kind: "answer"; reply: string }
+  | { kind: "new"; text: string }
+  | { kind: "error"; message: string; text: string; messageId: string };
+
+const UNDO_REQUEST = /^(undo|revert|go back)( (that|it|the last (change|edit)))?[.!]?$/i;
+
+const PANEL_WIDTH_KEY = "seethrough-script-width";
+const PANEL_MIN = 220;
+const INTAKE_MIN = 320;
+
+function panelMax() {
+  return Math.max(PANEL_MIN, Math.min(760, Math.round(window.innerWidth * 0.6)));
+}
+
+function clampPanel(width: number, min = PANEL_MIN) {
+  return Math.round(Math.min(panelMax(), Math.max(min, width)));
+}
+
+function fileName(title: string) {
+  return `${title.replace(/[^\w\s-]+/g, "").trim().replace(/\s+/g, "-").toLowerCase() || "board"}.pdf`;
+}
+
+function isAbortError(caught: unknown) {
+  return caught instanceof DOMException && caught.name === "AbortError";
+}
 
 type BrowserSpeechRecognition = {
   lang: string;
@@ -78,10 +161,13 @@ type BrowserSpeechRecognition = {
  */
 export function ExperimentBoard({
   kind = "tutor",
+  sessionId,
 }: {
   kind?: "tutor" | "system";
+  /** A saved system design to reopen. */
+  sessionId?: string;
 } = {}) {
-  const { accessToken } = useAuth();
+  const { accessToken, loading: authLoading } = useAuth();
   const [TldrawComp, setTldrawComp] = useState<
     typeof import("tldraw").Tldraw | null
   >(null);
@@ -118,13 +204,56 @@ export function ExperimentBoard({
   const [intake, setIntake] = useState<SystemDesignIntake | null>(null);
   const [designPrompt, setDesignPrompt] = useState("");
 
+  /** Latest design, including edits fetched but not yet on the board. Edits build on this. */
+  const designRef = useRef<DesignState | null>(null);
+  /** The design that matches what the board and script show right now. */
+  const appliedRef = useRef<DesignVersion | null>(null);
+  const historyRef = useRef<Array<DesignVersion & { lesson: ExperimentLesson }>>([]);
+  const outcomesRef = useRef<RevisionOutcome[]>([]);
+  const chainRef = useRef<Promise<void>>(Promise.resolve());
+  /** Edits sent and not yet applied. */
+  const queuedRef = useRef(0);
+  /** Edits whose request has not come back. */
+  const inflightRef = useRef(0);
+  const playingRef = useRef(false);
+  const flushingRef = useRef(false);
+  /** Bumped when the design is thrown away, so late responses are ignored. */
+  const epochRef = useRef(0);
+  const reviseAbortRef = useRef<AbortController | null>(null);
+  const [hasDesign, setHasDesign] = useState(false);
+  const [queuedEdits, setQueuedEdits] = useState(0);
+  const [canUndo, setCanUndo] = useState(false);
+
+  /** What the student asked and what the tutor answered, shown between the beats. */
+  const [messages, setMessages] = useState<DesignMessage[]>([]);
+  const messagesRef = useRef<DesignMessage[]>([]);
+  /** Where this design was last saved; saving again overwrites it. */
+  const savedRef = useRef<SavedDesignRef | null>(null);
+  /** The `?session=` id this page has already tried to open, so it opens once. */
+  const openedRef = useRef<string | null>(null);
+  const [editorReady, setEditorReady] = useState(false);
+  const [savingDesign, setSavingDesign] = useState(false);
+  /** "saved" once the board matches the last save; any later change makes it "changed". */
+  const [saveState, setSaveState] = useState<"new" | "saved" | "changed">("new");
+  const [exporting, setExporting] = useState(false);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  const dragRef = useRef<{ x: number; width: number } | null>(null);
+  const [panelWidth, setPanelWidth] = useState<number | null>(null);
+
   const busy =
     phase === "planning" ||
     phase === "playing" ||
     phase === "reacting" ||
+    phase === "revising" ||
+    phase === "opening" ||
     saving;
+  const designEditable =
+    kind === "system" &&
+    hasDesign &&
+    !saving &&
+    (phase === "idle" || phase === "playing" || phase === "revising");
   const boardWaiting =
-    !TldrawComp || phase === "planning" || phase === "reacting";
+    !TldrawComp || phase === "planning" || phase === "reacting" || phase === "opening";
   const canDictate = voiceReady || browserStt;
   phaseRef.current = phase;
   draftRef.current = draft;
@@ -150,6 +279,8 @@ export function ExperimentBoard({
     return () => {
       alive = false;
       abortRef.current?.abort();
+      reviseAbortRef.current?.abort();
+      epochRef.current += 1;
       stopMic();
       const rec = screenRef.current;
       screenRef.current = null;
@@ -176,6 +307,95 @@ export function ExperimentBoard({
     return () => window.clearInterval(timer);
   }, [phase]);
 
+  useEffect(() => {
+    if (kind !== "system" || !sessionId || !editorReady || authLoading) return;
+    if (openedRef.current === sessionId) return;
+    openedRef.current = sessionId;
+    void openSaved(sessionId);
+    // openSaved reads refs and the current token; it must run once per id, not on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kind, sessionId, editorReady, authLoading]);
+
+  useEffect(() => {
+    const stored = Number(window.localStorage.getItem(PANEL_WIDTH_KEY));
+    if (!Number.isFinite(stored) || stored <= 0) return;
+    const width = clampPanel(stored);
+    const frame = window.requestAnimationFrame(() => setPanelWidth(width));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    const min = intake ? INTAKE_MIN : PANEL_MIN;
+    const onResize = () =>
+      setPanelWidth((width) => (width === null ? null : clampPanel(width, min)));
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [intake]);
+
+  useEffect(() => {
+    if (!intake) return;
+    setPanelWidth((width) => clampPanel(width ?? INTAKE_MIN, INTAKE_MIN));
+  }, [intake]);
+
+  function storePanelWidth(width: number | null) {
+    try {
+      if (width === null) window.localStorage.removeItem(PANEL_WIDTH_KEY);
+      else window.localStorage.setItem(PANEL_WIDTH_KEY, String(width));
+    } catch {
+      /* private mode: the width lasts for this visit */
+    }
+  }
+
+  function onResizeStart(event: ReactPointerEvent<HTMLDivElement>) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragRef.current = {
+      x: event.clientX,
+      width: panelRef.current?.getBoundingClientRect().width ?? PANEL_MIN,
+    };
+    document.body.style.userSelect = "none";
+    document.body.style.cursor = "col-resize";
+  }
+
+  function panelMin() {
+    return intake ? INTAKE_MIN : PANEL_MIN;
+  }
+
+  function onResizeMove(event: ReactPointerEvent<HTMLDivElement>) {
+    const drag = dragRef.current;
+    if (!drag) return;
+    setPanelWidth(clampPanel(drag.width + drag.x - event.clientX, panelMin()));
+  }
+
+  function onResizeEnd(event: ReactPointerEvent<HTMLDivElement>) {
+    if (!dragRef.current) return;
+    dragRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    document.body.style.userSelect = "";
+    document.body.style.cursor = "";
+    const width = panelRef.current?.getBoundingClientRect().width;
+    if (width) storePanelWidth(Math.round(width));
+  }
+
+  function onResizeKey(event: KeyboardEvent<HTMLDivElement>) {
+    const step = event.shiftKey ? 64 : 16;
+    const min = panelMin();
+    const current = panelRef.current?.getBoundingClientRect().width ?? min;
+    let next: number | null;
+    if (event.key === "ArrowLeft") next = clampPanel(current + step, min);
+    else if (event.key === "ArrowRight") next = clampPanel(current - step, min);
+    else if (event.key === "Home") next = clampPanel(min, min);
+    else if (event.key === "End") next = panelMax();
+    else return;
+    event.preventDefault();
+    event.stopPropagation();
+    setPanelWidth(next);
+    storePanelWidth(next);
+  }
+
   function stopMic() {
     recorderRef.current?.state === "recording" && recorderRef.current.stop();
     recorderRef.current = null;
@@ -190,9 +410,75 @@ export function ExperimentBoard({
     setListening(false);
   }
 
+  const messageSeqRef = useRef(0);
+
+  function setConversation(next: DesignMessage[]) {
+    messagesRef.current = next.slice(-MAX_SAVED_MESSAGES);
+    setMessages(messagesRef.current);
+  }
+
+  function markChanged() {
+    setSaveState((current) => (current === "saved" ? "changed" : current));
+  }
+
+  /** Adds a line to the script after the beat on screen now; returns its id. */
+  function addMessage(role: DesignMessage["role"], text: string): string {
+    messageSeqRef.current += 1;
+    const message: DesignMessage = {
+      id: `m${Date.now().toString(36)}${messageSeqRef.current}`,
+      role,
+      text: text.trim(),
+      afterBeat: lessonRef.current ? indexRef.current : -1,
+    };
+    setConversation([...messagesRef.current, message]);
+    markChanged();
+    return message.id;
+  }
+
+  function markFailed(id: string) {
+    setConversation(
+      messagesRef.current.map((message) =>
+        message.id === id ? { ...message, failed: true } : message,
+      ),
+    );
+  }
+
+  function setSessionParam(id: string | null) {
+    const url = new URL(window.location.href);
+    if (id) url.searchParams.set("session", id);
+    else url.searchParams.delete("session");
+    window.history.replaceState(window.history.state, "", url);
+  }
+
+  /** The board no longer shows the saved design, so the next save starts a new entry. */
+  function forgetSaved() {
+    savedRef.current = null;
+    openedRef.current = null;
+    setSaveState("new");
+    if (kind === "system") setSessionParam(null);
+  }
+
+  function resetDesign() {
+    epochRef.current += 1;
+    reviseAbortRef.current?.abort();
+    reviseAbortRef.current = null;
+    designRef.current = null;
+    appliedRef.current = null;
+    historyRef.current = [];
+    outcomesRef.current = [];
+    chainRef.current = Promise.resolve();
+    queuedRef.current = 0;
+    inflightRef.current = 0;
+    flushingRef.current = false;
+    setHasDesign(false);
+    setQueuedEdits(0);
+    setCanUndo(false);
+  }
+
   function clearBoard() {
     abortRef.current?.abort();
     abortRef.current = null;
+    resetDesign();
     stopMic();
     const editor = editorRef.current;
     if (editor) {
@@ -217,6 +503,8 @@ export function ExperimentBoard({
     setDraft("");
     setIntake(null);
     setDesignPrompt("");
+    setConversation([]);
+    forgetSaved();
   }
 
   function onPromptKey(event: KeyboardEvent<HTMLElement>) {
@@ -236,55 +524,273 @@ export function ExperimentBoard({
 
   async function playFrom(start: number, ac: AbortController) {
     const editor = editorRef.current;
-    const current = lessonRef.current;
     const session = sessionRef.current;
-    if (!editor || !current || !session) return;
+    if (!editor || !lessonRef.current || !session) return;
 
     const { playExperimentBeat } = await import(
       "@/components/experiment/applyScene"
     );
 
-    for (let index = start; index < current.beats.length; index += 1) {
-      if (ac.signal.aborted) return;
-      indexRef.current = index;
-      setCurrentBeat(index);
-      setPhase("playing");
-      const beat = current.beats[index]!;
-      const lookOnly = /^look at the board\.?$/i.test(beat.say.trim());
-      const speech = lookOnly
-        ? Promise.resolve()
-        : speakLine(beat.say, ac.signal);
-      await playExperimentBeat(editor, beat, session);
-      await speech;
-      if (ac.signal.aborted) return;
-      if (beat.check) {
-        setPausedCheck(beat.check);
-        setPhase("paused");
-        setStatus("");
-        const ask = beat.check.ask.trim();
-        const alreadySaid =
-          ask.localeCompare(beat.say.trim(), undefined, {
-            sensitivity: "accent",
-          }) === 0;
-        if (!alreadySaid) await speakLine(ask, ac.signal);
-        return;
+    playingRef.current = true;
+    try {
+      // The lesson is re-read every beat: a design edit can replace it between sections.
+      for (
+        let index = start;
+        index < (lessonRef.current?.beats.length ?? 0);
+        index += 1
+      ) {
+        if (ac.signal.aborted) return;
+        const beat = lessonRef.current!.beats[index]!;
+        indexRef.current = index;
+        setCurrentBeat(index);
+        setPhase("playing");
+        const lookOnly = /^look at the board\.?$/i.test(beat.say.trim());
+        const speech = lookOnly
+          ? Promise.resolve()
+          : speakLine(beat.say, ac.signal);
+        await playExperimentBeat(editor, beat, session);
+        await speech;
+        if (ac.signal.aborted) return;
+        if (queuedRef.current > 0) {
+          if (inflightRef.current > 0) {
+            setStatus("Applying your change");
+            await chainRef.current;
+          }
+          if (ac.signal.aborted) return;
+          const next = await flushRevisions(true);
+          setStatus("");
+          if (next === "stop") return;
+        }
+        if (beat.check) {
+          setPausedCheck(beat.check);
+          setPhase("paused");
+          setStatus("");
+          const ask = beat.check.ask.trim();
+          const alreadySaid =
+            ask.localeCompare(beat.say.trim(), undefined, {
+              sensitivity: "accent",
+            }) === 0;
+          if (!alreadySaid) await speakLine(ask, ac.signal);
+          return;
+        }
       }
+    } finally {
+      playingRef.current = false;
     }
     setPausedCheck(null);
     setPhase("idle");
     setStatus("");
-    setCurrentBeat(Math.max(0, current.beats.length - 1));
+    setCurrentBeat(Math.max(0, (lessonRef.current?.beats.length ?? 1) - 1));
+    if (outcomesRef.current.length) void flushRevisions();
+  }
+
+  function speechSignal(): AbortSignal {
+    if (!abortRef.current || abortRef.current.signal.aborted) {
+      abortRef.current = new AbortController();
+    }
+    return abortRef.current.signal;
+  }
+
+  function settleQueued(count = 1) {
+    queuedRef.current = Math.max(0, queuedRef.current - count);
+    setQueuedEdits(queuedRef.current);
+  }
+
+  /**
+   * Sends an edit right away, in order behind any earlier edit, so each one
+   * builds on the last. It reaches the board at the next section boundary,
+   * or at once when nothing is playing.
+   */
+  function queueRevision(instruction: string, messageId: string) {
+    const design = designRef.current;
+    if (!design) return;
+    const epoch = epochRef.current;
+    if (!reviseAbortRef.current || reviseAbortRef.current.signal.aborted) {
+      reviseAbortRef.current = new AbortController();
+    }
+    const signal = reviseAbortRef.current.signal;
+    queuedRef.current += 1;
+    inflightRef.current += 1;
+    setQueuedEdits(queuedRef.current);
+    setDraft("");
+    setError("");
+
+    chainRef.current = chainRef.current
+      .then(async () => {
+        if (epoch !== epochRef.current) return;
+        const base = designRef.current;
+        if (!base) return;
+        let outcome: RevisionOutcome;
+        try {
+          const revision = await requestSystemDesignRevision(
+            { ...base, instruction },
+            signal,
+          );
+          if (revision.kind === "revised") {
+            const edits = [...base.edits, instruction].slice(-MAX_EDIT_HISTORY);
+            designRef.current = { ...base, spec: revision.spec, edits };
+            outcome = {
+              kind: "revised",
+              spec: revision.spec,
+              edits,
+              lesson: revision.lesson,
+              summary: revision.summary,
+            };
+          } else if (revision.kind === "answer") {
+            outcome = { kind: "answer", reply: revision.reply };
+          } else {
+            outcome = { kind: "new", text: instruction };
+          }
+        } catch (caught) {
+          if (signal.aborted || isAbortError(caught)) return;
+          outcome = {
+            kind: "error",
+            message: toUserFacingError(
+              caught,
+              "Could not change the design. Try again.",
+            ),
+            text: instruction,
+            messageId,
+          };
+        }
+        if (epoch !== epochRef.current) return;
+        outcomesRef.current.push(outcome);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (epoch !== epochRef.current) return;
+        inflightRef.current = Math.max(0, inflightRef.current - 1);
+        if (!playingRef.current) void flushRevisions();
+      });
+  }
+
+  function undoChange() {
+    const last = historyRef.current[historyRef.current.length - 1];
+    if (!last || queuedRef.current > 0 || !designRef.current) return;
+    designRef.current = { ...designRef.current, spec: last.spec, edits: last.edits };
+    queuedRef.current += 1;
+    setQueuedEdits(queuedRef.current);
+    setCanUndo(false);
+    outcomesRef.current.push({ kind: "undo" });
+    if (!playingRef.current) void flushRevisions();
+  }
+
+  /**
+   * Puts finished edits on the board in the order they were sent. Only sheets
+   * already drawn are redrawn; later sheets simply play from the new design.
+   * Returns "stop" when playback should end (a new design was asked for).
+   */
+  async function flushRevisions(inPlayback = false): Promise<"ok" | "stop"> {
+    if (flushingRef.current) return "ok";
+    const editor = editorRef.current;
+    const session = sessionRef.current;
+    const epoch = epochRef.current;
+    flushingRef.current = true;
+    let enteredRevising = false;
+    try {
+      while (outcomesRef.current.length) {
+        if (epoch !== epochRef.current) return "stop";
+        const outcome = outcomesRef.current.shift()!;
+        settleQueued();
+        if (outcome.kind === "error") {
+          setError(outcome.message);
+          markFailed(outcome.messageId);
+          if (!draftRef.current.trim()) setDraft(outcome.text);
+          continue;
+        }
+        if (outcome.kind === "new") {
+          outcomesRef.current = [];
+          enteredRevising = false;
+          flushingRef.current = false;
+          void startLesson(outcome.text);
+          return "stop";
+        }
+        if (!inPlayback && !enteredRevising) {
+          enteredRevising = true;
+          setPhase("revising");
+        }
+        if (outcome.kind === "answer") {
+          addMessage("tutor", outcome.reply);
+          await speakLine(outcome.reply, speechSignal());
+          continue;
+        }
+        const current = lessonRef.current;
+        const applied = appliedRef.current;
+        if (!editor || !session || !current || !applied) continue;
+
+        let target: DesignVersion & { lesson: ExperimentLesson };
+        let summary: string;
+        if (outcome.kind === "undo") {
+          const last = historyRef.current.pop();
+          if (!last) continue;
+          target = last;
+          summary = "Undid the last change.";
+        } else {
+          historyRef.current.push({ ...applied, lesson: current });
+          target = { spec: outcome.spec, edits: outcome.edits, lesson: outcome.lesson };
+          summary = outcome.summary;
+        }
+
+        const { redrawExperimentSheets } = await import(
+          "@/components/experiment/applyScene"
+        );
+        const diff = changedSheets(current, target.lesson);
+        await redrawExperimentSheets(
+          editor,
+          session,
+          current,
+          target.lesson,
+          diff.shapes,
+        );
+        if (epoch !== epochRef.current) return "stop";
+        lessonRef.current = target.lesson;
+        appliedRef.current = { spec: target.spec, edits: target.edits };
+        setLesson(target.lesson);
+        setCanUndo(historyRef.current.length > 0);
+        addMessage("tutor", summary);
+        await speakLine(summary, speechSignal());
+      }
+    } finally {
+      if (epoch === epochRef.current) {
+        flushingRef.current = false;
+        if (enteredRevising) setPhase("idle");
+      }
+    }
+    return "ok";
   }
 
   async function onPromptSubmit(event: FormEvent) {
     event.preventDefault();
     const text = draft.trim();
-    if (!text || busy) return;
+    if (!text) return;
+    if (designEditable) {
+      requestDesignChange(text);
+      return;
+    }
+    if (busy) return;
     if (phase === "paused") {
       await submitAnswer(text);
       return;
     }
     await startLesson(text);
+  }
+
+  function requestDesignChange(text: string) {
+    if (UNDO_REQUEST.test(text)) {
+      setDraft("");
+      if (!historyRef.current.length) {
+        setError("There is no change to undo.");
+        return;
+      }
+      if (queuedRef.current > 0) {
+        setError("Wait for your last change to land, then undo.");
+        return;
+      }
+      addMessage("user", text);
+      undoChange();
+      return;
+    }
+    queueRevision(text, addMessage("user", text));
   }
 
   async function startLesson(text: string) {
@@ -298,6 +804,7 @@ export function ExperimentBoard({
     const ac = new AbortController();
     abortRef.current = ac;
     stopMic();
+    resetDesign();
 
     setPhase("planning");
     setError("");
@@ -310,6 +817,9 @@ export function ExperimentBoard({
     setTopic(text);
     setIntake(null);
     setDesignPrompt("");
+    forgetSaved();
+    setConversation([]);
+    const promptId = addMessage("user", text);
 
     try {
       const result = await requestExperimentLesson(text, ac.signal, undefined, kind);
@@ -336,6 +846,7 @@ export function ExperimentBoard({
       ) {
         return;
       }
+      markFailed(promptId);
       setDraft(text);
       setPhase("idle");
       setError(
@@ -370,6 +881,13 @@ export function ExperimentBoard({
         throw new Error("Could not design that system. Try again.");
       }
       setIntake(null);
+      resetDesign();
+      if (result.spec) {
+        designRef.current = { prompt, answers, spec: result.spec, edits: [] };
+        appliedRef.current = { spec: result.spec, edits: [] };
+        setHasDesign(true);
+      }
+      addMessage("user", Object.values(answers).map((value) => value.trim()).join("\n"));
       lessonRef.current = result.lesson;
       setLesson(result.lesson);
       const { prepareExperimentSession } = await import(
@@ -406,6 +924,13 @@ export function ExperimentBoard({
     setDraft("");
     setPhase("reacting");
     setStatus("Checking your answer");
+    const ask = check.ask.trim();
+    const beatSay = current.beats[indexRef.current]?.say.trim() ?? "";
+    if (ask && ask.localeCompare(beatSay, undefined, { sensitivity: "accent" }) !== 0) {
+      addMessage("tutor", ask);
+    }
+    const answerId = addMessage("user", text);
+    setPausedCheck(null);
 
     try {
       const local = gradeAnswer(text, check.expect);
@@ -429,8 +954,7 @@ export function ExperimentBoard({
             );
 
       if (ac.signal.aborted) return;
-      setNote(followup.say);
-      setPausedCheck(null);
+      addMessage("tutor", followup.say);
       await speakLine(followup.say, ac.signal);
 
       if (followup.lesson.beats.length) {
@@ -454,6 +978,8 @@ export function ExperimentBoard({
       ) {
         return;
       }
+      markFailed(answerId);
+      setPausedCheck(check);
       setPhase("paused");
       setDraft(text);
       setError(
@@ -470,6 +996,134 @@ export function ExperimentBoard({
     setPausedCheck(null);
     setNote("We'll keep going.");
     await playFrom(indexRef.current + 1, abortRef.current);
+  }
+
+  function boardTitle() {
+    return (
+      appliedRef.current?.spec.title ||
+      lessonRef.current?.title ||
+      topic.trim() ||
+      "Board"
+    );
+  }
+
+  async function saveDesign() {
+    const editor = editorRef.current;
+    const design = designRef.current;
+    const applied = appliedRef.current;
+    if (!editor || !design || !applied || savingDesign) return;
+    if (queuedRef.current > 0) {
+      setError("Wait for your change to land, then save.");
+      return;
+    }
+    setSavingDesign(true);
+    setError("");
+    try {
+      const session: SavedDesignSession = {
+        version: 1,
+        prompt: design.prompt,
+        answers: design.answers,
+        spec: applied.spec,
+        edits: applied.edits,
+        messages: messagesRef.current,
+      };
+      const { boardPreview } = await import("@/components/experiment/boardExport");
+      const preview = await boardPreview(editor, sessionRef.current);
+      const outcome = await saveDesignSession({
+        ref: savedRef.current,
+        title: boardTitle(),
+        session,
+        preview,
+        accessToken,
+      });
+      savedRef.current = outcome.ref;
+      setSessionParam(outcome.ref.id);
+      setSaveState("saved");
+      if (outcome.cloudError) console.warn("[design-save] kept on this device:", outcome.cloudError);
+      setNote(
+        !outcome.ref.local
+          ? "Saved. Open it from Dashboard to keep building."
+          : accessToken
+            ? "Saved on this device; your account could not be reached. Save again later to move it there."
+            : "Saved on this device. Sign in to keep it in your account.",
+      );
+    } catch (caught) {
+      setError(toUserFacingError(caught, "Could not save this design. Try again."));
+    } finally {
+      setSavingDesign(false);
+    }
+  }
+
+  async function exportPdf() {
+    const editor = editorRef.current;
+    if (!editor || exporting) return;
+    if (!editor.getCurrentPageShapeIds().size) {
+      setError("There is nothing on the board to export yet.");
+      return;
+    }
+    setExporting(true);
+    setError("");
+    try {
+      const { downloadBlob, exportBoardPdf } = await import("@/components/experiment/boardExport");
+      const title = boardTitle();
+      const pdf = await exportBoardPdf(editor, sessionRef.current, lessonRef.current, title);
+      downloadBlob(pdf, fileName(title));
+    } catch (caught) {
+      setError(toUserFacingError(caught, "Could not export the board. Try again."));
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  /** Puts a saved design back on the board, ready for more changes. */
+  async function openSaved(id: string) {
+    const editor = editorRef.current;
+    if (!editor) return;
+    abortRef.current?.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
+    stopMic();
+    resetDesign();
+    setPhase("opening");
+    setStatus("Opening your design");
+    setError("");
+    setNote("");
+    setIntake(null);
+    setPausedCheck(null);
+    setLesson(null);
+    lessonRef.current = null;
+    setCurrentBeat(-1);
+    setConversation([]);
+    try {
+      const opened = await openDesignSession(id, accessToken, ac.signal);
+      if (ac.signal.aborted) return;
+      const { prompt, answers, spec, edits } = opened.session;
+      const { drawExperimentLessonNow } = await import("@/components/experiment/applyScene");
+      const session = await drawExperimentLessonNow(editor, opened.lesson);
+      if (ac.signal.aborted) return;
+      designRef.current = { prompt, answers, spec, edits };
+      appliedRef.current = { spec, edits };
+      sessionRef.current = session;
+      lessonRef.current = opened.lesson;
+      const last = opened.lesson.beats.length - 1;
+      indexRef.current = last;
+      setLesson(opened.lesson);
+      setCurrentBeat(last);
+      setTopic(prompt);
+      setHasDesign(true);
+      setConversation(opened.session.messages);
+      savedRef.current = opened.ref;
+      setSaveState("saved");
+      setNote("Ask for a change to keep building on this design.");
+      setPhase("idle");
+      setStatus("");
+    } catch (caught) {
+      if (ac.signal.aborted || isAbortError(caught)) return;
+      setSessionParam(null);
+      setPhase("idle");
+      setStatus("");
+      setError(toUserFacingError(caught, "Could not open that design."));
+    }
   }
 
   async function persistRecording(file: {
@@ -578,11 +1232,20 @@ export function ExperimentBoard({
       return;
     }
     setDraft(text);
-    if (phaseRef.current === "paused") {
+    const current = phaseRef.current;
+    if (
+      kind === "system" &&
+      designRef.current &&
+      (current === "idle" || current === "playing" || current === "revising")
+    ) {
+      requestDesignChange(text);
+      return;
+    }
+    if (current === "paused") {
       await submitAnswer(text);
       return;
     }
-    if (phaseRef.current === "idle") {
+    if (current === "idle") {
       await startLesson(text);
     }
   }
@@ -628,7 +1291,7 @@ export function ExperimentBoard({
   }
 
   async function toggleMic() {
-    if (!canDictate || busy) return;
+    if (!canDictate || (busy && !designEditable)) return;
     if (listening) {
       stopMic();
       return;
@@ -687,6 +1350,8 @@ export function ExperimentBoard({
     ? "Listening…"
     : phase === "paused"
       ? "Type or speak your answer…"
+      : designEditable
+        ? "Change the design, like “use AWS instead of Supabase”…"
       : kind === "system"
         ? "Describe a system, like a chat app or a URL shortener…"
         : "Ask a question or tap the mic…";
@@ -694,6 +1359,15 @@ export function ExperimentBoard({
     lesson && currentBeat >= 0
       ? visibleLessonGraph(lesson.beats, currentBeat)
       : null;
+  const editNotice =
+    queuedEdits > 0
+      ? phase === "playing"
+        ? queuedEdits > 1
+          ? `${queuedEdits} changes will apply after this section.`
+          : "Your change will apply after this section."
+        : "Updating the design…"
+      : "";
+  const inputLocked = busy && !designEditable;
 
   return (
     <div className="experiment-board fixed inset-0 flex bg-board">
@@ -717,6 +1391,7 @@ export function ExperimentBoard({
                   editorRef.current = editor;
                   editor.selectNone();
                   editor.setCurrentTool("hand");
+                  setEditorReady(true);
                 }}
               />
             ) : null}
@@ -774,8 +1449,69 @@ export function ExperimentBoard({
               </>
             )}
           </Button>
+          {kind === "system" && hasDesign ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={undoChange}
+              disabled={!canUndo || queuedEdits > 0 || saving}
+              aria-label="Undo the last design change"
+              className="pointer-events-auto h-8 gap-1.5 rounded-none border-board-edge bg-white/95 px-2.5 text-[13px] text-ink shadow-[0_8px_20px_rgba(26,43,60,0.08)] backdrop-blur-sm disabled:opacity-50"
+            >
+              <Undo2 className="size-3.5" />
+              Undo
+            </Button>
+          ) : null}
         </div>
-        <div className="pointer-events-none absolute top-3 right-3 z-30">
+        <div className="pointer-events-none absolute top-3 right-3 z-30 flex gap-2">
+          {kind === "system" && hasDesign ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => void saveDesign()}
+              disabled={
+                savingDesign ||
+                queuedEdits > 0 ||
+                phase === "opening" ||
+                phase === "planning"
+              }
+              aria-label={
+                saveState === "saved"
+                  ? "Design saved"
+                  : saveState === "changed"
+                    ? "Save changes to this design"
+                    : "Save this design"
+              }
+              className="pointer-events-auto h-8 gap-1.5 rounded-none border-board-edge bg-white/95 px-2.5 text-[13px] text-ink shadow-[0_8px_20px_rgba(26,43,60,0.08)] backdrop-blur-sm disabled:opacity-50"
+            >
+              {savingDesign ? (
+                <LoaderCircle className="size-3.5 animate-spin" />
+              ) : saveState === "saved" ? (
+                <Check className="size-3.5" />
+              ) : (
+                <Save className="size-3.5" />
+              )}
+              {savingDesign ? "Saving" : saveState === "saved" ? "Saved" : "Save"}
+            </Button>
+          ) : null}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => void exportPdf()}
+            disabled={exporting || !lesson}
+            aria-label="Export the board as PDF"
+            className="pointer-events-auto h-8 gap-1.5 rounded-none border-board-edge bg-white/95 px-2.5 text-[13px] text-ink shadow-[0_8px_20px_rgba(26,43,60,0.08)] backdrop-blur-sm disabled:opacity-50"
+          >
+            {exporting ? (
+              <LoaderCircle className="size-3.5 animate-spin" />
+            ) : (
+              <FileDown className="size-3.5" />
+            )}
+            {exporting ? "Exporting" : "PDF"}
+          </Button>
           <Button
             asChild
             type="button"
@@ -783,7 +1519,7 @@ export function ExperimentBoard({
             size="sm"
             className="pointer-events-auto h-8 gap-1.5 rounded-none border-board-edge bg-white/95 px-2.5 text-[13px] text-ink shadow-[0_8px_20px_rgba(26,43,60,0.08)] backdrop-blur-sm"
           >
-            <Link href="/dashboard">
+            <Link href={kind === "system" ? "/dashboard?tab=designs" : "/dashboard"}>
               <LayoutGrid className="size-3.5" />
               Dashboard
             </Link>
@@ -805,7 +1541,11 @@ export function ExperimentBoard({
                 {error}
               </p>
             ) : null}
-            {busy && status && !boardWaiting ? (
+            {editNotice ? (
+              <p className="mb-2 text-center text-[12px] text-muted" role="status">
+                {editNotice}
+              </p>
+            ) : busy && status && !boardWaiting ? (
               <p className="mb-2 text-center text-[12px] text-muted">
                 {status}
               </p>
@@ -825,7 +1565,7 @@ export function ExperimentBoard({
               <label htmlFor="experiment-prompt" className="sr-only">
                 {phase === "paused" ? "Answer" : "Question"}
               </label>
-              {canDictate && !busy ? (
+              {canDictate && !inputLocked ? (
                 <Button
                   type="button"
                   size="icon-sm"
@@ -854,24 +1594,26 @@ export function ExperimentBoard({
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder={placeholder}
                 autoComplete="off"
-                disabled={busy}
-                maxLength={800}
+                disabled={inputLocked}
+                maxLength={designEditable ? 500 : 800}
                 className="h-10 min-w-0 flex-1 rounded-none border-0 bg-transparent px-3 text-[15px] shadow-none focus-visible:ring-0"
               />
               <Button
                 type="submit"
                 size="icon-sm"
-                disabled={busy || !draft.trim()}
+                disabled={inputLocked || !draft.trim()}
                 aria-label={
-                  busy
+                  inputLocked
                     ? "Explaining"
-                    : phase === "paused"
-                      ? "Submit answer"
-                      : "Send"
+                    : designEditable
+                      ? "Change the design"
+                      : phase === "paused"
+                        ? "Submit answer"
+                        : "Send"
                 }
                 className="size-9 rounded-none bg-[#085080] text-white hover:bg-[#083068]"
               >
-                {busy ? (
+                {inputLocked ? (
                   <LoaderCircle className="size-4 animate-spin" />
                 ) : (
                   <ArrowUp className="size-4" />
@@ -883,13 +1625,31 @@ export function ExperimentBoard({
       </div>
 
       <div
-        className={`h-full shrink-0 ${
-          intake ? "w-[min(22rem,34vw)]" : "w-[min(16rem,26vw)]"
+        ref={panelRef}
+        className={`relative h-full min-w-[13.75rem] shrink-0 ${
+          panelWidth ? "" : "w-[min(22rem,36vw)]"
         }`}
+        style={panelWidth ? { width: panelWidth } : undefined}
       >
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          aria-label="Resize the script"
+          aria-valuemin={intake ? INTAKE_MIN : PANEL_MIN}
+          aria-valuemax={760}
+          aria-valuenow={panelWidth ?? 352}
+          tabIndex={0}
+          className="absolute inset-y-0 -left-1 z-40 w-2 cursor-col-resize touch-none outline-none before:absolute before:inset-y-0 before:left-1/2 before:w-px before:-translate-x-1/2 before:bg-board-edge hover:before:bg-[#085080] focus-visible:before:bg-[#085080]"
+          onPointerDown={onResizeStart}
+          onPointerMove={onResizeMove}
+          onPointerUp={onResizeEnd}
+          onPointerCancel={onResizeEnd}
+          onKeyDown={onResizeKey}
+        />
         {intake && phase === "intake" ? (
           <SystemDesignIntakeForm
             intake={intake}
+            prompt={designPrompt}
             busy={false}
             error={error}
             onSubmit={(answers) => void submitDesign(answers)}
@@ -901,9 +1661,10 @@ export function ExperimentBoard({
             streaming={phase === "playing" || phase === "planning"}
             pausedCheck={pausedCheck}
             note={note}
+            messages={messages}
             intro={
               kind === "system"
-                ? "Describe a system. Four short questions come first, then the design is drawn on the board."
+                ? "Describe a system. Four short questions come first, then the design is drawn on the board. Ask for a change at any point, like a different provider or a new feature, and every diagram follows."
                 : undefined
             }
           />

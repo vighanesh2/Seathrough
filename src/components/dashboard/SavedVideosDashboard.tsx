@@ -16,6 +16,12 @@ import {
   listLocalVideos,
   renameLocalVideo,
 } from "@/lib/experiment/localSavedVideos";
+import {
+  deleteDesignSession,
+  listDesignSessions,
+  renameDesignSession,
+} from "@/lib/experiment/systemDesign/sessionClient";
+import type { SavedDesignSummary } from "@/lib/experiment/systemDesign/session";
 import { fixWebmDuration } from "@/lib/experiment/fixWebmDuration";
 import { clipTitle } from "@/lib/experiment/lessonTitle";
 
@@ -361,7 +367,7 @@ function formatDuration(ms?: number): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-export type DashboardTab = "lessons" | "explain";
+export type DashboardTab = "lessons" | "explain" | "designs";
 
 const TABS: {
   id: DashboardTab;
@@ -405,6 +411,12 @@ const TABS: {
   },
 ];
 
+const TAB_ITEMS: { id: DashboardTab; label: string }[] = [
+  { id: "lessons", label: "Lessons" },
+  { id: "designs", label: "Designs" },
+  { id: "explain", label: "Video explainer" },
+];
+
 export function SavedVideosDashboard({ initialTab = "lessons" }: { initialTab?: DashboardTab }) {
   return (
     <StudioAccessProvider>
@@ -416,6 +428,7 @@ export function SavedVideosDashboard({ initialTab = "lessons" }: { initialTab?: 
 function SavedVideosDashboardView({ initialTab }: { initialTab: DashboardTab }) {
   const { accessToken, user, loading } = useAuth();
   const [tab, setTab] = useState<DashboardTab>(initialTab);
+  const designsTab = tab === "designs";
   const current = TABS.find((item) => item.id === tab) ?? TABS[0]!;
 
   useEffect(() => {
@@ -426,6 +439,7 @@ function SavedVideosDashboardView({ initialTab }: { initialTab: DashboardTab }) 
   }, []);
   const { openAuth } = useQuestionAccess();
   const [videos, setVideos] = useState<ListedVideo[]>([]);
+  const [designs, setDesigns] = useState<SavedDesignSummary[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(true);
   const [playing, setPlaying] = useState<ListedVideo | null>(null);
@@ -465,9 +479,27 @@ function SavedVideosDashboardView({ initialTab }: { initialTab: DashboardTab }) 
     }
   }, [accessToken, current.kind, current.endpoint]);
 
+  const loadDesigns = useCallback(async () => {
+    const run = ++loadRun.current;
+    setBusy(true);
+    setError("");
+    setDesigns([]);
+    try {
+      const result = await listDesignSessions(accessToken);
+      if (run !== loadRun.current) return;
+      setDesigns(result.sessions);
+      if (result.cloudError) setError(result.cloudError);
+    } catch {
+      if (run === loadRun.current) setError("Could not load saved designs.");
+    } finally {
+      if (run === loadRun.current) setBusy(false);
+    }
+  }, [accessToken]);
+
   useEffect(() => {
-    void load();
-  }, [load]);
+    if (designsTab) void loadDesigns();
+    else void load();
+  }, [designsTab, load, loadDesigns]);
 
   function chooseTab(next: DashboardTab) {
     if (next === tab) return;
@@ -523,6 +555,31 @@ function SavedVideosDashboardView({ initialTab }: { initialTab: DashboardTab }) 
     }
   }
 
+  async function commitDesignRename(design: SavedDesignSummary) {
+    const title = clipTitle(draftTitle);
+    setEditingId(null);
+    if (!title || title === design.title) return;
+    setDesigns((current) =>
+      current.map((item) => (item.id === design.id ? { ...item, title } : item)),
+    );
+    try {
+      await renameDesignSession(design, title, accessToken);
+    } catch {
+      setError("Could not rename that design.");
+      void loadDesigns();
+    }
+  }
+
+  async function removeDesign(design: SavedDesignSummary) {
+    setDesigns((current) => current.filter((item) => item.id !== design.id));
+    try {
+      await deleteDesignSession(design, accessToken);
+    } catch {
+      setError("Could not delete that design.");
+      void loadDesigns();
+    }
+  }
+
   async function removeVideo(video: ListedVideo) {
     setVideos((current) => current.filter((item) => item.id !== video.id));
     if (playing?.id === video.id) setPlaying(null);
@@ -541,11 +598,21 @@ function SavedVideosDashboardView({ initialTab }: { initialTab: DashboardTab }) 
     }
   }
 
-  const empty = !busy && videos.length === 0;
+  const empty = !busy && (designsTab ? designs.length === 0 : videos.length === 0);
   const signedOutHint = useMemo(
     () => !user && !loading,
     [user, loading],
   );
+  const intro = designsTab
+    ? "System designs you saved. Open one to keep building on it."
+    : current.intro;
+  const newHref = designsTab ? "/system-design" : current.newHref;
+  const newLabel = designsTab ? "New design" : current.newLabel;
+  const emptyTitle = designsTab ? "No saved designs yet" : current.emptyTitle;
+  const emptyBody = designsTab
+    ? "Describe a system, let it draw, then press Save. It lands here so you can open it again and keep editing."
+    : current.emptyBody;
+  const emptyCta = designsTab ? "Open System design" : current.emptyCta;
 
   return (
     <div className="min-h-dvh bg-white font-[family-name:var(--font-inter)] text-[#111111]">
@@ -558,19 +625,19 @@ function SavedVideosDashboardView({ initialTab }: { initialTab: DashboardTab }) 
               Dashboard
             </h1>
             <p className="mt-4 max-w-sm text-[15px] leading-6 text-[#5c6370]">
-              {current.intro}
+              {intro}
             </p>
           </div>
           <Link
-            href={current.newHref}
+            href={newHref}
             className="inline-flex h-11 shrink-0 items-center bg-[#085080] px-5 text-[14px] font-medium text-white outline-none transition hover:bg-[#083068] focus-visible:ring-2 focus-visible:ring-[#085080]/40"
           >
-            {current.newLabel}
+            {newLabel}
           </Link>
         </div>
 
-        <div role="tablist" aria-label="Saved videos" className="mt-10 flex gap-6 border-b border-[#e6e8ee]">
-          {TABS.map((item) => {
+        <div role="tablist" aria-label="Saved work" className="mt-10 flex gap-6 border-b border-[#e6e8ee]">
+          {TAB_ITEMS.map((item) => {
             const selected = item.id === tab;
             return (
               <button
@@ -585,9 +652,9 @@ function SavedVideosDashboardView({ initialTab }: { initialTab: DashboardTab }) 
                 onKeyDown={(event) => {
                   if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
                   event.preventDefault();
-                  const index = TABS.findIndex((entry) => entry.id === tab);
+                  const index = TAB_ITEMS.findIndex((entry) => entry.id === tab);
                   const step = event.key === "ArrowRight" ? 1 : -1;
-                  const next = TABS[(index + step + TABS.length) % TABS.length]!;
+                  const next = TAB_ITEMS[(index + step + TAB_ITEMS.length) % TAB_ITEMS.length]!;
                   chooseTab(next.id);
                   document.getElementById(`dashboard-tab-${next.id}`)?.focus();
                 }}
@@ -607,7 +674,7 @@ function SavedVideosDashboardView({ initialTab }: { initialTab: DashboardTab }) 
 
         {signedOutHint ? (
           <p className="mt-8 text-[14px] text-[#5c6370]">
-            Videos on this device stay here.{" "}
+            {designsTab ? "Designs" : "Videos"} on this device stay here.{" "}
             <button
               type="button"
               className="font-medium text-[#085080] underline-offset-2 outline-none hover:underline"
@@ -626,22 +693,101 @@ function SavedVideosDashboardView({ initialTab }: { initialTab: DashboardTab }) 
         ) : null}
 
         {busy ? (
-          <p className="mt-10 text-[15px] text-[#5c6370]">Loading saved videos…</p>
+          <p className="mt-10 text-[15px] text-[#5c6370]">
+            {designsTab ? "Loading saved designs…" : "Loading saved videos…"}
+          </p>
         ) : null}
 
         {empty ? (
           <div className="mt-8 border border-[#e6e8ee] px-6 py-16 text-center">
-            <p className="text-[16px] font-medium text-[#111111]">{current.emptyTitle}</p>
+            <p className="text-[16px] font-medium text-[#111111]">{emptyTitle}</p>
             <p className="mx-auto mt-2 max-w-md text-[15px] leading-6 text-[#5c6370]">
-              {current.emptyBody}
+              {emptyBody}
             </p>
             <Link
-              href={current.newHref}
+              href={newHref}
               className="mt-6 inline-flex h-11 items-center bg-[#085080] px-5 text-[14px] font-medium text-white outline-none transition hover:bg-[#083068] focus-visible:ring-2 focus-visible:ring-[#085080]/40"
             >
-              {current.emptyCta}
+              {emptyCta}
             </Link>
           </div>
+        ) : designsTab ? (
+          <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {designs.map((design) => (
+              <li
+                key={design.id}
+                className="overflow-hidden border border-[#e6e8ee] bg-white"
+              >
+                <Link
+                  href={`/system-design?session=${encodeURIComponent(design.id)}`}
+                  className="relative block aspect-video w-full bg-[#f4f5f7]"
+                  aria-label={`Open ${design.title}`}
+                >
+                  {design.preview ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={design.preview} alt="" className="size-full object-cover object-top-left" />
+                  ) : (
+                    <span className="absolute inset-0 flex items-center justify-center bg-[#f4f8fb] px-4 text-center text-[13px] text-[#5c6370]">
+                      {design.question || design.title}
+                    </span>
+                  )}
+                </Link>
+                <div className="px-3.5 py-3">
+                  {editingId === design.id ? (
+                    <Input
+                      value={draftTitle}
+                      autoFocus
+                      maxLength={60}
+                      onChange={(event) => setDraftTitle(event.target.value)}
+                      onBlur={() => void commitDesignRename(design)}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter") {
+                          event.preventDefault();
+                          void commitDesignRename(design);
+                        }
+                        if (event.key === "Escape") setEditingId(null);
+                      }}
+                      className="h-8 text-[14px]"
+                      aria-label="Rename design"
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      className="flex w-full items-start gap-2 text-left"
+                      onClick={() => {
+                        setEditingId(design.id);
+                        setDraftTitle(design.title);
+                      }}
+                    >
+                      <span className="min-w-0 flex-1 text-[15px] font-medium leading-5 text-[#111111]">
+                        {design.title}
+                      </span>
+                      <Pencil className="mt-0.5 size-3.5 shrink-0 text-muted" />
+                    </button>
+                  )}
+                  {design.question ? (
+                    <p className="mt-1 line-clamp-2 text-[12px] leading-5 text-[#5c6370]">
+                      {design.question}
+                    </p>
+                  ) : null}
+                  <div className="mt-2 flex items-center justify-between gap-2">
+                    <p className="text-[12px] text-[#5c6370]">
+                      {formatWhen(design.updatedAt)}
+                      {design.local ? " · this device" : ""}
+                    </p>
+                    <button
+                      type="button"
+                      className="rounded-md p-1 text-muted hover:bg-[#f4f7fb] hover:text-error"
+                      aria-label={`Delete ${design.title}`}
+                      onClick={() => void removeDesign(design)}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
         ) : (
           <ul className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {videos.map((video) => (

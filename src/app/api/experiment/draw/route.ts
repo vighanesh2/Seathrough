@@ -2,7 +2,7 @@ import { generateExperimentLesson } from "@/lib/experiment/generateScene";
 import { simpleShapeLesson } from "@/lib/experiment/scene";
 import { mentionsSecantAndTangent } from "@/lib/experiment/graph";
 import { parseIntakeAnswers } from "@/lib/experiment/systemDesign/answers";
-import { generateSystemDesignLesson } from "@/lib/experiment/systemDesign/generate";
+import { generateSystemDesign } from "@/lib/experiment/systemDesign/generate";
 import { systemDesignIntake } from "@/lib/experiment/systemDesign/sections";
 import { envPresence } from "@/lib/env";
 import { toUserFacingError } from "@/lib/errors/userFacing";
@@ -61,8 +61,8 @@ export async function POST(request: Request) {
       if (!parsed.ok) {
         return Response.json({ error: parsed.error }, { status: 400 });
       }
-      const lesson = await generateSystemDesignLesson(prompt, parsed.answers);
-      return Response.json({ lesson });
+      const { spec, lesson } = await generateSystemDesign(prompt, parsed.answers);
+      return Response.json({ lesson, design: { spec } });
     }
 
     const lesson = await generateExperimentLesson(prompt);

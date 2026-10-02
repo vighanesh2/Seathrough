@@ -13,6 +13,7 @@ export default async function DashboardPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { tab } = await searchParams;
-  const initialTab: DashboardTab = tab === "explain" ? "explain" : "lessons";
+  const initialTab: DashboardTab =
+    tab === "explain" || tab === "designs" ? tab : "lessons";
   return <SavedVideosDashboard initialTab={initialTab} />;
 }
