@@ -232,7 +232,7 @@ function unionBox(boxes: ShapeBox[]): ShapeBox | null {
 }
 
 function applyBox(shape: ExperimentShape, box: ShapeBox) {
-  if (shape.type === "arrow") return;
+  if (shape.type === "arrow" || shape.type === "route") return;
   shape.x = box.x;
   shape.y = box.y;
   if (shape.type === "geo") {
@@ -242,7 +242,7 @@ function applyBox(shape: ExperimentShape, box: ShapeBox) {
 }
 
 function translateShape(shape: ExperimentShape, dx: number, dy: number) {
-  if (shape.type === "arrow") return;
+  if (shape.type === "arrow" || shape.type === "route") return;
   shape.x += dx;
   shape.y += dy;
 }
@@ -584,8 +584,8 @@ export function overlappingPairs(
 }
 
 export function layoutShapes(shapes: ExperimentShape[]): ExperimentShape[] {
-  const arrows = shapes.filter((shape) => shape.type === "arrow");
-  const nodes = shapes.filter((shape) => shape.type !== "arrow");
+  const arrows = shapes.filter((shape) => shape.type === "arrow" || shape.type === "route");
+  const nodes = shapes.filter((shape) => shape.type !== "arrow" && shape.type !== "route");
   if (!nodes.length) return shapes;
 
   const geos = nodes.filter(
@@ -663,13 +663,13 @@ export function layoutShapes(shapes: ExperimentShape[]): ExperimentShape[] {
 
   const minX = Math.min(
     ...keptNodes.map((shape) =>
-      shape.type === "arrow" ? 0 : shape.x,
+      shape.type === "arrow" || shape.type === "route" ? 0 : shape.x,
     ),
     0,
   );
   const minY = Math.min(
     ...keptNodes.map((shape) =>
-      shape.type === "arrow" ? 0 : shape.y,
+      shape.type === "arrow" || shape.type === "route" ? 0 : shape.y,
     ),
     0,
   );

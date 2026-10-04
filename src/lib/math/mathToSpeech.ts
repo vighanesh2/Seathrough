@@ -253,8 +253,42 @@ function stripMathDelimiters(input: string): string {
     .replace(/\\\[([\s\S]*?)\\\]/g, " $1 ");
 }
 
+/** Diagram and implication arrows. Must run before ">" becomes "greater than". */
+function speakArrows(input: string): string {
+  return input
+    .replace(/<->|↔|⇔|⟷/g, " to ")
+    .replace(/-->|==>|=>|->|→|⟶|⇒|➜|➔|➞|➡|⇨/g, " to ")
+    .replace(/<--|<-|←|⟵|⇐/g, " from ");
+}
+
+function speakMarks(input: string): string {
+  let s = speakArrows(input);
+  s = s.replace(/<=|≤/g, " less than or equal to ");
+  s = s.replace(/>=|≥/g, " greater than or equal to ");
+  // long_url, s3_key — not math subscripts. Leave x_1 and x_{i} for LaTeX.
+  while (/([A-Za-z]{2,}|\d)_([A-Za-z]{2,})/.test(s)) {
+    s = s.replace(/([A-Za-z]{2,}|\d)_([A-Za-z]{2,})/g, "$1 $2");
+  }
+  s = s.replace(/~/g, " about ");
+  s = s.replace(/&/g, " and ");
+  s = s.replace(/(\d)\s*ms\b/gi, "$1 milliseconds");
+  s = s.replace(/(\d)\s*µs\b/g, "$1 microseconds");
+  s = s.replace(/(\d+(?:\.\d+)?)M\b/g, "$1 million");
+  s = s.replace(/(\d+(?:\.\d+)?)k\b/g, "$1 thousand");
+  s = s.replace(/\bp(\d{2})\b/g, "p $1");
+  s = s.replace(/\bI\/O\b/g, "I O");
+  s = s.replace(/\b([A-Za-z]{2,})\/([A-Za-z]{2,})\b/g, (all, left: string, right: string) => {
+    if (all.toLowerCase() === "and/or") return all;
+    if (/^(day|days|sec|secs|second|seconds|min|mins|minute|minutes|hour|hours|user|users|request|requests)$/i.test(right)) {
+      return `${left} per ${right}`;
+    }
+    return `${left} and ${right}`;
+  });
+  return s;
+}
+
 function speakAsciiMath(input: string): string {
-  let s = input;
+  let s = speakMarks(input);
 
   for (const [glyph, spoken] of Object.entries(UNICODE_FRACTIONS)) {
     s = s.split(glyph).join(` ${spoken} `);
@@ -274,10 +308,7 @@ function speakAsciiMath(input: string): string {
     .replace(/÷/g, " divided by ")
     .replace(/±/g, " plus or minus ")
     .replace(/≠/g, " is not equal to ")
-    .replace(/≤/g, " less than or equal to ")
-    .replace(/≥/g, " greater than or equal to ")
     .replace(/≈/g, " approximately ")
-    .replace(/→/g, " goes to ")
     .replace(/°/g, " degrees ");
 
   // x^2, 3x^{2}, (x+1)^n — after LaTeX unwrap these are still around.
@@ -322,7 +353,7 @@ function speakAsciiMath(input: string): string {
     /(?<=[A-Za-z])\s+[-−–]\s+(?=[\dA-Za-zπθ\(]|negative)/g,
     " minus ",
   );
-  s = s.replace(/(?<=[A-Za-z])[-−](?=\d)/g, " minus ");
+  s = s.replace(/(?<=\b[A-Za-z])[-−](?=\d)/g, " minus ");
   s = s.replace(/(?<=\b[A-Za-z])[-−](?=[A-Za-z]\b)/g, " minus ");
 
   s = s.replace(/=/g, " equals ");
@@ -356,6 +387,7 @@ export function mathToSpeech(input: string): string {
     s = s.replace(/\\\\/g, "\\");
   }
 
+  s = speakMarks(s);
   s = stripMathDelimiters(s);
   s = speakLatex(s);
   s = speakAsciiMath(s);

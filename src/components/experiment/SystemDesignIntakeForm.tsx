@@ -7,6 +7,7 @@ import type { IntakeAnswers } from "@/lib/experiment/systemDesign/sections";
 
 type SystemDesignIntakeFormProps = {
   intake: SystemDesignIntake;
+  prompt?: string;
   busy: boolean;
   error: string;
   onSubmit: (answers: IntakeAnswers) => void;
@@ -14,6 +15,7 @@ type SystemDesignIntakeFormProps = {
 
 export function SystemDesignIntakeForm({
   intake,
+  prompt = "",
   busy,
   error,
   onSubmit,
@@ -40,10 +42,19 @@ export function SystemDesignIntakeForm({
         <h2 className="mt-0.5 font-[family-name:var(--font-newsreader)] text-[1.15rem] tracking-tight text-ink">
           A few questions first
         </h2>
-        <p className="mt-1 line-clamp-3 text-[12px] leading-5 text-muted">
-          {intake.title}
-        </p>
+        {!prompt && intake.title ? (
+          <p className="mt-1 line-clamp-3 text-[12px] leading-5 text-muted">
+            {intake.title}
+          </p>
+        ) : null}
       </div>
+      {prompt ? (
+        <div className="shrink-0 px-4 pb-2">
+          <p className="ml-auto max-w-[92%] whitespace-pre-wrap rounded-2xl rounded-br-sm bg-[#085080] px-3 py-2 text-[14px] leading-6 text-white">
+            {prompt}
+          </p>
+        </div>
+      ) : null}
       <form
         className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-4 py-3"
         onSubmit={submit}

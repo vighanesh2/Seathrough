@@ -7,7 +7,7 @@ export const dashboardMode: ModeDefinition = {
   navLabel: "Dashboard",
   title: "Dashboard",
   description:
-    "Watch lessons you saved from Smart tutor. Titles are written for you; rename any of them.",
+    "Watch lessons you saved from Smart tutor, and reopen system designs to keep editing them.",
   kind: "learning",
   group: "studio",
   order: 2,

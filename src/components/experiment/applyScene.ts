@@ -2,6 +2,7 @@
 
 import {
   createShapeId,
+  getIndices,
   toRichText,
   type Editor,
   type TLShapeId,
@@ -14,6 +15,7 @@ import {
   shapeBounds,
 } from "@/lib/experiment/layout";
 import { looksLikeCode } from "@/lib/experiment/boardText";
+import { freshNodeIds } from "@/lib/experiment/systemDesign/diff";
 import type {
   ExperimentBeat,
   ExperimentColor,
@@ -29,7 +31,17 @@ export type ExperimentDrawSession = {
   created: TLShapeId[];
   clusterOf: Map<TLShapeId, string>;
   diagram?: ExperimentBeat["diagram"];
+  /** Every shape drawn for a sheet, arrows and highlights included, so the sheet can be redrawn. */
+  sheets: Map<string, TLShapeId[]>;
+  sheet?: string;
 };
+
+function track(session: ExperimentDrawSession, ...ids: TLShapeId[]) {
+  if (!session.sheet || !ids.length) return;
+  const list = session.sheets.get(session.sheet);
+  if (list) list.push(...ids);
+  else session.sheets.set(session.sheet, [...ids]);
+}
 
 function sleep(ms: number) {
   return new Promise<void>((resolve) => {
@@ -336,10 +348,10 @@ function connectArrow(
   label: string | undefined,
   color: ExperimentColor,
   lane?: "above" | "below",
-) {
+): TLShapeId | null {
   const startBounds = editor.getShapePageBounds(fromId);
   const endBounds = editor.getShapePageBounds(toId);
-  if (!startBounds || !endBounds) return;
+  if (!startBounds || !endBounds) return null;
 
   const dx = endBounds.center.x - startBounds.center.x;
   const dy = endBounds.center.y - startBounds.center.y;
@@ -385,7 +397,7 @@ function connectArrow(
     });
   } catch (error) {
     console.warn("[experiment-draw] arrow create failed", error);
-    return;
+    return null;
   }
   try {
     editor.createBindings([
@@ -417,18 +429,110 @@ function connectArrow(
   } catch (error) {
     console.warn("[experiment-draw] arrow binding failed", error);
   }
+  return arrowId;
+}
+
+/**
+ * Draws a path that was laid out ahead of time, exactly as given: a line
+ * through every bend, an arrowhead on the last leg, and the label in the
+ * spot that was kept free for it. Nothing here reroutes or moves.
+ */
+function drawRoute(
+  editor: Editor,
+  shape: Extract<ExperimentShape, { type: "route" }>,
+  dx: number,
+  dy: number,
+): TLShapeId[] {
+  const points = shape.points.map((point) => ({ x: point.x + dx, y: point.y + dy }));
+  if (points.length < 2) return [];
+  const color = colorOf(shape, "grey");
+  const ids: TLShapeId[] = [];
+  try {
+    if (points.length > 2) {
+      const body = points.slice(0, -1);
+      const origin = body[0]!;
+      const indices = getIndices(body.length);
+      const lineId = createShapeId();
+      editor.createShape({
+        id: lineId,
+        type: "line",
+        x: origin.x,
+        y: origin.y,
+        props: {
+          color,
+          dash: "draw",
+          size: "m",
+          spline: "line",
+          scale: 1,
+          points: Object.fromEntries(
+            body.map((point, index) => {
+              const key = indices[index]!;
+              return [key, { id: key, index: key, x: point.x - origin.x, y: point.y - origin.y }];
+            }),
+          ),
+        },
+      });
+      ids.push(lineId);
+    }
+    const start = points[points.length - 2]!;
+    const end = points[points.length - 1]!;
+    const arrowId = createShapeId();
+    editor.createShape({
+      id: arrowId,
+      type: "arrow",
+      x: start.x,
+      y: start.y,
+      props: {
+        color,
+        dash: "draw",
+        size: "m",
+        kind: "arc",
+        bend: 0,
+        arrowheadStart: "none",
+        arrowheadEnd: "arrow",
+        start: { x: 0, y: 0 },
+        end: { x: end.x - start.x, y: end.y - start.y },
+      },
+    });
+    ids.push(arrowId);
+    if (shape.label) {
+      const labelId = createShapeId();
+      editor.createShape({
+        id: labelId,
+        type: "text",
+        x: shape.label.x + dx,
+        y: shape.label.y + dy,
+        props: {
+          color: "black",
+          size: "s",
+          font: "draw",
+          textAlign: "middle",
+          autoSize: false,
+          w: shape.label.w,
+          richText: toRichText(shape.label.text),
+        },
+      });
+      ids.push(labelId);
+    }
+  } catch (error) {
+    console.warn("[experiment-draw] route failed", shape.id, error);
+  }
+  return ids;
 }
 
 export async function applyExperimentShapes(
   editor: Editor,
   shapes: ExperimentShape[],
   session: ExperimentDrawSession,
+  options: { pace?: number } = {},
 ) {
+  const pace = options.pace ?? 70;
   const nodes = shapes.filter(
-    (s) => s.type !== "arrow" && s.type !== "callout",
+    (s) => s.type !== "arrow" && s.type !== "callout" && s.type !== "route",
   );
   const callouts = shapes.filter((s) => s.type === "callout");
   const arrows = shapes.filter((s) => s.type === "arrow");
+  const routes = shapes.filter((s) => s.type === "route");
 
   for (const shape of nodes) {
     const extras: TLShapeId[] = [];
@@ -444,7 +548,8 @@ export async function applyExperimentShapes(
     }
     const isOrganicPart =
       shape.type === "geo" && Boolean(cluster) && isOrganicGeo(shape);
-    if (!isOrganicPart) {
+    // A system-design sheet arrives fully laid out; nudging a box would detach its arrows.
+    if (!isOrganicPart && !session.sheet) {
       const skip = new Set<TLShapeId>();
       for (const [placedId, placedCluster] of session.clusterOf) {
         if (!cluster || placedCluster !== cluster) continue;
@@ -465,7 +570,8 @@ export async function applyExperimentShapes(
     }
     session.idMap.set(shape.id, id);
     session.created.push(id, ...extras);
-    await sleep(70);
+    track(session, id, ...extras);
+    await sleep(pace);
   }
 
   for (const shape of callouts) {
@@ -474,11 +580,13 @@ export async function applyExperimentShapes(
     nudgeClearOfPlaced(editor, id, session.created);
     session.idMap.set(shape.id, id);
     session.created.push(id);
+    track(session, id);
     const toId = session.idMap.get(shape.to);
     if (toId) {
-      connectArrow(editor, id, toId, undefined, colorOf(shape, "grey"));
+      const arrowId = connectArrow(editor, id, toId, undefined, colorOf(shape, "grey"));
+      if (arrowId) track(session, arrowId);
     }
-    await sleep(70);
+    await sleep(pace);
   }
 
   for (const shape of arrows) {
@@ -486,7 +594,7 @@ export async function applyExperimentShapes(
     const fromId = session.idMap.get(shape.from);
     const toId = session.idMap.get(shape.to);
     if (!fromId || !toId) continue;
-    connectArrow(
+    const arrowId = connectArrow(
       editor,
       fromId,
       toId,
@@ -494,7 +602,17 @@ export async function applyExperimentShapes(
       colorOf(shape, "grey"),
       shape.lane,
     );
-    await sleep(70);
+    if (arrowId) track(session, arrowId);
+    await sleep(pace);
+  }
+
+  for (const shape of routes) {
+    if (shape.type !== "route") continue;
+    const ids = drawRoute(editor, shape, session.dx, session.dy);
+    if (!ids.length) continue;
+    session.created.push(...ids);
+    track(session, ...ids);
+    await sleep(pace);
   }
 }
 
@@ -530,6 +648,7 @@ export async function highlightExperimentIds(
         },
       });
       session.created.push(id);
+      track(session, id);
     } catch (error) {
       console.warn("[experiment-draw] highlight failed", key, error);
     }
@@ -560,6 +679,7 @@ export function prepareExperimentSession(
     idMap: new Map<string, TLShapeId>(),
     created: [] as TLShapeId[],
     clusterOf: new Map<TLShapeId, string>(),
+    sheets: new Map<string, TLShapeId[]>(),
   };
 }
 
@@ -569,6 +689,8 @@ export async function playExperimentBeat(
   session: ExperimentDrawSession,
 ) {
   if (beat.diagram) session.diagram = beat.diagram;
+  session.sheet = beat.sheet;
+  if (beat.sheet) session.sheets.set(beat.sheet, []);
   const before = session.created.length;
   if (beat.shapes.length) {
     await applyExperimentShapes(editor, beat.shapes, session);
@@ -582,6 +704,84 @@ export async function playExperimentBeat(
   if (added.length) zoomCreated(editor, added);
 }
 
+/**
+ * Draws a whole lesson at once, as when a saved design is reopened. Sheets are
+ * tracked exactly as in playback so later edits can redraw them.
+ */
+export async function drawExperimentLessonNow(
+  editor: Editor,
+  lesson: ExperimentLesson,
+): Promise<ExperimentDrawSession> {
+  const session = prepareExperimentSession(editor, lesson);
+  for (const beat of lesson.beats) {
+    if (beat.diagram) session.diagram = beat.diagram;
+    session.sheet = beat.sheet;
+    if (beat.sheet) session.sheets.set(beat.sheet, []);
+    if (beat.shapes.length) {
+      await applyExperimentShapes(editor, beat.shapes, session, { pace: 0 });
+    }
+    if (beat.highlight?.length) {
+      await highlightExperimentIds(editor, session, beat.highlight);
+    }
+  }
+  const focus = session.sheets.get("architecture") ?? [];
+  zoomCreated(editor, focus.length ? focus : session.created);
+  return session;
+}
+
+/**
+ * Brings sheets already on the board in line with a revised lesson. Only
+ * sheets whose shapes changed are touched: all of them are erased first so a
+ * taller sheet never collides with a stale one, then each is redrawn and its
+ * new or relabeled boxes are outlined. Sheets not yet drawn are left for playback.
+ */
+export async function redrawExperimentSheets(
+  editor: Editor,
+  session: ExperimentDrawSession,
+  previous: ExperimentLesson,
+  next: ExperimentLesson,
+  changed: string[],
+): Promise<void> {
+  const oldBeats = new Map(
+    previous.beats.flatMap((beat) => (beat.sheet ? [[beat.sheet, beat] as const] : [])),
+  );
+  const targets = next.beats.filter(
+    (beat) => beat.sheet && changed.includes(beat.sheet) && session.sheets.has(beat.sheet),
+  );
+  if (!targets.length) return;
+
+  const doomed = new Set<TLShapeId>();
+  for (const beat of targets) {
+    for (const id of session.sheets.get(beat.sheet!) ?? []) doomed.add(id);
+  }
+  try {
+    const live = [...doomed].filter((id) => editor.getShape(id));
+    if (live.length) editor.deleteShapes(live);
+  } catch {
+    /* already gone */
+  }
+  session.created = session.created.filter((id) => !doomed.has(id));
+  for (const [key, id] of session.idMap) {
+    if (doomed.has(id)) session.idMap.delete(key);
+  }
+  for (const id of doomed) session.clusterOf.delete(id);
+
+  const redrawn: TLShapeId[] = [];
+  const resume = session.sheet;
+  for (const beat of targets) {
+    session.sheet = beat.sheet;
+    session.sheets.set(beat.sheet!, []);
+    await applyExperimentShapes(editor, beat.shapes, session, { pace: 25 });
+    const fresh = freshNodeIds(oldBeats.get(beat.sheet!), beat).filter(
+      (id) => !id.startsWith("heading-"),
+    );
+    if (fresh.length) await highlightExperimentIds(editor, session, fresh);
+    redrawn.push(...(session.sheets.get(beat.sheet!) ?? []));
+  }
+  session.sheet = resume;
+  if (redrawn.length) zoomCreated(editor, redrawn);
+}
+
 export async function applyExperimentScene(
   editor: Editor,
   scene: ExperimentScene,
@@ -593,6 +793,7 @@ export async function applyExperimentScene(
     idMap: new Map<string, TLShapeId>(),
     created: [] as TLShapeId[],
     clusterOf: new Map<TLShapeId, string>(),
+    sheets: new Map<string, TLShapeId[]>(),
   };
   await applyExperimentShapes(editor, scene.shapes, session);
   if (!session.created.length) {

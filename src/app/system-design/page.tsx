@@ -7,6 +7,12 @@ export const metadata: Metadata = {
   description: systemDesignMode.metaDescription,
 };
 
-export default function SystemDesignPage() {
-  return <ExperimentBoard kind="system" />;
+export default async function SystemDesignPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const { session } = await searchParams;
+  const sessionId = typeof session === "string" && session ? session : undefined;
+  return <ExperimentBoard kind="system" sessionId={sessionId} />;
 }
