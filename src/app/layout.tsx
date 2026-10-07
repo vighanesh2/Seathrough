@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Fraunces, Geist, IBM_Plex_Mono, Inter, Newsreader } from "next/font/google";
+import { Geist, IBM_Plex_Mono, Inter, Newsreader } from "next/font/google";
+import localFont from "next/font/local";
 import { AuthProvider } from "@/components/AuthProvider";
 import { QuestionAccessProvider } from "@/components/usage/QuestionAccess";
 import { PageTransition } from "@/components/site/PageTransition";
@@ -24,10 +25,13 @@ const newsreader = Newsreader({
   style: ["normal", "italic"],
 });
 
-const fraunces = Fraunces({
+// Self-hosted so Vercel/Turbopack builds do not depend on fonts.gstatic.com
+// (next/font/google Fraunces was failing deploy with misleading "module not found").
+const fraunces = localFont({
+  src: "./fonts/Fraunces-Variable.ttf",
   variable: "--font-fraunces",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  display: "swap",
+  weight: "100 900",
 });
 
 const ibmPlexMono = IBM_Plex_Mono({

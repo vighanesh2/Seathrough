@@ -52,11 +52,6 @@ export const MODE_UI: Record<ModeId, ModeUi> = {
     hint: "Answer in your own words. A picture appears when a mix-up shows up.",
     tone: "blue",
   },
-  developer: {
-    icon: Monitor,
-    hint: "Two agents take work from a project manager and code at their desks.",
-    tone: "ink",
-  },
   "system-design": {
     icon: Network,
     hint: "Watch a full design stay on the board, diagram under diagram.",
