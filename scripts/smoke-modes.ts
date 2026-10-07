@@ -7,16 +7,20 @@ import {
 } from "../src/modes/registry";
 
 const learning = listEnabledModes("learning");
-assert.equal(learning.length, 4);
+assert.equal(learning.length, 5);
 assert.equal(learning[0]?.id, "smart-tutor");
-assert.equal(learning[1]?.id, "dashboard");
-assert.equal(learning[2]?.id, "system-design");
-assert.equal(learning[3]?.id, "explain-video");
+assert.equal(learning[1]?.id, "browser-experience");
+assert.equal(learning[2]?.id, "dashboard");
+assert.equal(learning[3]?.id, "system-design");
+assert.equal(learning[4]?.id, "explain-video");
 assert.equal(getMode("smart-tutor")?.href, "/smart-tutor");
+assert.equal(getMode("browser-experience")?.href, "/browser");
 assert.equal(getMode("dashboard")?.href, "/dashboard");
 assert.equal(getMode("smart-tutor")?.enabled, true);
+assert.equal(getMode("browser-experience")?.enabled, true);
 assert.equal(getMode("dashboard")?.enabled, true);
 assert.equal(getMode("smart-tutor")?.navLabel, "Smart tutor");
+assert.equal(getMode("browser-experience")?.navLabel, "Browser");
 assert.equal(getMode("dashboard")?.navLabel, "Dashboard");
 
 assert.equal(getMode("lessons")?.href, "/lessons");
@@ -33,11 +37,12 @@ assert.equal(getMode("scene-explain")?.enabled, false);
 assert.equal(getMode("scene-explain")?.href, "/lessons?view=3d");
 
 const studios = listModesByGroup("studio");
-assert.equal(studios.length, 4);
+assert.equal(studios.length, 5);
 assert.equal(studios[0]?.id, "smart-tutor");
-assert.equal(studios[1]?.id, "dashboard");
-assert.equal(studios[2]?.id, "system-design");
-assert.equal(studios[3]?.id, "explain-video");
+assert.equal(studios[1]?.id, "browser-experience");
+assert.equal(studios[2]?.id, "dashboard");
+assert.equal(studios[3]?.id, "system-design");
+assert.equal(studios[4]?.id, "explain-video");
 assert.equal(getMode("explain-video")?.href, "/video");
 assert.equal(getMode("explain-video")?.enabled, true);
 assert.ok(!studios.some((m) => m.id === "lessons"));
@@ -46,10 +51,11 @@ assert.ok(!studios.some((m) => m.id === "ai-tutor"));
 
 const siblings = listSiblingModes("smart-tutor");
 assert.ok(siblings.every((m) => m.id !== "smart-tutor"));
-assert.equal(siblings.length, 3);
-assert.equal(siblings[0]?.id, "dashboard");
-assert.equal(siblings[1]?.id, "system-design");
-assert.equal(siblings[2]?.id, "explain-video");
+assert.equal(siblings.length, 4);
+assert.equal(siblings[0]?.id, "browser-experience");
+assert.equal(siblings[1]?.id, "dashboard");
+assert.equal(siblings[2]?.id, "system-design");
+assert.equal(siblings[3]?.id, "explain-video");
 assert.ok(!listEnabledModes().some((m) => m.id === "lessons"));
 assert.ok(!listEnabledModes().some((m) => m.id === "ai-tutor"));
 assert.ok(!listEnabledModes().some((m) => m.id === "figures-3d"));

@@ -10,7 +10,7 @@ export const dashboardMode: ModeDefinition = {
     "Watch lessons you saved from Smart tutor, and reopen system designs to keep editing them.",
   kind: "learning",
   group: "studio",
-  order: 2,
+  order: 3,
   enabled: true,
   usesWhiteboard: false,
   metaTitle: "Dashboard | SeeThrough",
