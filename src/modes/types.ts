@@ -14,7 +14,7 @@ export type ModeId =
   | "figures-3d"
   | "scene-explain"
   | "system-design"
-  | "developer"
+  | "browser-experience"
   | "automatic-drawing"
   | "draw-engine"
   | "explain-video";

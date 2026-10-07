@@ -131,6 +131,14 @@ export function getTavilyConfig() {
   };
 }
 
+/** Cloud browser for /browser (Browserbase). Optional — local Playwright can be used instead. */
+export function getBrowserbaseConfig() {
+  return {
+    apiKey: optional("BROWSERBASE_API_KEY"),
+    projectId: optional("BROWSERBASE_PROJECT_ID"),
+  };
+}
+
 export function getSupabaseConfig() {
   return {
     url: required("NEXT_PUBLIC_SUPABASE_URL"),
@@ -146,6 +154,8 @@ export function envPresence() {
     OPENAI_API_KEY: Boolean(optional("OPENAI_API_KEY")),
     EXPLAIN_VIDEO_API_KEY: Boolean(optional("EXPLAIN_VIDEO_API_KEY")),
     TAVILY_API_KEY: Boolean(optional("TAVILY_API_KEY")),
+    BROWSERBASE_API_KEY: Boolean(optional("BROWSERBASE_API_KEY")),
+    BROWSERBASE_PROJECT_ID: Boolean(optional("BROWSERBASE_PROJECT_ID")),
     DEEPGRAM_API_KEY: Boolean(optional("DEEPGRAM_API_KEY")),
     NEXT_PUBLIC_SUPABASE_URL: Boolean(optional("NEXT_PUBLIC_SUPABASE_URL")),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: Boolean(optional("NEXT_PUBLIC_SUPABASE_ANON_KEY")),

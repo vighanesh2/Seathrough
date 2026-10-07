@@ -10,7 +10,7 @@ export const systemDesignMode: ModeDefinition = {
     "Ask for a system. Each diagram stays on the board, from the architecture down to what happens when it fails.",
   kind: "learning",
   group: "studio",
-  order: 3,
+  order: 4,
   enabled: true,
   usesWhiteboard: false,
   metaTitle: "System design | SeeThrough",

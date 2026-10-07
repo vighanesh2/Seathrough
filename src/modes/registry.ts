@@ -1,4 +1,5 @@
 import { automaticDrawingMode } from "@/modules/automatic-drawing/mode";
+import { browserExperienceMode } from "@/modules/browser-experience/mode";
 import { explainVideoMode } from "@/modules/explain-video/mode";
 import { aiTutorMode } from "@/modules/ai-tutor/mode";
 import { dashboardMode } from "@/modules/dashboard/mode";
@@ -18,6 +19,7 @@ import type { ModeDefinition, ModeGroup, ModeId, ModeKind } from "@/modes/types"
  */
 const ALL_MODES: ModeDefinition[] = [
   smartTutorMode,
+  browserExperienceMode,
   dashboardMode,
   lessonsMode,
   aiTutorMode,

@@ -5,6 +5,7 @@ import {
   Box,
   Camera,
   Code2,
+  Compass,
   HeartPulse,
   LayoutDashboard,
   Lightbulb,
@@ -31,6 +32,11 @@ export const MODE_UI: Record<ModeId, ModeUi> = {
     hint: "Ask a question. The tutor draws, talks, and checks you understood.",
     tone: "blue",
   },
+  "browser-experience": {
+    icon: Compass,
+    hint: "Ask a question. We open a live browser, find a credible page, and highlight while explaining.",
+    tone: "teal",
+  },
   dashboard: {
     icon: LayoutDashboard,
     hint: "Watch lessons you saved as videos, and rename the titles.",
@@ -47,19 +53,14 @@ export const MODE_UI: Record<ModeId, ModeUi> = {
     tone: "blue",
   },
   developer: {
-    icon: Code2,
-    hint: "Watch two agents ask Brief for work, code, and sleep when credits run out.",
+    icon: Monitor,
+    hint: "Two agents take work from a project manager and code at their desks.",
     tone: "ink",
   },
   "system-design": {
     icon: Network,
     hint: "Watch a full design stay on the board, diagram under diagram.",
     tone: "copper",
-  },
-  developer: {
-    icon: Monitor,
-    hint: "Two agents take work from a project manager and code at their desks.",
-    tone: "ink",
   },
   "scene-explain": {
     icon: Atom,
