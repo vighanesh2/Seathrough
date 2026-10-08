@@ -6,6 +6,7 @@
 export type ModeId =
   | "lessons"
   | "smart-tutor"
+  | "browser-experience"
   | "dashboard"
   | "ai-tutor"
   | "developer"

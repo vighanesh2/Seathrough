@@ -148,6 +148,12 @@ export function getSupabaseConfig() {
 }
 
 export function envPresence() {
+  const imageRefRaw = optional("IMAGE_REFERENCE_ENABLED")?.toLowerCase();
+  const imageReferenceExplicitOff =
+    imageRefRaw === "0" ||
+    imageRefRaw === "false" ||
+    imageRefRaw === "off" ||
+    imageRefRaw === "no";
   return {
     LLM_PROVIDER: optional("LLM_PROVIDER") ?? "groq",
     GROQ_API_KEY: Boolean(optional("GROQ_API_KEY")),
@@ -156,6 +162,7 @@ export function envPresence() {
     TAVILY_API_KEY: Boolean(optional("TAVILY_API_KEY")),
     BROWSERBASE_API_KEY: Boolean(optional("BROWSERBASE_API_KEY")),
     BROWSERBASE_PROJECT_ID: Boolean(optional("BROWSERBASE_PROJECT_ID")),
+    IMAGE_REFERENCE_ENABLED: !imageReferenceExplicitOff,
     DEEPGRAM_API_KEY: Boolean(optional("DEEPGRAM_API_KEY")),
     NEXT_PUBLIC_SUPABASE_URL: Boolean(optional("NEXT_PUBLIC_SUPABASE_URL")),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: Boolean(optional("NEXT_PUBLIC_SUPABASE_ANON_KEY")),

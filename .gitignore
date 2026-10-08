@@ -51,3 +51,7 @@ next-env.d.ts
 
 # vendor icon clone (keep out of app git; transform via npm run ingest:svgs)
 /tabler-icons
+
+# local research / dataset folders (not part of the Next deploy)
+/Analytics-Dashboard
+/metaphor-dataset

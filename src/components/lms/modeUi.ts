@@ -57,6 +57,11 @@ export const MODE_UI: Record<ModeId, ModeUi> = {
     hint: "Watch a full design stay on the board, diagram under diagram.",
     tone: "copper",
   },
+  developer: {
+    icon: Monitor,
+    hint: "Two agents take work from a project manager and code at their desks.",
+    tone: "ink",
+  },
   "scene-explain": {
     icon: Atom,
     hint: "Ask for osmosis, orbits, anything — a 3D scene builds and explains it.",
