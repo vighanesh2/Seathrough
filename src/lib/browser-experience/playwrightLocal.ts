@@ -1,9 +1,15 @@
 import { chromium, type Browser } from "playwright-core";
 import type { LiveBrowserHandle } from "@/lib/browser-experience/driver";
+import { localPlaywrightAllowed } from "@/lib/browser-experience/host";
 
 let sharedBrowserPromise: Promise<Browser> | null = null;
 
 async function launchChromium(): Promise<Browser> {
+  if (!localPlaywrightAllowed()) {
+    throw new Error(
+      "Local Chromium is not available on this host. Set BROWSERBASE_API_KEY for cloud browser sessions.",
+    );
+  }
   const args = [
     "--disable-dev-shm-usage",
     "--no-sandbox",
@@ -12,16 +18,9 @@ async function launchChromium(): Promise<Browser> {
     "--autoplay-policy=no-user-gesture-required",
     "--disable-blink-features=AutomationControlled",
   ];
-  // Prefer Playwright's Chromium, then the machine's installed Chrome.
-  try {
-    return await chromium.launch({ headless: true, args });
-  } catch {
-    return chromium.launch({
-      headless: true,
-      channel: "chrome",
-      args,
-    });
-  }
+  // Prefer Playwright's bundled Chromium. Do not fall back to system Chrome —
+  // that path fails on CI/Vercel (/opt/google/chrome) and confuses the error.
+  return chromium.launch({ headless: true, args });
 }
 
 async function getSharedBrowser(): Promise<Browser> {

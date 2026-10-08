@@ -11,7 +11,7 @@ export async function openBrowserbaseSession(): Promise<LiveBrowserHandle> {
   const { apiKey, projectId } = getBrowserbaseConfig();
   if (!apiKey) {
     throw new Error(
-      "Add BROWSERBASE_API_KEY to enable the live cloud browser, or install Playwright Chromium for local mode.",
+      "Add BROWSERBASE_API_KEY to enable the live cloud browser. On Vercel, local Chromium is not available.",
     );
   }
 
